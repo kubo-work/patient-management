@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import { theme } from "./util/theme";
 
 export default function Home() {
   return (
@@ -14,7 +15,7 @@ export default function Home() {
           priority
         />
         <ol>
-          <li>
+          <li style={{ color: theme.palette.primary.main }}>
             Get started by editing <code>src/app/page.tsx</code>.
           </li>
           <li>Save and see your changes instantly.</li>
