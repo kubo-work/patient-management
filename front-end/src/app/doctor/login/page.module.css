@@ -1,0 +1,10 @@
+.loginPage {
+  background: var(--mantine-color-orange-2);
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+}
+
+.header {
+  padding: 2rem 5vw;
+}
