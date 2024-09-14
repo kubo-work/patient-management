@@ -1,5 +1,5 @@
 $widthTab: 1024px; //タブレット
-$widthSp: 600px; //スマートフォン
+$widthSp: 721px; //スマートフォン
 
 @mixin sp {
   @media (max-width: ($widthSp)) {
