@@ -21,7 +21,7 @@ const page = () => {
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
           <header className={style.header}>
             <Title order={1} ta="center">
-              ログイン
+              医心堂鍼灸整骨院
             </Title>
           </header>
           <form>
