@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Sex {
+  no_answer
+  man
+  woman
+  neither
+}
+
+model patients {
+  id              Int               @id @default(autoincrement())
+  name            String
+  sex             Sex               @default(no_answer)
+  tel             String
+  address         String
+  email           String            @unique
+  password        String
+  birth           String
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  medical_records medical_records[]
+}
+
+model doctors {
+  id              Int               @id @default(autoincrement())
+  name            String
+  password        String
+  email           String            @unique
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now())
+  medical_records medical_records[]
+}
+
+model medical_records {
+  id             Int      @id @default(autoincrement())
+  patient_id     Int
+  doctor_id      Int
+  medical_memo   String
+  doctor_memo    String
+  examination_at DateTime @default(now())
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now())
+
+  patient            patients             @relation(fields: [patient_id], references: [id], onDelete: SetDefault)
+  doctor             doctors              @relation(fields: [doctor_id], references: [id], onDelete: SetDefault)
+  medical_categories medical_categories[]
+}
+
+model categories {
+  id                 Int                  @id @default(autoincrement())
+  treatment          String
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @default(now())
+  medical_categories medical_categories[]
+}
+
+model medical_categories {
+  id                Int      @id @default(autoincrement())
+  medical_record_id Int
+  category_id       Int
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  medical_record medical_records @relation(fields: [medical_record_id], references: [id], onDelete: Cascade)
+  category       categories      @relation(fields: [category_id], references: [id], onDelete: Cascade)
+}
