@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+      "outDir": "src",
+      "target": "es2020",
+      "module": "NodeNext",
+      "esModuleInterop": false,
+      "skipLibCheck": true
+    }
+  }
