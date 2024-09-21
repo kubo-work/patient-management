@@ -1,9 +1,16 @@
 {
-    "compilerOptions": {
+  "compilerOptions": {
       "outDir": "src",
-      "target": "es2020",
+      "target": "es2016", 
       "module": "NodeNext",
-      "esModuleInterop": false,
-      "skipLibCheck": true
-    }
-  }
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.cjs",
+    "**/*.mjs",
+  ],
+  "exclude": ["node_modules"]
+}
