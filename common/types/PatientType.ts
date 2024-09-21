@@ -1,6 +1,6 @@
 import { SexTypes } from "./SexTypes";
 
-export type PatientListType = {
+export type PatientType = {
   id: number;
   name: string;
   address: string;
