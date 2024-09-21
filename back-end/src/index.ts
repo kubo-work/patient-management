@@ -3,7 +3,7 @@ import type { Express, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client"
 import cors from "cors";
 import { DoctorType } from "../../common/types/DoctorType";
-import { PatientListType } from "../../common/types/PatientListType";
+import { PatientType } from "../../common/types/PatientType";
 
 const app: Express = express();
 const PORT: number = 8080;
@@ -42,7 +42,7 @@ app.get("/doctor/:email/:password", async (req: Request, res: Response) => {
 
 app.get("/patients", async (req: Request, res: Response) => {
     try {
-        const allPatients: PatientListType[] = await prisma.patients.findMany();
+        const allPatients: PatientType[] = await prisma.patients.findMany();
         return res.json(allPatients)
     } catch (e) {
         console.error(e);
