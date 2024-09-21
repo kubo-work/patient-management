@@ -27,7 +27,7 @@ export default function Layout({
 
       <AppShell.Navbar p="md">Navbar</AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main className={style.main}>{children}</AppShell.Main>
     </AppShell>
   );
 }
