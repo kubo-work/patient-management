@@ -2,7 +2,8 @@ import express from "express";
 import type { Express, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client"
 import cors from "cors";
-import { error } from "console";
+import { DoctorType } from "../../common/types/DoctorType";
+import { PatientListType } from "../../common/types/PatientListType";
 
 const app: Express = express();
 const PORT: number = 8080;
@@ -26,12 +27,11 @@ app.get("/doctor/:email/:password", async (req: Request, res: Response) => {
         if (!password) {
             return res.status(400).json({ error: "パスワードが入力されていません。" })
         }
-        const doctor = await prisma.doctors.findFirst({
+        const doctor: DoctorType = await prisma.doctors.findFirst({
             where: {
                 AND: [
                     { email }, { password }
                 ]
-
             }
         })
         return res.json(doctor)
@@ -42,7 +42,7 @@ app.get("/doctor/:email/:password", async (req: Request, res: Response) => {
 
 app.get("/patients", async (req: Request, res: Response) => {
     try {
-        const allPatients = await prisma.patients.findMany();
+        const allPatients: PatientListType[] = await prisma.patients.findMany();
         return res.json(allPatients)
     } catch (e) {
         console.error(e);
