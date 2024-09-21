@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button, Title } from "@mantine/core";
 import { usePatientsList } from "@/app/hooks/usePatientsList";
 import { PatientType } from "@/../../common/types/PatientType";
+import { sexList } from "../../../../../constants/sexList";
 
 const Page = () => {
   const { data } = usePatientsList();
@@ -28,6 +29,12 @@ const Page = () => {
         accessorKey: "name",
         header: "名前",
         maxSize: 100,
+      },
+      {
+        accessorKey: "sex",
+        header: "性別",
+        Cell: ({ row }) => sexList[row.original.sex].label,
+        maxSize: 40,
       },
       {
         accessorKey: "address",
