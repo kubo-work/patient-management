@@ -1,15 +1,17 @@
-"use client";
 import { AppShell, Burger, Button, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import style from "./layout.module.scss";
+import useDoctorLogout from "@/app/hooks/useDoctorLogout";
+import React, { FC, ReactNode } from "react";
 
-export default function Layout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+type Props = {
+  children: ReactNode;
+};
+
+const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
+  const { children } = props;
   const [opened, { toggle }] = useDisclosure();
-
+  const { handleClickLogout } = useDoctorLogout();
   return (
     <AppShell
       header={{ height: 60 }}
@@ -25,11 +27,15 @@ export default function Layout({
         <Title order={2}>医心堂鍼灸整骨院</Title>
       </AppShell.Header>
 
-      <AppShell.Navbar>
-        <Button className={style.sideButton}>ログアウト</Button>
+      <AppShell.Navbar className={style.nav}>
+        <Button onClick={handleClickLogout}>ログアウト</Button>
       </AppShell.Navbar>
 
       <AppShell.Main>{children}</AppShell.Main>
     </AppShell>
   );
-}
+});
+
+DoctorDashboardLayout.displayName = "DashboardLayout";
+
+export default DoctorDashboardLayout;

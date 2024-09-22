@@ -1,3 +1,6 @@
 body {
-  --mantine-color-body: rgba(243, 145, 17, 0.6);
+  --mantine-color-body: rgba(243, 145, 17, 0.5);
+  --mantine-em-color: rgb(243, 145, 17);
+  --main-color: #764a1b;
+  color: var(--main-color);
 }
