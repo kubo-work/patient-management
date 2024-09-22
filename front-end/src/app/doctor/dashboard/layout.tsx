@@ -1,5 +1,5 @@
 "use client";
-import { AppShell, Burger, Title } from "@mantine/core";
+import { AppShell, Burger, Button, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import style from "./layout.module.scss";
 
@@ -25,7 +25,9 @@ export default function Layout({
         <Title order={2}>医心堂鍼灸整骨院</Title>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">Navbar</AppShell.Navbar>
+      <AppShell.Navbar>
+        <Button className={style.sideButton}>ログアウト</Button>
+      </AppShell.Navbar>
 
       <AppShell.Main>{children}</AppShell.Main>
     </AppShell>
