@@ -5,3 +5,19 @@
   align-items: center;
   gap: 10px;
 }
+
+.sideButton{
+  background: none;
+  transition: background 0.2s ease,color 0.2s ease;
+  &.current{
+    background: #ffffff;
+    color:var(--mantine-color-body);
+  }
+  &:not(.current){
+    &:hover{
+      background: #ffffff;
+      color:var(--mantine-color-body);
+    }
+  }
+  
+}
