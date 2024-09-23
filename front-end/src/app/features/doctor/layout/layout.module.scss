@@ -8,6 +8,22 @@
 
 .nav{
   button{
+    width: 100%;
+    background: none;
+    transition: background 0.2s ease,color 0.2s ease;
+    &.current{
+      background: #ffffff;
+      color:var(--mantine-color-body);
+    }
+    &:not(.current){
+      &:hover{
+        background: #ffffff;
+        color:var(--mantine-color-body);
+      }
+    }
+  }
+  a{
+    width: 100%;
     background: none;
     transition: background 0.2s ease,color 0.2s ease;
     &.current{
