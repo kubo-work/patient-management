@@ -3,6 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import style from "./layout.module.scss";
 import useDoctorLogout from "@/app/hooks/useDoctorLogout";
 import React, { FC, ReactNode } from "react";
+import Link from "next/link";
 
 type Props = {
   children: ReactNode;
@@ -28,6 +29,9 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
       </AppShell.Header>
 
       <AppShell.Navbar className={style.nav}>
+        <Link href={`/doctor/patients-list`}>
+          <Button component="a">患者一覧</Button>
+        </Link>
         <Button onClick={handleClickLogout}>ログアウト</Button>
       </AppShell.Navbar>
 

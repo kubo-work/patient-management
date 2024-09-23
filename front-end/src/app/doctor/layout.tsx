@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import DoctorDashboardLayout from "../features/doctor/dashboard/DoctorDashboardLayout";
+import DoctorDashboardLayout from "../features/doctor/layout/DoctorDashboardLayout";
 
 export default function Layout({
   children,
