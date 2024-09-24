@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Button, Title } from "@mantine/core";
 import { usePatientsList } from "@/app/hooks/usePatientsList";
 import { PatientType } from "@/../../common/types/PatientType";
-import { sexList } from "@/../../constants/sexList";
+import { sexList } from "../../../../constants/sexList";
 
 const Page = () => {
   const { data } = usePatientsList();
