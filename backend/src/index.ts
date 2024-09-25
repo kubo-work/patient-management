@@ -92,7 +92,7 @@ app.post("/doctor/logout", async (req: Request, res: Response) => {
     });
 });
 
-app.get("/patients", async (req: Request, res: Response) => {
+app.get("/doctor/patients", async (req: Request, res: Response) => {
     if (!req.session) {
         return res.status(401).json({ error: "不正なアクセスです。" })
     }
