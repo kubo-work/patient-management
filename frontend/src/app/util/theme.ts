@@ -7,7 +7,6 @@ export const theme = createTheme({
     "MS PGothic", sans-serif`,
     primaryColor: 'brand',
     colors: {
-        //body: ['#764a1b'], // カスタムカラーを追加
         brand: [
             '#F6A94B', '#F5A03F', '#F59B2D', '#F39111', '#D87A0E', '#B5640B',
             '#9E4F09', '#8A4407', '#733608',
