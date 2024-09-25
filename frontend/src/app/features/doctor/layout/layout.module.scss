@@ -1,39 +1,30 @@
+.body{
+  background: var(--mantine-color-brand-1);
+}
+
 .header {
   color: #ffffff;
-  padding: var(--mantine-spacing-md);;
+  padding: var(--mantine-spacing-md);
+  background: var(--mantine-color-brand-3);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .nav{
-  button{
+  background: var(--mantine-color-brand-3);
+  button,a{
     width: 100%;
     background: none;
     transition: background 0.2s ease,color 0.2s ease;
     &.current{
       background: #ffffff;
-      color:var(--mantine-color-body);
+      color:var(--mantine-color-brand-3);
     }
     &:not(.current){
       &:hover{
         background: #ffffff;
-        color:var(--mantine-color-body);
-      }
-    }
-  }
-  a{
-    width: 100%;
-    background: none;
-    transition: background 0.2s ease,color 0.2s ease;
-    &.current{
-      background: #ffffff;
-      color:var(--mantine-color-body);
-    }
-    &:not(.current){
-      &:hover{
-        background: #ffffff;
-        color:var(--mantine-color-body);
+        color:var(--mantine-color-brand-3);
       }
     }
   }

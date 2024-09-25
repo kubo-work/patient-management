@@ -1,6 +1,17 @@
+:root {
+  --button-bg: #f3a011; /* ボタンの背景色 */
+  --button-hover: #f3a011; /* ボタンのホバー時の背景色 */
+  --input-color: #f3a011;
+}
+
 body {
-  --mantine-color-body: rgba(243, 145, 17, 0.5);
-  --mantine-em-color: rgb(243, 145, 17);
-  --main-color: #764a1b;
-  color: var(--main-color);
+  --mantine-color-text: #764a1b;
+}
+
+button {
+  transition: opacity 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.8;
 }

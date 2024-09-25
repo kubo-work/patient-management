@@ -1,5 +1,5 @@
 .loginPage {
-  background: var(--mantine-color-body);
+  background: var(--mantine-color-brand-1);
   min-height: 100dvh;
   display: flex;
   align-items: center;
@@ -7,13 +7,11 @@
 
 .container{
   background-color: white;
-  color:var(--mantine-em-color)
+  h1{
+    color:var(--mantine-color-brand-3)
+  }
 }
 
 .header {
   padding: 2rem 0;
-}
-
-.form{
-  color:var(--main-color)
 }

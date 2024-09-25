@@ -14,6 +14,7 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
   const { handleClickLogout } = useDoctorLogout();
   return (
     <AppShell
+      className={style.body}
       header={{ height: 60 }}
       navbar={{
         width: 300,
