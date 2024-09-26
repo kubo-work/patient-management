@@ -1,5 +1,5 @@
 import express from "express";
-import type { Express, Request, Response } from "express";
+import type { Express, NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client"
 import cors from "cors";
 import { DoctorType } from "../../common/types/DoctorType";
@@ -40,6 +40,14 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // セッションの有効期限を設定（例: 24時間）
     }
 }))
+
+// セッションチェック用
+const doctorSessionCheck = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session) {
+        return res.status(401).json({ error: "不正なアクセスです。" });
+    }
+    next(); // セッションがあれば次の処理に進む
+};
 
 app.post("/doctor/login", async (req: Request, res: Response) => {
     try {
@@ -92,10 +100,7 @@ app.post("/doctor/logout", async (req: Request, res: Response) => {
     });
 });
 
-app.get("/doctor/patients", async (req: Request, res: Response) => {
-    if (!req.session) {
-        return res.status(401).json({ error: "不正なアクセスです。" })
-    }
+app.get("/doctor/patients", doctorSessionCheck, async (req: Request, res: Response) => {
     try {
         const allPatients: PatientType[] = await prisma.patients.findMany();
         return res.json(allPatients)
