@@ -1,5 +1,9 @@
 .body{
+  --mantine-color-body:var(--mantine-color-brand-3);
   background: var(--mantine-color-brand-1);
+  h1{
+    color:#ffffff;
+  }
 }
 
 .header {

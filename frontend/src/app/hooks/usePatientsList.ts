@@ -9,7 +9,7 @@ async function fetcher(key: string): Promise<PatientType[]> {
 
 export const usePatientsList = () => {
     const { data, isLoading, error } = useSWR(
-        `${API_URL}/patients`,
+        `${API_URL}/doctor/patients`,
         fetcher
     );
 

@@ -1,7 +1,7 @@
 :root {
-  --button-bg: #f3a011; /* ボタンの背景色 */
-  --button-hover: #f3a011; /* ボタンのホバー時の背景色 */
-  --input-color: #f3a011;
+  --button-bg: #f39111; /* ボタンの背景色 */
+  --button-hover: #f39111; /* ボタンのホバー時の背景色 */
+  --input-color: #f39111;
 }
 
 body {
