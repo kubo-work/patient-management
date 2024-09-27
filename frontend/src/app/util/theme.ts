@@ -8,8 +8,8 @@ export const theme = createTheme({
     primaryColor: 'brand',
     colors: {
         brand: [
-            '#F6A94B', '#F5A03F', '#F59B2D', '#F39111', '#D87A0E', '#B5640B',
-            '#9E4F09', '#8A4407', '#733608',
+            '#fce1a1', '#fbd18a', '#fbc074', '#fabf5d', '#f3b000',
+            '#dc9e00', '#c68d00', '#af7b00', '#996a00',
         ],
     },
 });

@@ -1,18 +1,17 @@
 .body{
-  background: var(--mantine-color-brand-1);
+  --mantine-color-body:var(--mantine-color-brand-4);
+  //background: var(--mantine-color-brand-3);
 }
 
 .header {
   color: #ffffff;
   padding: var(--mantine-spacing-md);
-  background: var(--mantine-color-brand-3);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .nav{
-  background: var(--mantine-color-brand-3);
   button,a{
     width: 100%;
     background: none;
