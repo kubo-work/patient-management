@@ -2,7 +2,7 @@
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css"; //if using mantine date picker features
 import "mantine-react-table/styles.css"; //make sure MRT styles were imported in your app root (once)
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import Link from "next/link";
 import { Button, Title } from "@mantine/core";
@@ -11,12 +11,11 @@ import { PatientType } from "@/../../common/types/PatientType";
 import { sexList } from "../../../../constants/sexList";
 
 const Page = () => {
-  const { data } = usePatientsList();
-  const [patients, setPatients] = useState<PatientType[] | null>([]);
+  const { data, patients, setPatients } = usePatientsList();
 
   useEffect(() => {
     data && setPatients(data);
-  }, [data]);
+  }, [data, setPatients]);
 
   const columns = useMemo<MRT_ColumnDef<PatientType>[]>(
     () => [
@@ -45,7 +44,7 @@ const Page = () => {
         header: "操作",
         Cell: ({ row }) => (
           <Link
-            href={`/patients?id=${row.original.id}`}
+            href={`/doctor/medical_records?patients_id=${row.original.id}`}
             passHref
             legacyBehavior
           >
