@@ -50,6 +50,7 @@ const doctorSessionCheck = (req: Request, res: Response, next: NextFunction) => 
     next(); // セッションがあれば次の処理に進む
 };
 
+// 患者のデータ取得
 app.get("/patients/:patient_id", doctorSessionCheck, async (req: Request, res: Response) => {
     try {
         const { patient_id }: { patient_id: number } = req.body;
@@ -64,6 +65,7 @@ app.get("/patients/:patient_id", doctorSessionCheck, async (req: Request, res: R
     }
 })
 
+// doctor 管理画面ログイン
 app.post("/doctor/login", async (req: Request, res: Response) => {
     try {
         const { email, password }: { email: string; password: string } = req.body;
@@ -104,6 +106,7 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
     }
 })
 
+// doctor ログアウト
 app.post("/doctor/logout", async (req: Request, res: Response) => {
     req.session.destroy((err) => {
         if (err) {
@@ -114,6 +117,7 @@ app.post("/doctor/logout", async (req: Request, res: Response) => {
     });
 });
 
+// 患者一覧を取得する
 app.get("/doctor/patients", doctorSessionCheck, async (req: Request, res: Response) => {
     try {
         const allPatients: PatientType[] = await prisma.patients.findMany();
@@ -123,6 +127,7 @@ app.get("/doctor/patients", doctorSessionCheck, async (req: Request, res: Respon
     }
 })
 
+// 選択した患者の診察履歴一覧を取得する
 app.get("/doctor/medical_records/:patient_id", doctorSessionCheck, async (req: Request, res: Response) => {
     try {
         const { patient_id }: { patient_id: number } = req.body;
@@ -150,6 +155,30 @@ app.get("/doctor/medical_records/:patient_id", doctorSessionCheck, async (req: R
         return res.status(400).json({ error: "データの取得に失敗しました。" })
     }
 })
+
+// カテゴリを取得する
+app.get('/doctor/categories', doctorSessionCheck, async (req: Request, res: Response) => {
+    try {
+        const allCategories = await prisma.categories.findMany({
+            select: {
+                id: true,
+                treatment: true,
+                children: {
+                    select: {
+                        id: true,
+                        treatment: true
+                    }
+                }
+            },
+            where: {
+                parent_id: null
+            }
+        });
+        return res.json(allCategories)
+    } catch (e) {
+        return res.status(400).json({ error: "データの取得に失敗しました。" })
+    }
+});
 
 const prisma = new PrismaClient();
 
