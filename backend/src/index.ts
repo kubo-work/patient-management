@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client"
 import cors from "cors";
 import { DoctorType } from "../../common/types/DoctorType";
 import { PatientType } from "../../common/types/PatientType";
+import { MedicalRecordsType } from "../../common/types/MedicalRecordsType";
 
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
@@ -49,10 +50,23 @@ const doctorSessionCheck = (req: Request, res: Response, next: NextFunction) => 
     next(); // セッションがあれば次の処理に進む
 };
 
+app.get("/patients/:patient_id", doctorSessionCheck, async (req: Request, res: Response) => {
+    try {
+        const { patient_id }: { patient_id: number } = req.body;
+        const patient: PatientType = await prisma.patients.findFirst({
+            where: {
+                id: patient_id
+            }
+        });
+        return res.json(patient)
+    } catch (e) {
+        return res.status(400).json({ error: "データの取得に失敗しました。" })
+    }
+})
+
 app.post("/doctor/login", async (req: Request, res: Response) => {
     try {
-        const email: string = req.body.email;
-        const password: string = req.body.password;
+        const { email, password }: { email: string; password: string } = req.body;
 
         if (!email) {
             return res.status(400).json({ error: "メールアドレスが入力されていません。" })
@@ -104,6 +118,34 @@ app.get("/doctor/patients", doctorSessionCheck, async (req: Request, res: Respon
     try {
         const allPatients: PatientType[] = await prisma.patients.findMany();
         return res.json(allPatients)
+    } catch (e) {
+        return res.status(400).json({ error: "データの取得に失敗しました。" })
+    }
+})
+
+app.get("/doctor/medical_records/:patient_id", doctorSessionCheck, async (req: Request, res: Response) => {
+    try {
+        const { patient_id }: { patient_id: number } = req.body;
+        const allMedicalRecords: MedicalRecordsType[] = await prisma.medical_records.findMany({
+            select: {
+                id: true,
+                patient_id: true,
+                examination_at: true,
+                medical_categories: {
+                    select: {
+                        categories: {
+                            select: {
+                                treatment: true
+                            }
+                        }
+                    }
+                }
+            },
+            where: {
+                patient_id
+            }
+        });
+        return res.json(allMedicalRecords)
     } catch (e) {
         return res.status(400).json({ error: "データの取得に失敗しました。" })
     }
