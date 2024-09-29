@@ -60,10 +60,14 @@ model medical_records {
 }
 
 model categories {
-  id                 Int                  @id @default(autoincrement())
-  treatment          String
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @default(now())
+  id         Int          @id @default(autoincrement())
+  treatment  String
+  parent_id  Int?
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now())
+  parent     categories?  @relation("CategoryParent", fields: [parent_id], references: [id])
+  children   categories[] @relation("CategoryParent")
+
   medical_categories medical_categories[]
 }
 
@@ -74,6 +78,6 @@ model medical_categories {
   created_at        DateTime @default(now())
   updated_at        DateTime @default(now())
 
-  medical_record medical_records @relation(fields: [medical_record_id], references: [id], onDelete: Cascade)
-  category       categories      @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  medical_records medical_records @relation(fields: [medical_record_id], references: [id], onDelete: Cascade)
+  categories      categories      @relation(fields: [category_id], references: [id], onDelete: Cascade)
 }
