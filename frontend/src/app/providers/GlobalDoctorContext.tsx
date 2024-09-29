@@ -4,22 +4,22 @@ import useSWR, { useSWRConfig } from "swr";
 
 import { CategoriesType } from "@/../../common/types/CategoriesType";
 
-export type CategoriesContextType = {
+export type GlobalDoctorContextType = {
   categories: CategoriesType[] | null;
   categoriesIsLoading: boolean;
   categoriesError: boolean;
   categoriesDoMutate: () => void;
 };
 
-export const CategoriesContent = createContext<CategoriesContextType>(
-  {} as CategoriesContextType
+export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
+  {} as GlobalDoctorContextType
 );
 
 async function fetcher(key: string): Promise<[CategoriesType]> {
   return fetch(key).then((res) => res.json());
 }
 
-const CategoriesProvider = (props: { children: ReactNode }) => {
+const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
   const fetchUrl = `${API_URL}/doctor/categories`;
   const [categories, setCategories] = useState<CategoriesType[] | null>([]);
@@ -38,7 +38,7 @@ const CategoriesProvider = (props: { children: ReactNode }) => {
     mutate(fetchUrl);
   };
   return (
-    <CategoriesContent.Provider
+    <GlobalDoctorContext.Provider
       value={{
         categories,
         categoriesIsLoading,
@@ -47,8 +47,8 @@ const CategoriesProvider = (props: { children: ReactNode }) => {
       }}
     >
       {children}
-    </CategoriesContent.Provider>
+    </GlobalDoctorContext.Provider>
   );
 };
 
-export default CategoriesProvider;
+export default GlobalDoctorProvider;
