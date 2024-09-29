@@ -7,7 +7,7 @@ import { useDisclosure } from "@mantine/hooks";
 import style from "./layout.module.scss";
 import useDoctorLogout from "@/app/hooks/useDoctorLogout";
 import React, { FC, ReactNode } from "react";
-import CategoriesProvider from "@/app/providers/CategoriesProvider";
+import GlobalDoctorProvider from "@/app/providers/GlobalDoctorContext";
 
 type Props = {
   children: ReactNode;
@@ -18,7 +18,7 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
   const [opened, { toggle }] = useDisclosure();
   const { handleClickLogout } = useDoctorLogout();
   return (
-    <CategoriesProvider>
+    <GlobalDoctorProvider>
       <AppShell
         className={style.body}
         header={{ height: 60 }}
@@ -43,7 +43,7 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
 
         <AppShell.Main>{children}</AppShell.Main>
       </AppShell>
-    </CategoriesProvider>
+    </GlobalDoctorProvider>
   );
 });
 
