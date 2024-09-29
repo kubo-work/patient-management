@@ -1,4 +1,5 @@
-export type CategoriesType = {
-    id: number;
-    treatment: string,
+import { BasicCategoriesType } from "./BasicCategoriesType";
+
+export type CategoriesType = BasicCategoriesType & {
+    children: BasicCategoriesType[];
 }

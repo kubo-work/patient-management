@@ -1,7 +1,7 @@
-import { CategoriesType } from "./CategoriesType";
+import { BasicCategoriesType } from "./BasicCategoriesType";
 
 type MedicalCategoriesType = {
-    categories: Pick<CategoriesType, "treatment">;
+    categories: Pick<BasicCategoriesType, "treatment">;
 }
 
 export type MedicalRecordsType = {
