@@ -3,47 +3,118 @@ import { API_URL } from "../../../constants/url";
 import useSWR, { useSWRConfig } from "swr";
 
 import { CategoriesType } from "@/../../common/types/CategoriesType";
+import { DoctorType } from "@/../../common/types/DoctorType";
+import { PatientType } from "../../../../common/types/PatientType";
 
 export type GlobalDoctorContextType = {
+  loginDoctor: DoctorType | null;
+  loginDoMutate: () => void;
   categories: CategoriesType[] | null;
-  categoriesIsLoading: boolean;
-  categoriesError: boolean;
   categoriesDoMutate: () => void;
+  doctors: DoctorType[] | null;
+  doctorsDoMutate: () => void;
+  patients: PatientType[] | null;
+  patientsMutate: () => void;
 };
 
 export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-async function fetcher(key: string): Promise<[CategoriesType]> {
+async function loginDoctorFetcher(key: string): Promise<DoctorType> {
+  return fetch(key, {
+    method: "GET",
+    credentials: "include", // クッキーを送信するために必要
+  }).then((res) => res.json());
+}
+
+async function categoriesFetcher(key: string): Promise<CategoriesType[]> {
+  return fetch(key).then((res) => res.json());
+}
+
+async function doctorsFetcher(key: string): Promise<DoctorType[]> {
+  return fetch(key).then((res) => res.json());
+}
+
+async function patientsFetcher(key: string): Promise<PatientType[]> {
   return fetch(key).then((res) => res.json());
 }
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
-  const fetchUrl = `${API_URL}/doctor/categories`;
+  const loginDoctorFetchUrl = `${API_URL}/doctor/login_doctor`;
+  const categoriesFetchUrl = `${API_URL}/doctor/categories`;
+  const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
+  const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
+
+  // ログインしている医者データのステート管理
+  const [loginDoctor, setLoginDoctor] = useState<DoctorType | null>(null);
+  // カテゴリ一覧データのステート管理
   const [categories, setCategories] = useState<CategoriesType[] | null>([]);
-  const {
-    data,
-    isLoading: categoriesIsLoading,
-    error: categoriesError,
-  } = useSWR(fetchUrl, fetcher);
+  // 医者一覧データのステート管理
+  const [doctors, setDoctors] = useState<DoctorType[] | null>([]);
+  // 患者一覧データのステート管理
+  const [patients, setPatients] = useState<PatientType[] | null>([]);
+
+  const { data: loginDoctorData } = useSWR(
+    loginDoctorFetchUrl,
+    loginDoctorFetcher
+  );
+
+  const { data: categoriesData } = useSWR(
+    categoriesFetchUrl,
+    categoriesFetcher
+  );
+
+  const { data: doctorsData } = useSWR(doctorsFetchUrl, doctorsFetcher);
+
+  const { data: patientsData } = useSWR(patientsFetchUrl, patientsFetcher);
+
   useEffect(() => {
-    data && setCategories(data);
-  }, [data, setCategories]);
+    loginDoctorData && setLoginDoctor(loginDoctorData);
+  }, [loginDoctorData, setLoginDoctor]);
+
+  useEffect(() => {
+    categoriesData && setCategories(categoriesData);
+  }, [categoriesData, setCategories]);
+
+  useEffect(() => {
+    doctorsData && setDoctors(doctorsData);
+  }, [doctorsData, setDoctors]);
+
+  useEffect(() => {
+    patientsData && setPatients(patientsData);
+  }, [patientsData, setPatients]);
 
   const { mutate } = useSWRConfig();
 
-  const categoriesDoMutate = () => {
-    mutate(fetchUrl);
+  const loginDoMutate = () => {
+    mutate(loginDoctorFetchUrl);
   };
+
+  const categoriesDoMutate = () => {
+    mutate(categoriesFetchUrl);
+  };
+
+  const doctorsDoMutate = () => {
+    mutate(doctorsFetchUrl);
+  };
+
+  const patientsMutate = () => {
+    mutate(patientsFetchUrl);
+  };
+
   return (
     <GlobalDoctorContext.Provider
       value={{
+        loginDoctor,
+        loginDoMutate,
         categories,
-        categoriesIsLoading,
-        categoriesError,
         categoriesDoMutate,
+        doctors,
+        doctorsDoMutate,
+        patients,
+        patientsMutate,
       }}
     >
       {children}
