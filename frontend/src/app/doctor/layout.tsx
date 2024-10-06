@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import DoctorDashboardLayout from "../features/doctor/layout/DoctorDashboardLayout";
+import GlobalDoctorProvider from "../providers/GlobalDoctorContext";
 
 export default function Layout({
   children,
@@ -11,6 +12,10 @@ export default function Layout({
   if ("/doctor/login" === pathname) {
     return <>{children}</>;
   } else {
-    return <DoctorDashboardLayout>{children}</DoctorDashboardLayout>;
+    return (
+      <GlobalDoctorProvider>
+        <DoctorDashboardLayout>{children}</DoctorDashboardLayout>
+      </GlobalDoctorProvider>
+    );
   }
 }
