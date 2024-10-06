@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import Link from "next/link";
 import { Button, Title } from "@mantine/core";
-import { usePatientsList } from "@/app/hooks/usePatientsList";
 import { PatientType } from "@/../../common/types/PatientType";
 import { sexList } from "../../../../constants/sexList";
+import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
 
 const Page = () => {
-  const { data, patients, setPatients } = usePatientsList();
-
-  useEffect(() => {
-    data && setPatients(data);
-  }, [data, setPatients]);
+  const { patients } = useGlobalDoctor();
 
   const columns = useMemo<MRT_ColumnDef<PatientType>[]>(
     () => [
