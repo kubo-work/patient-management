@@ -61,9 +61,18 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             form.setValues({
                 id: data.id.toString(),
                 categories: getCategories,
-                doctor_id: loginDoctor?.id.toString(),
+                doctor_id: data?.doctor_id.toString(),
                 medical_memo: data.medical_memo,
                 doctor_memo: data.doctor_memo
+            })
+        } else {
+            form.setValues({
+                id: "",
+                name,
+                doctor_id: loginDoctor?.id.toString(),
+                categories: [],
+                medical_memo: "",
+                doctor_memo: ""
             })
         }
     }, [data])
@@ -79,7 +88,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             method,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                id: Number(id),
+                id: id ? Number(id) : 0,
                 doctor_id: Number(doctor_id),
                 patient_id,
                 medical_memo,

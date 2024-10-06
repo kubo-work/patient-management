@@ -180,6 +180,7 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
                 examination_at: true,
                 medical_memo: true,
                 doctor_memo: true,
+                doctor_id: true,
                 medical_categories: {
                     select: {
                         categories: {
@@ -193,13 +194,17 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
             },
             where: {
                 patient_id
+            },
+            orderBy: {
+                id: "desc"
             }
         });
         const allMedicalRecords: MedicalRecordsType[] = resultAllMedicalRecords.map((result) => {
-            const { id, patient_id, examination_at, medical_memo, doctor_memo, medical_categories } = result;
+            const { id, patient_id, doctor_id, examination_at, medical_memo, doctor_memo, medical_categories } = result;
             return {
                 id,
                 patient_id,
+                doctor_id,
                 examination_at,
                 medical_memo,
                 doctor_memo,
@@ -240,7 +245,7 @@ type PutMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & { categori
 
 app.put("/doctor/medical_records", async (req: Request, res: Response) => {
     try {
-        const { id, patient_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = req.body;
+        const { id, patient_id, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = req.body;
         const updated_at: Date = new Date();
         const medicalRecordId: number = Number(id);
         const categoryNumbers: number[] = categories.map((category) => Number(category))
@@ -249,6 +254,7 @@ app.put("/doctor/medical_records", async (req: Request, res: Response) => {
                 where: { id: medicalRecordId },
                 data: {
                     patient_id,
+                    doctor_id,
                     medical_memo,
                     doctor_memo,
                     updated_at
@@ -306,12 +312,11 @@ type PostMedicalRecordsType = PutMedicalRecordsType & { doctor_id: string };
 app.post("/doctor/medical_records", async (req: Request, res: Response) => {
     try {
         const { patient_id, doctor_id, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = req.body;
-        const postDoctorId = Number(doctor_id);
         const examination_at = new Date();
         const result = await prisma.$transaction(async (prisma) => {
             const newMedicalRecord = await prisma.medical_records.create({
                 data: {
-                    doctor_id: postDoctorId,
+                    doctor_id,
                     patient_id,
                     medical_memo,
                     doctor_memo,
@@ -321,13 +326,13 @@ app.post("/doctor/medical_records", async (req: Request, res: Response) => {
 
             const medicalRecordId = newMedicalRecord.id;
             if (categories.length) {
+                console.log(categories)
                 const postMedicalCategoriesData = categories.map((category) => (
                     {
                         medical_record_id: medicalRecordId,
                         category_id: Number(category)
                     }
                 ))
-
                 await prisma.medical_categories.createMany({
                     data: postMedicalCategoriesData
                 });

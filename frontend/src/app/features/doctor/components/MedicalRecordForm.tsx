@@ -97,7 +97,7 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 form.setFieldValue("doctor_memo", e.currentTarget.value)
               }
             />
-            <Button type="submit">{getName ? "更新" : "作成"}</Button>
+            <Button type="submit">{data === null ? "保存" : "更新"}</Button>
           </Flex>
         </Flex>
       </form>
