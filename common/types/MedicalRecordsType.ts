@@ -1,12 +1,10 @@
 import { BasicCategoriesType } from "./BasicCategoriesType";
 
-type MedicalCategoriesType = {
-    categories: Pick<BasicCategoriesType, "treatment">;
-}
-
 export type MedicalRecordsType = {
     id: number;
     patient_id: number;
+    medical_memo: string;
+    doctor_memo: string;
     examination_at: Date;
-    medical_categories: MedicalCategoriesType[]
+    categories: BasicCategoriesType[]
 }
