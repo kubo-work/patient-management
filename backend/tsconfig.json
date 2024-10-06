@@ -20,5 +20,5 @@
     "**/*.mts",
     "../common/**/*.ts"  // common フォルダ内の TypeScript ファイルを含める
   ],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules","build"],
 }
