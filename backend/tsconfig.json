@@ -1,16 +1,24 @@
 {
   "compilerOptions": {
-      "outDir": "src",
-      "target": "es2016", 
-      "module": "NodeNext",
+      "outDir": "build",
+      "target": "ES2021", 
       "esModuleInterop": true,
+      "moduleResolution": "node",
       "skipLibCheck": true,
+      "declaration": true,
+      "baseUrl": "./", // 基本となるディレクトリ
+      "paths": {
+        "@/*": ["src/*"], // srcディレクトリをエイリアスとして設定
+        "@common/*": ["../common/*"] // エイリアスの設定
+      }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "**/*.cjs",
     "**/*.mjs",
+    "**/*.mts",
+    "../common/**/*.ts"  // common フォルダ内の TypeScript ファイルを含める
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }
