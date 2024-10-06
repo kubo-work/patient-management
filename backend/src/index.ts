@@ -1,4 +1,5 @@
 import express from "express";
+import session from 'express-session';
 import type { Express, NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client"
 import cors from "cors";
@@ -7,7 +8,7 @@ import { PatientType } from "../../common/types/PatientType";
 import { MedicalRecordsType } from "../../common/types/MedicalRecordsType";
 import { BasicCategoriesType } from "../../common/types/BasicCategoriesType";
 import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCategoryType";
-
+import { v4 as uuidv4 } from 'uuid';
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
@@ -16,11 +17,8 @@ declare module 'express-session' {
     }
 }
 
-const { v4: uuidv4 } = require('uuid');  // uuidライブラリからv4 UUIDを使う
-
 const app: Express = express();
 const PORT: number = 8080;
-const session = require('express-session');
 const sessionName = "doctor-management";
 
 const ACCESS_CLIENT_URL: string = process.env.CLIENT_URL;
