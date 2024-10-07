@@ -9,7 +9,7 @@ export const theme = createTheme({
     colors: {
         brand: [
             '#fce1a1', '#fbd18a', '#fbc074', '#fabf5d', '#f3b000',
-            '#dc9e00', '#c68d00', '#af7b00', '#996a00',
+            '#dc9e00', '#c68d00', '#af7b00', '#996a00', '996a00'
         ],
     },
 });
