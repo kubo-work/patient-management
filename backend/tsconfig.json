@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
       "outDir": "build",
-      "target": "ES2021", 
+      "module": "ESNext", // ESモジュールを使用する場合
+      "target": "ES2021", // ターゲットのバージョン
       "esModuleInterop": true,
       "moduleResolution": "node",
       "skipLibCheck": true,
@@ -12,13 +13,10 @@
         "@common/*": ["../common/*"] // エイリアスの設定
       }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.cjs",
-    "**/*.mjs",
-    "**/*.mts",
-    "../common/**/*.ts"  // common フォルダ内の TypeScript ファイルを含める
-  ],
+ "include": [
+    "src/**/*.ts", // src内のすべてのtsファイル
+    "src/**/*.tsx", // src内のすべてのtsxファイル
+    "../common/**/*.ts" // commonフォルダ内のTypeScriptファイルを含める
+],
   "exclude": ["node_modules","build"],
 }
