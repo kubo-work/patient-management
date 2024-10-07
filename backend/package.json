@@ -4,6 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "tsc",
+    "start": "node build/backend/src/index.js",
     "dev": "nodemon"
   },
   "keywords": [],
