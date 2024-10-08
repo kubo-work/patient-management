@@ -324,7 +324,6 @@ app.post("/doctor/medical_records", async (req: Request, res: Response) => {
 
             const medicalRecordId = newMedicalRecord.id;
             if (categories.length) {
-                console.log(categories)
                 const postMedicalCategoriesData = categories.map((category) => (
                     {
                         medical_record_id: medicalRecordId,
