@@ -1,7 +1,7 @@
 import express from "express";
 import session from 'express-session';
 import type { Express, NextFunction, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client"
+import { delFlag, PrismaClient } from "@prisma/client"
 import cors from "cors";
 import { DoctorType } from "../../common/types/DoctorType";
 import { PatientType } from "../../common/types/PatientType";
@@ -9,6 +9,7 @@ import { MedicalRecordsType } from "../../common/types/MedicalRecordsType";
 import { BasicCategoriesType } from "../../common/types/BasicCategoriesType";
 import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCategoryType";
 import { v4 as uuidv4 } from 'uuid';
+import { DelFlagType } from "@common/types/DelFllagType";
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
@@ -161,7 +162,7 @@ app.get("/doctor/patients", doctorSessionCheck, async (req: Request, res: Respon
     }
 })
 
-type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & {
+type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag"> & {
     medical_categories: {
         categories: BasicCategoriesType;
     }[]
@@ -179,12 +180,13 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
                 medical_memo: true,
                 doctor_memo: true,
                 doctor_id: true,
+                delFlag: true,
                 medical_categories: {
                     select: {
                         categories: {
                             select: {
                                 id: true,
-                                treatment: true
+                                treatment: true,
                             }
                         }
                     }
@@ -192,7 +194,7 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
             },
             where: {
                 AND: [
-                    { patient_id }, { delFlag: "ACTIVE" }
+                    { patient_id }, { delFlag: delFlag.ACTIVE }
                 ]
             },
             orderBy: {
@@ -350,7 +352,7 @@ app.delete("/doctor/medical_records", async (req: Request, res: Response) => {
             const targetId = Number(id);
             await prisma.medical_records.update({
                 data: {
-                    delFlag: "DELETED"
+                    delFlag: delFlag.DELETED
                 },
                 where: {
                     id: targetId
@@ -359,7 +361,7 @@ app.delete("/doctor/medical_records", async (req: Request, res: Response) => {
 
             await prisma.medical_categories.updateMany({
                 data: {
-                    delFlag: "DELETED"
+                    delFlag: delFlag.DELETED
                 },
                 where: {
                     medical_record_id: targetId
