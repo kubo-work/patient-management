@@ -26,6 +26,7 @@ const MedicalRecordForm: FC<Props> = React.memo(
       doctorsData,
       form,
       handleSubmit,
+      handleDelete,
     } = useMedicalRecordForm(name, data);
     return (
       <form
@@ -98,6 +99,14 @@ const MedicalRecordForm: FC<Props> = React.memo(
               }
             />
             <Button type="submit">{data === null ? "保存" : "更新"}</Button>
+            {data && (
+              <Button
+                style={{ background: "red" }}
+                onClick={() => handleDelete(data.id, mutate, modalClosed)}
+              >
+                削除
+              </Button>
+            )}
           </Flex>
         </Flex>
       </form>

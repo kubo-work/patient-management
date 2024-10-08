@@ -89,12 +89,14 @@ const MedicalRecordsContents = React.memo(({ name, patients_id }: Props) => {
         }
         keepMounted
       >
-        <MedicalRecordForm
-          name={name}
-          data={selectedRecord || null}
-          mutate={patientMutate}
-          modalClosed={() => setSelectedRecord(null)}
-        />
+        {(selectedRecord || isNewRecord) && (
+          <MedicalRecordForm
+            name={name}
+            data={selectedRecord || null}
+            mutate={patientMutate}
+            modalClosed={() => setSelectedRecord(null)}
+          />
+        )}
       </Modal>
 
       <Box py={30}>

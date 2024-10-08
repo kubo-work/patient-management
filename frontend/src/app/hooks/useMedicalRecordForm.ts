@@ -53,6 +53,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
     }));
 
     useEffect(() => {
+        console.log(data)
         if (data) {
             const getCategories = data
                 ? data.categories.map((category) => category.id.toString())
@@ -111,28 +112,31 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         }
     }
 
-    const handleDelete = async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
+    const handleDelete = async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
-        const { id } = values;
-        const response = await fetch(`${API_URL}/doctor/medical_records`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                id: Number(id),
-            }),
-        });
-        if (!response.ok) {
-            const errorData = await response.json();  // サーバーからのエラーメッセージを取得
-            setSubmitError(errorData.error);
-            alert(submitError);
-            return;
-        } else {
-            setSubmitError("")
-            alert("データを削除しました。")
-            doMutate()
-            modalClosed();
-            return;
+        const result = window.confirm("削除しますか？");
+        if (result) {
+            const response = await fetch(`${API_URL}/doctor/medical_records`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id,
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();  // サーバーからのエラーメッセージを取得
+                setSubmitError(errorData.error);
+                alert(submitError);
+                return;
+            } else {
+                setSubmitError("")
+                alert("データを削除しました。")
+                doMutate()
+                modalClosed();
+                return;
+            }
         }
+
     }
 
     return { getName, getPatient, loginDoctor, getCategories, patientNameSuggestions, categories, doctorsData, form, handleSubmit, handleDelete }

@@ -191,7 +191,9 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
                 }
             },
             where: {
-                patient_id
+                AND: [
+                    { patient_id }, { delFlag: "ACTIVE" }
+                ]
             },
             orderBy: {
                 id: "desc"
@@ -346,15 +348,21 @@ app.delete("/doctor/medical_records", async (req: Request, res: Response) => {
         const { id } = req.body;
         const result = await prisma.$transaction(async (prisma) => {
             const targetId = Number(id);
-            await prisma.medical_records.delete({
+            await prisma.medical_records.update({
+                data: {
+                    delFlag: "DELETED"
+                },
                 where: {
                     id: targetId
                 }
             });
 
-            await prisma.medical_categories.deleteMany({
+            await prisma.medical_categories.updateMany({
+                data: {
+                    delFlag: "DELETED"
+                },
                 where: {
-                    id: targetId
+                    medical_record_id: targetId
                 }
             });
         })
