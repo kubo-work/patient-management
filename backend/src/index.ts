@@ -180,7 +180,6 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
                 medical_memo: true,
                 doctor_memo: true,
                 doctor_id: true,
-                delFlag: true,
                 medical_categories: {
                     select: {
                         categories: {
