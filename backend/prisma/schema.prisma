@@ -20,6 +20,11 @@ enum Sex {
   neither
 }
 
+enum delFlag {
+  ACTIVE
+  DELETED
+}
+
 model patients {
   id              Int               @id @default(autoincrement())
   name            String
@@ -53,6 +58,7 @@ model medical_records {
   examination_at DateTime @default(now())
   created_at     DateTime @default(now())
   updated_at     DateTime @default(now())
+  delFlag        delFlag  @default(ACTIVE)
 
   patient            patients             @relation(fields: [patient_id], references: [id], onDelete: SetDefault)
   doctor             doctors              @relation(fields: [doctor_id], references: [id], onDelete: SetDefault)
@@ -77,6 +83,7 @@ model medical_categories {
   category_id       Int
   created_at        DateTime @default(now())
   updated_at        DateTime @default(now())
+  delFlag           delFlag  @default(ACTIVE)
 
   medical_records medical_records @relation(fields: [medical_record_id], references: [id], onDelete: Cascade)
   categories      categories      @relation(fields: [category_id], references: [id], onDelete: Cascade)
