@@ -11,6 +11,7 @@ import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCat
 import { v4 as uuidv4 } from 'uuid';
 import { ParsedQs } from 'qs';
 import dayjs from "dayjs";
+import { setHttpOnly } from "../constants/session";
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
@@ -39,7 +40,7 @@ app.use(session({
     name: sessionName,
     cookie: {
         secure: false, // HTTPSを使用
-        httpOnly: true, // XSS攻撃を防ぐ
+        httpOnly: setHttpOnly, // XSS攻撃を防ぐ
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // セッションの有効期限を設定（例: 24時間）
     }
