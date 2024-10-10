@@ -3,7 +3,7 @@ import useMedicalRecords from "@/app/hooks/useMedicalRecords";
 import React, { useMemo } from "react";
 import { MantineReactTable, MRT_ColumnDef } from "mantine-react-table";
 import { MedicalRecordsType } from "../../../../../../common/types/MedicalRecordsType";
-import { Box, Button, Flex, List, ListItem, Modal, Text } from "@mantine/core";
+import { Box, Button, Flex, List, ListItem, Modal } from "@mantine/core";
 import MedicalRecordForm from "../components/MedicalRecordForm";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -25,10 +25,14 @@ const MedicalRecordsContents = React.memo(({ name, patients_id }: Props) => {
     setSelectedRecord,
     isNewRecord,
     setIsNewRecord,
-    modalFormatData,
   } = useMedicalRecords(patients_id);
   const columns = useMemo<MRT_ColumnDef<MedicalRecordsType>[]>(
     () => [
+      {
+        accessorKey: "id",
+        header: "ID",
+        maxSize: 50,
+      },
       {
         accessorKey: "examination_at",
         header: "診察日",
@@ -81,12 +85,7 @@ const MedicalRecordsContents = React.memo(({ name, patients_id }: Props) => {
           setSelectedRecord(null);
           setIsNewRecord(false);
         }} // モーダルを閉じるときはnullに戻す
-        title={
-          <Flex gap="md">
-            <Text>{isNewRecord ? "新しい診察を作成" : "診察編集"}</Text>
-            <Text>診察日: {modalFormatData}</Text>
-          </Flex>
-        }
+        title={isNewRecord ? "新しい診察を作成" : "診察編集"}
         keepMounted
       >
         {(selectedRecord || isNewRecord) && (

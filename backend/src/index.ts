@@ -9,7 +9,8 @@ import { MedicalRecordsType } from "../../common/types/MedicalRecordsType";
 import { BasicCategoriesType } from "../../common/types/BasicCategoriesType";
 import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCategoryType";
 import { v4 as uuidv4 } from 'uuid';
-import { DelFlagType } from "@common/types/DelFllagType";
+import { ParsedQs } from 'qs';
+import dayjs from "dayjs";
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
@@ -168,10 +169,24 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag
     }[]
 }
 
+type MedicalRecordRequestQuery = ParsedQs & {
+    all?: boolean; startDate?: string; endDate?: string;
+}
+
 // 選択した患者の診察履歴一覧を取得する
 app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Response) => {
     try {
         const { patient_id }: { patient_id: number } = req.body;
+        const { all, startDate, endDate } = req.query; // クエリパラメータから日付を取得
+
+        // 現在の日付
+        const now = dayjs();
+        // デフォルトで3ヶ月前の日付を計算
+        const threeMonthsAgo = now.subtract(3, 'month').toISOString();
+
+        // 開始日と終了日を検証
+        const validStartDate = startDate && typeof startDate === "string" ? dayjs(startDate).toISOString() : threeMonthsAgo;
+        const validEndDate = endDate && typeof endDate === "string" ? dayjs(endDate).toISOString() : now.toISOString();
         const resultAllMedicalRecords: ResultMedicalRecordsType[] = await prisma.medical_records.findMany({
             select: {
                 id: true,
@@ -193,7 +208,13 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
             },
             where: {
                 AND: [
-                    { patient_id }, { delFlag: delFlag.ACTIVE }
+                    { patient_id }, { delFlag: delFlag.ACTIVE },
+                    all && typeof all === "boolean" ? {} : {
+                        examination_at: {
+                            gte: validStartDate,
+                            lte: validEndDate,
+                        }
+                    }
                 ]
             },
             orderBy: {
@@ -246,7 +267,7 @@ type PutMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & { categori
 
 app.put("/doctor/medical_records", async (req: Request, res: Response) => {
     try {
-        const { id, patient_id, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = req.body;
+        const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = req.body;
         const updated_at: Date = new Date();
         const medicalRecordId: number = Number(id);
         const categoryNumbers: number[] = categories.map((category) => Number(category))
@@ -258,6 +279,7 @@ app.put("/doctor/medical_records", async (req: Request, res: Response) => {
                     doctor_id,
                     medical_memo,
                     doctor_memo,
+                    examination_at,
                     updated_at
                 },
             });
@@ -312,8 +334,7 @@ type PostMedicalRecordsType = PutMedicalRecordsType & { doctor_id: string };
 
 app.post("/doctor/medical_records", async (req: Request, res: Response) => {
     try {
-        const { patient_id, doctor_id, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = req.body;
-        const examination_at = new Date();
+        const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = req.body;
         const result = await prisma.$transaction(async (prisma) => {
             const newMedicalRecord = await prisma.medical_records.create({
                 data: {
