@@ -8,6 +8,7 @@ type FormValues = {
 }
 
 export const useDoctorLogin = () => {
+    console.log(API_URL)
     const router = useRouter();
     const [loginError, setLoginError] = useState<string>("");
     const handleLogin = async (values: FormValues) => {
