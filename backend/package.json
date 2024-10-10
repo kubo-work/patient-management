@@ -24,6 +24,7 @@
     "@types/express-session": "^1.18.0",
     "@types/node": "^22.5.5",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "express-session": "^1.18.0",
     "nodemon": "^3.1.6",
