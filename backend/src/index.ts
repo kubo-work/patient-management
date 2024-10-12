@@ -63,6 +63,7 @@ app.use(session({
     saveUninitialized: false,
     name: sessionName,
     cookie: {
+        domain: process.env.DATABASE_URL,
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
         httpOnly: false, // XSS攻撃を防ぐ
         sameSite: 'lax',
