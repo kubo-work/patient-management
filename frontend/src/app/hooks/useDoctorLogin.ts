@@ -33,3 +33,7 @@ export const useDoctorLogin = () => {
     }
     return { handleLogin, loginError }
 }
+
+export const config = {
+    matcher: ['/doctor/:path*'],
+};
