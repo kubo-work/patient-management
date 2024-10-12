@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
     // クッキーからセッション情報を取得
-    console.log(req)
+    if (
+        req.nextUrl.pathname.startsWith('/_next/') || // Next.jsの静的ファイル
+        req.nextUrl.pathname.startsWith('/favicon.ico') // favicon.ico
+    ) {
+        return NextResponse.next();
+    }
     if (req.nextUrl.pathname.startsWith("/doctor")) {
         const session = req.cookies.get("doctor-management");
         if (req.nextUrl.pathname !== "/doctor/login") {
