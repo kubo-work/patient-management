@@ -38,7 +38,8 @@ app.use(express.json())
 app.use(cors({
     origin: ACCESS_CLIENT_URL,
     optionsSuccessStatus: 200,
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type']
 }))
 
 app.set('trust proxy', 1) // trust first proxy
