@@ -14,6 +14,7 @@ type FormValues = {
     name: string;
     doctor_id: string;
     categories: string[];
+    examination_at: Date;
     medical_memo: string;
     doctor_memo: string;
 }
@@ -21,6 +22,7 @@ type FormValues = {
 const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => {
     const { patients, loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
+    const [inputDateTime, setInputDateTime] = useState<Date | null>(new Date());
     // 患者の名前をサジェストするためのリストを準備
     const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
         return patients ? patients.map(patient => ({
@@ -43,8 +45,14 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             doctor_id: "",
             categories: [""],
             medical_memo: "",
-            doctor_memo: ""
-        }
+            doctor_memo: "",
+            examination_at: new Date()
+        },
+        validate: {
+            name: (value) => value ? null : "選択してください。",
+            doctor_id: (value) => value ? null : "選択してください。",
+            categories: (value) => value.length > 0 ? null : "少なくとも1つのカテゴリを選択してください",
+        },
     })
 
     const doctorsData = doctors?.map((doctor) => ({
@@ -57,14 +65,15 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             const getCategories = data
                 ? data.categories.map((category) => category.id.toString())
                 : [];
-
             form.setValues({
                 id: data.id.toString(),
                 categories: getCategories,
                 doctor_id: data?.doctor_id.toString(),
                 medical_memo: data.medical_memo,
-                doctor_memo: data.doctor_memo
+                doctor_memo: data.doctor_memo,
+                examination_at: new Date(data.examination_at)
             })
+            setInputDateTime(new Date(data.examination_at))
         } else {
             form.setValues({
                 id: "",
@@ -72,14 +81,17 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 doctor_id: loginDoctor?.id.toString(),
                 categories: [],
                 medical_memo: "",
-                doctor_memo: ""
+                doctor_memo: "",
+                examination_at: new Date()
             })
+            setInputDateTime(new Date())
         }
     }, [data])
 
 
     const handleSubmit = async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
+
         const { id, name, doctor_id, medical_memo, doctor_memo, categories } = values;
         const patientData = patients?.find((patient) => patient.name === name);
         const patient_id = patientData ? Number(patientData.id) : 0;
@@ -93,6 +105,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 patient_id,
                 medical_memo,
                 doctor_memo,
+                examination_at: inputDateTime,
                 categories
             }),
         });
@@ -111,31 +124,34 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         }
     }
 
-    const handleDelete = async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
+    const handleDelete = async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
-        const { id } = values;
-        const response = await fetch(`${API_URL}/doctor/medical_records`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                id: Number(id),
-            }),
-        });
-        if (!response.ok) {
-            const errorData = await response.json();  // サーバーからのエラーメッセージを取得
-            setSubmitError(errorData.error);
-            alert(submitError);
-            return;
-        } else {
-            setSubmitError("")
-            alert("データを削除しました。")
-            doMutate()
-            modalClosed();
-            return;
+        const result = window.confirm("削除しますか？");
+        if (result) {
+            const response = await fetch(`${API_URL}/doctor/medical_records`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id,
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();  // サーバーからのエラーメッセージを取得
+                setSubmitError(errorData.error);
+                alert(submitError);
+                return;
+            } else {
+                setSubmitError("")
+                alert("データを削除しました。")
+                doMutate()
+                modalClosed();
+                return;
+            }
         }
+
     }
 
-    return { getName, getPatient, loginDoctor, getCategories, patientNameSuggestions, categories, doctorsData, form, handleSubmit, handleDelete }
+    return { getName, getPatient, loginDoctor, getCategories, patientNameSuggestions, categories, doctorsData, form, handleSubmit, handleDelete, submitError, inputDateTime, setInputDateTime }
 }
 
 export default useMedicalRecordForm
