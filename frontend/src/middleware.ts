@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
     // クッキーからセッション情報を取得
     if (
         req.nextUrl.pathname.startsWith('/_next/') || // Next.jsの静的ファイル
@@ -16,5 +16,6 @@ export function middleware(req: NextRequest) {
             }
         }
     }
+    console.log('Middleware completed for:', req.nextUrl.pathname);
     return NextResponse.next();
 }
