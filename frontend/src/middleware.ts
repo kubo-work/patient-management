@@ -8,9 +8,8 @@ export function middleware(req: NextRequest) {
         if (req.nextUrl.pathname !== "/doctor/login") {
             if (!session) {
                 return NextResponse.redirect(new URL('/doctor/login', req.url));
-            } else {
-                return NextResponse.next();
             }
         }
     }
+    return NextResponse.next();
 }
