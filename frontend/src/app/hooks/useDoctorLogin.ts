@@ -28,7 +28,7 @@ export const useDoctorLogin = () => {
             setLoginError(errorData.error);
             return;
         } else {
-            router.push('/doctor/dashboard');  // ダッシュボードページに遷移
+            await router.push('/doctor/dashboard');  // ダッシュボードページに遷移
         }
     }
     return { handleLogin, loginError }
