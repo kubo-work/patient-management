@@ -54,7 +54,7 @@ app.use(session({
     name: sessionName,
     cookie: {
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-        httpOnly: true, // XSS攻撃を防ぐ
+        httpOnly: false, // XSS攻撃を防ぐ
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000, // セッションの有効期限を設定（例: 24時間）
         path: "/doctor" // "/doctor"以下のリクエストでのみクッキーを送信

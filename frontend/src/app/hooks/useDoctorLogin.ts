@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { API_URL } from "../../../constants/url";
 import { useState } from "react";
 
@@ -7,6 +8,7 @@ type FormValues = {
 }
 
 export const useDoctorLogin = () => {
+    const router = useRouter();
     const [loginError, setLoginError] = useState<string>("");
     const handleLogin = async (values: FormValues) => {
         setLoginError("")
@@ -26,8 +28,7 @@ export const useDoctorLogin = () => {
             setLoginError(errorData.error);
             return;
         } else {
-            const data = await response.json()
-            return data
+            router.push('/doctor/dashboard');  // ダッシュボードページに遷移
         }
     }
     return { handleLogin, loginError }
