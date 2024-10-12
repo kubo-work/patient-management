@@ -9,6 +9,8 @@ import { MedicalRecordsType } from "../../common/types/MedicalRecordsType";
 import { BasicCategoriesType } from "../../common/types/BasicCategoriesType";
 import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCategoryType";
 import { v4 as uuidv4 } from 'uuid';
+import pkg from 'pg';
+import PgSession from 'connect-pg-simple';
 import { ParsedQs } from 'qs';
 import dayjs from "dayjs";
 
@@ -19,6 +21,13 @@ declare module 'express-session' {
         userId?: number
     }
 }
+
+const { Pool } = pkg;
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+})
+
+const PgSessionStore = PgSession(session)
 
 const app: Express = express();
 const PORT: number = 8080;
@@ -34,6 +43,11 @@ app.use(cors({
 
 app.set('trust proxy', 1) // trust first proxy
 app.use(session({
+    store: new PgSessionStore({
+        pool,
+        tableName: "session",
+        createTableIfMissing: true
+    }),
     secret: process.env.DOCTOR_SESSION_SECRET_KEY,
     resave: false,
     saveUninitialized: false,
