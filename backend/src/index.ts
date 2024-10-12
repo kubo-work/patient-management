@@ -41,9 +41,6 @@ app.use(cors({
     credentials: true
 }))
 
-console.log(process.env.DOCTOR_SESSION_SECURE)
-console.log(typeof process.env.DOCTOR_SESSION_SECURE)
-
 app.set('trust proxy', 1) // trust first proxy
 app.use(session({
     store: new PgSessionStore({
