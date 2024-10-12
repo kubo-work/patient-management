@@ -41,6 +41,7 @@ app.use(cors({
     credentials: true,
     allowedHeaders: [
         'Content-Type',
+        'Cache-Control',
         'Authorization',
         'Accept',
         'X-Requested-With',

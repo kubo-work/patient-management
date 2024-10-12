@@ -15,7 +15,10 @@ export const useDoctorLogin = () => {
         const { email, password } = values;
         const response = await fetch(`${API_URL}/doctor/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-store" // キャッシュを無効にする
+            },
             body: JSON.stringify({
                 email,
                 password
