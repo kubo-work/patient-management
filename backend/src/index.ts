@@ -39,7 +39,13 @@ app.use(cors({
     origin: ACCESS_CLIENT_URL,
     optionsSuccessStatus: 200,
     credentials: true,
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Accept',
+        'X-Requested-With',
+        'Cookie'  // ここにCookieを追加
+    ]
 }))
 
 app.set('trust proxy', 1) // trust first proxy
@@ -122,6 +128,14 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
         return res.status(400).json(e);
     }
 })
+
+app.get('/doctor/session', (req, res) => {
+    if (req.session.userId) {
+        res.status(200).json({ userId: req.session.userId });
+    } else {
+        res.status(401).json({ error: 'セッションが存在しません' });
+    }
+});
 
 // doctor ログアウト
 app.post("/doctor/logout", async (req: Request, res: Response) => {
