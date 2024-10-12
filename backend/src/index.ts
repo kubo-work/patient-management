@@ -48,6 +48,9 @@ app.use(cors({
     ]
 }))
 
+// プリフライトリクエストの処理
+app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
+
 app.set('trust proxy', 1) // trust first proxy
 app.use(session({
     store: new PgSessionStore({
