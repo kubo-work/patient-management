@@ -86,7 +86,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             })
             setInputDateTime(new Date())
         }
-    }, [data])
+    }, [form, loginDoctor, name, data])
 
 
     const handleSubmit = async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
