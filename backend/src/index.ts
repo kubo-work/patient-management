@@ -122,6 +122,14 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
     }
 })
 
+app.get('/doctor/session', (req, res) => {
+    if (req.session.userId) {
+        res.status(200).json({ userId: req.session.userId });
+    } else {
+        res.status(401).json({ error: 'セッションが存在しません' });
+    }
+});
+
 // doctor ログアウト
 app.post("/doctor/logout", async (req: Request, res: Response) => {
     req.session.destroy((err) => {
