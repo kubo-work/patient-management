@@ -22,3 +22,7 @@ export async function middleware(req: NextRequest) {
     console.log('Middleware completed for:', req.nextUrl.pathname);
     return NextResponse.next();
 }
+
+export const config = {
+    matcher: ['/doctor/:path*'],
+};
