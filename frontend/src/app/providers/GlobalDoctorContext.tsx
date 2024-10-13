@@ -5,6 +5,8 @@ import useSWR, { useSWRConfig } from "swr";
 import { CategoriesType } from "@/../../common/types/CategoriesType";
 import { DoctorType } from "@/../../common/types/DoctorType";
 import { PatientType } from "../../../../common/types/PatientType";
+import { doctorCookieKeyName } from "../../../constants/cookieKey";
+import { CookieValueTypes, getCookie } from "cookies-next";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | null;
@@ -21,10 +23,17 @@ export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-async function loginDoctorFetcher(key: string): Promise<DoctorType> {
-  return fetch(key, {
+async function loginDoctorFetcher(
+  key: [string, { sid: CookieValueTypes }]
+): Promise<DoctorType> {
+  return fetch(key[0], {
     method: "GET",
     credentials: "include", // クッキーを送信するために必要
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key[1].sid}`,
+      // 他のヘッダーを必要に応じて追加
+    },
   }).then((res) => res.json());
 }
 
@@ -46,8 +55,12 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
+  const sid: CookieValueTypes = getCookie(doctorCookieKeyName);
+  const loginDoctorAdditionalParam: { sid: CookieValueTypes } = {
+    sid,
+  };
 
-  // ログインしている医者データのステート管理
+  // ログインしている医者 データのステート管理
   const [loginDoctor, setLoginDoctor] = useState<DoctorType | null>(null);
   // カテゴリ一覧データのステート管理
   const [categories, setCategories] = useState<CategoriesType[] | null>([]);
@@ -57,7 +70,7 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const [patients, setPatients] = useState<PatientType[] | null>([]);
 
   const { data: loginDoctorData } = useSWR(
-    loginDoctorFetchUrl,
+    [loginDoctorFetchUrl, loginDoctorAdditionalParam],
     loginDoctorFetcher
   );
 
