@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
@@ -16,6 +17,8 @@ export async function middleware(req: NextRequest) {
             }
         }
     }
+    const cookeStore = cookies();
+    console.log(cookeStore)
     console.log('Middleware completed for:', req.nextUrl.pathname);
     return NextResponse.next();
 }
