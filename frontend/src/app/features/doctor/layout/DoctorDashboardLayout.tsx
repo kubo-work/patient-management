@@ -8,6 +8,7 @@ import style from "./layout.module.scss";
 import useDoctorLogout from "@/app/hooks/useDoctorLogout";
 import React, { FC, ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type Props = {
   children: ReactNode;
@@ -15,6 +16,7 @@ type Props = {
 
 const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
   const { children } = props;
+  const pathname = usePathname();
   const [opened, { toggle }] = useDisclosure();
   const { handleClickLogout } = useDoctorLogout();
   return (
@@ -35,7 +37,14 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
 
       <AppShell.Navbar className={style.nav}>
         <Link href={`/doctor/patients-list`} passHref legacyBehavior>
-          <Button component="a">患者一覧</Button>
+          <Button
+            component="a"
+            className={
+              pathname === `/doctor/patients-list` ? style.current : ""
+            }
+          >
+            患者一覧
+          </Button>
         </Link>
 
         <Button onClick={handleClickLogout}>ログアウト</Button>
