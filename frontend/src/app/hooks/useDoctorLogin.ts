@@ -1,6 +1,9 @@
 import { useRouter } from "next/navigation";
 import { API_URL } from "../../../constants/url";
 import { useState } from "react";
+import { doctorCookieKeyName } from "../../../constants/cookieKey";
+import { setCookie } from "cookies-next";
+import { doctorCookieOptions } from "../../../constants/cookieOption";
 
 type FormValues = {
     email: string;
@@ -30,7 +33,8 @@ export const useDoctorLogin = () => {
             setLoginError(errorData.error);
             return;
         } else {
-            console.log(response)
+            const data = await response.json()
+            setCookie(doctorCookieKeyName, data.sessionId, doctorCookieOptions);
             router.push('/doctor/dashboard');  // ダッシュボードページに遷移
         }
     }

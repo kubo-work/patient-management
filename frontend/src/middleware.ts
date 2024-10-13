@@ -1,28 +1,20 @@
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { doctorCookieKeyName } from "../constants/cookieKey";
+import { getCookie } from "cookies-next";
 
-export async function middleware(req: NextRequest) {
-    // クッキーからセッション情報を取得
-    if (
-        req.nextUrl.pathname.startsWith('/_next/') || // Next.jsの静的ファイル
-        req.nextUrl.pathname.startsWith('/favicon.ico') // favicon.ico
-    ) {
-        return NextResponse.next();
-    }
+export function middleware(req: NextRequest) {
     if (req.nextUrl.pathname.startsWith("/doctor")) {
-        const session = req.cookies.get("doctor-management");
+        const cookie = getCookie(doctorCookieKeyName, { req })
         if (req.nextUrl.pathname !== "/doctor/login") {
-            if (!session) {
+            if (!cookie) {
                 return NextResponse.redirect(new URL('/doctor/login', req.url));
+            }
+        } else {
+            if (cookie) {
+                return NextResponse.redirect(new URL('/doctor/dashboard', req.url));
             }
         }
     }
-    const cookeStore = cookies();
-    console.log(cookeStore)
-    console.log('Middleware completed for:', req.nextUrl.pathname);
     return NextResponse.next();
 }
 
-export const config = {
-    matcher: ['/doctor/:path*'],
-};

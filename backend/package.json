@@ -31,7 +31,6 @@
     "express-session": "^1.18.0",
     "nodemon": "^3.1.6",
     "pg": "^8.13.0",
-    "typescript": "^5.6.2",
-    "uuid": "^10.0.0"
+    "typescript": "^5.6.2"
   }
 }

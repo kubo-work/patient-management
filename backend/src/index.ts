@@ -8,10 +8,8 @@ import { PatientType } from "../../common/types/PatientType";
 import { MedicalRecordsType } from "../../common/types/MedicalRecordsType";
 import { BasicCategoriesType } from "../../common/types/BasicCategoriesType";
 import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCategoryType";
-import { v4 as uuidv4 } from 'uuid';
 import pkg from 'pg';
 import PgSession from 'connect-pg-simple';
-import { ParsedQs } from 'qs';
 import dayjs from "dayjs";
 
 // SessionDataに独自の型を生やす
@@ -68,7 +66,7 @@ app.use(session({
         httpOnly: false, // XSS攻撃を防ぐ
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000, // セッションの有効期限を設定（例: 24時間）
-        path: "/doctor" // "/doctor"以下のリクエストでのみクッキーを送信
+        path: "/doctor"
     }
 }))
 
@@ -83,19 +81,20 @@ const doctorSessionCheck = (req: Request, res: Response, next: NextFunction) => 
 const prisma = new PrismaClient();
 
 // 患者のデータ取得
-app.get("/patients/:patient_id", doctorSessionCheck, async (req: Request, res: Response) => {
-    try {
-        const { patient_id }: { patient_id: number } = req.body;
-        const patient: PatientType = await prisma.patients.findFirst({
-            where: {
-                id: patient_id
-            }
-        });
-        return res.json(patient)
-    } catch (e) {
-        return res.status(400).json({ error: "データの取得に失敗しました。" })
-    }
-})
+app.get("/patients/:patient_id"
+    , async (req: Request, res: Response) => {
+        try {
+            const { patient_id }: { patient_id: number } = req.body;
+            const patient: PatientType = await prisma.patients.findFirst({
+                where: {
+                    id: patient_id
+                }
+            });
+            return res.json(patient)
+        } catch (e) {
+            return res.status(400).json({ error: "データの取得に失敗しました。" })
+        }
+    })
 
 // doctor 管理画面ログイン
 app.post("/doctor/login", async (req: Request, res: Response) => {
@@ -120,29 +119,29 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
             return res.status(401).json({ error: "無効なメールアドレスまたはパスワードです。" });
         }
 
-        const sessionUUID = uuidv4();
-        req.session.sessionId = sessionUUID;  // UUIDをセッションIDとして保存
+        const sid = req.sessionID;
+        req.session.sessionId = sid;  // UUIDをセッションIDとして保存
         req.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
+        req.session.cookie.httpOnly = true;
         return res.json({
             message: "ログインに成功しました。",
-            sessionId: sessionUUID,
             userId: req.session.userId,
+            sessionId: sid
         });
     } catch (e) {
         return res.status(400).json(e);
     }
 })
 
-app.get('/doctor/session', (req, res) => {
-    if (req.session.userId) {
-        res.status(200).json({ userId: req.session.userId });
-    } else {
-        res.status(401).json({ error: 'セッションが存在しません' });
-    }
-});
 
 // doctor ログアウト
 app.post("/doctor/logout", async (req: Request, res: Response) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const sid = authHeader.split(' ')[1];
+        await pool.query('DELETE FROM session WHERE sid = $1', [sid]);
+    }
+
     req.session.destroy((err) => {
         if (err) {
             return res.status(500).json({ message: 'Failed to log out' });
@@ -154,26 +153,35 @@ app.post("/doctor/logout", async (req: Request, res: Response) => {
 
 // doctor session 情報を取得してログインしているユーザーの情報を取得する
 app.get("/doctor/login_doctor", async (req: Request, res: Response) => {
-    if (req.session.userId) {
-        try {
-            const doctor: DoctorType = await prisma.doctors.findFirst({
-                where: {
-                    AND: [
-                        { id: req.session.userId }
-                    ]
-                }
-            })
-            return res.json(doctor)
-        } catch (e) {
-            return res.status(400).json({ error: "データの取得に失敗しました。" });
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: "認証トークンがありません。" });
         }
-    } else {
-        res.status(401).json({ error: 'セッションがありません' });
+
+        // 'Bearer 'を取り除いてセッションIDを取得
+        const sid = authHeader.split(' ')[1];
+        const doctorSess = await pool.query('SELECT sess FROM session WHERE sid = $1 limit 1', [sid]);
+        const doctor: DoctorType = await prisma.doctors.findFirst({
+            select: {
+                id: true,
+                name: true,
+                email: true
+            },
+            where: {
+                AND: [
+                    { id: Number(doctorSess.rows[0].sess.userId) }
+                ]
+            }
+        })
+        return res.json(doctor)
+    } catch (e) {
+        return res.status(400).json({ error: "データの取得に失敗しました。" });
     }
 });
 
 // 医者一覧を取得
-app.get("/doctor/doctors", doctorSessionCheck, async (req: Request, res: Response) => {
+app.get("/doctor/doctors", async (req: Request, res: Response) => {
     try {
         const allDoctors: DoctorType[] = await prisma.doctors.findMany({
             select: {
@@ -189,7 +197,7 @@ app.get("/doctor/doctors", doctorSessionCheck, async (req: Request, res: Respons
 })
 
 // 患者一覧を取得する
-app.get("/doctor/patients", doctorSessionCheck, async (req: Request, res: Response) => {
+app.get("/doctor/patients", async (req: Request, res: Response) => {
     try {
         const allPatients: PatientType[] = await prisma.patients.findMany();
         return res.json(allPatients);
@@ -204,9 +212,6 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag
     }[]
 }
 
-type MedicalRecordRequestQuery = ParsedQs & {
-    all?: boolean; startDate?: string; endDate?: string;
-}
 
 // 選択した患者の診察履歴一覧を取得する
 app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Response) => {
@@ -275,7 +280,7 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
 })
 
 // カテゴリを取得する
-app.get("/doctor/categories", doctorSessionCheck, async (req: Request, res: Response) => {
+app.get("/doctor/categories", async (req: Request, res: Response) => {
     try {
         const allCategories = await prisma.categories.findMany({
             select: {
