@@ -30,6 +30,7 @@ export const useDoctorLogin = () => {
             setLoginError(errorData.error);
             return;
         } else {
+            console.log(response)
             router.push('/doctor/dashboard');  // ダッシュボードページに遷移
         }
     }
