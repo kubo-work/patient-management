@@ -63,7 +63,7 @@ app.use(session({
     cookie: {
         domain: process.env.DATABASE_URL,
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-        httpOnly: true, // XSS攻撃を防ぐ
+        httpOnly: false, // XSS攻撃を防ぐ
         sameSite: 'none',
         maxAge: 24 * 60 * 60 * 1000, // セッションの有効期限を設定（例: 24時間）
         path: "/doctor"
