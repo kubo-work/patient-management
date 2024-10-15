@@ -13,6 +13,7 @@ import React, { FC } from "react";
 import { MedicalRecordsType } from "../../../../../../common/types/MedicalRecordsType";
 import useMedicalRecordForm from "@/app/hooks/useMedicalRecordForm";
 import { DateTimePicker } from "@mantine/dates";
+import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
 
 type Props = {
   name: string;
@@ -25,9 +26,9 @@ dayjs.extend(customParseFormat);
 
 const MedicalRecordForm: FC<Props> = React.memo(
   ({ name, data, mutate, modalClosed }) => {
+    const { patientNameSuggestions } = useGlobalDoctor();
     const {
       getName,
-      patientNameSuggestions,
       categories,
       doctorsData,
       form,
@@ -49,7 +50,7 @@ const MedicalRecordForm: FC<Props> = React.memo(
             handleSubmit(form.values, mutate, modalClosed)
           )}
         >
-          <Flex direction="column" gap="md">
+          <Flex direction="column" gap="lg">
             <Flex gap="md">
               <Autocomplete
                 label="患者様"

@@ -40,7 +40,10 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
           <Button
             component="a"
             className={
-              pathname === `/doctor/patients-list` ? style.current : ""
+              pathname === `/doctor/patients-list` ||
+              pathname.indexOf("medical-records") !== -1
+                ? style.current
+                : ""
             }
           >
             患者一覧
