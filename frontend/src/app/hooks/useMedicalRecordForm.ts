@@ -1,13 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useGlobalDoctor } from "./useGlobalDoctor";
 import { useForm } from "@mantine/form";
 import { MedicalRecordsType } from "../../../../common/types/MedicalRecordsType";
 import { API_URL } from "../../../constants/url";
-
-type PatientNameSuggestionsType = {
-    value: string;
-    id: string
-};
 
 type FormValues = {
     id: string;
@@ -23,13 +18,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
     const { patients, loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
     const [inputDateTime, setInputDateTime] = useState<Date | null>(new Date());
-    // 患者の名前をサジェストするためのリストを準備
-    const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
-        return patients ? patients.map(patient => ({
-            value: patient.name,
-            id: patient.id.toString()
-        })) : [];
-    }, [patients])
 
     const getName: string = name;
     const getPatient = patients ? patients?.find((patient) => patient.name === getName) : null;
@@ -108,6 +96,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 examination_at: inputDateTime,
                 categories
             }),
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -134,6 +123,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 body: JSON.stringify({
                     id,
                 }),
+                credentials: 'include'
             });
             if (!response.ok) {
                 const errorData = await response.json();  // サーバーからのエラーメッセージを取得
@@ -151,7 +141,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
 
     }
 
-    return { getName, getPatient, loginDoctor, getCategories, patientNameSuggestions, categories, doctorsData, form, handleSubmit, handleDelete, submitError, inputDateTime, setInputDateTime }
+    return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError, inputDateTime, setInputDateTime }
 }
 
 export default useMedicalRecordForm

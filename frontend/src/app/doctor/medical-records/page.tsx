@@ -3,10 +3,10 @@ import { API_URL } from "../../../../constants/url";
 import { Metadata } from "next";
 import { PatientType } from "../../../../../common/types/PatientType";
 import { Title } from "@mantine/core";
-import MedicalRecordsContents from "@/app/features/doctor/medical_records/MedicalRecordsContents";
+import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
 
 const getPatients = async (patients_id: number) => {
-  return await fetch(`${API_URL}/patients/${patients_id}`)
+  return await fetch(`${API_URL}/doctor/patients/${patients_id}`)
     .then((res) => {
       const data: Promise<PatientType> = res.json();
       return data;
@@ -39,19 +39,19 @@ const Page = async ({ searchParams }: QueryParamType) => {
   if (!patients_id) {
     notFound();
   }
-  const patientsData: PatientType = await getPatients(patients_id);
-  if (!patientsData) {
+  const patientData: PatientType = await getPatients(patients_id);
+  if (!patientData) {
     notFound();
   }
   return (
     <>
       <header>
         <Title order={1} ta="center">
-          {patientsData.name} 様
+          {patientData.name} 様
         </Title>
       </header>
       <MedicalRecordsContents
-        name={patientsData.name}
+        patientData={patientData}
         patients_id={patients_id}
       />
     </>

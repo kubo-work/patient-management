@@ -10,7 +10,10 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 async function fetcher(key: string): Promise<MedicalRecordsType[]> {
-    return fetch(key).then((res) => res.json());
+    return fetch(key, {
+        method: "GET",
+        credentials: "include", // クッキーを送信するために必要
+    }).then((res) => res.json());
 }
 
 const useMedicalRecords = (patients_id: number) => {

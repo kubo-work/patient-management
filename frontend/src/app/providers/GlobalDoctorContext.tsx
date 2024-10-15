@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useEffect, useState } from "react";
+import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
 import { API_URL } from "../../../constants/url";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -7,6 +7,8 @@ import { DoctorType } from "@/../../common/types/DoctorType";
 import { PatientType } from "../../../../common/types/PatientType";
 import { doctorCookieKeyName } from "../../../constants/cookieKey";
 import { CookieValueTypes, getCookie } from "cookies-next";
+import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
+import { SexTypes } from "@/../../common/types/SexTypes";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | null;
@@ -17,6 +19,8 @@ export type GlobalDoctorContextType = {
   doctorsDoMutate: () => void;
   patients: PatientType[] | null;
   patientsMutate: () => void;
+  patientNameSuggestions: PatientNameSuggestionsType[];
+  sexList: SexTypes;
 };
 
 export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
@@ -38,15 +42,24 @@ async function loginDoctorFetcher(
 }
 
 async function categoriesFetcher(key: string): Promise<CategoriesType[]> {
-  return fetch(key).then((res) => res.json());
+  return fetch(key, {
+    method: "GET",
+    credentials: "include", // クッキーを送信するために必要
+  }).then((res) => res.json());
 }
 
 async function doctorsFetcher(key: string): Promise<DoctorType[]> {
-  return fetch(key).then((res) => res.json());
+  return fetch(key, {
+    method: "GET",
+    credentials: "include", // クッキーを送信するために必要
+  }).then((res) => res.json());
 }
 
 async function patientsFetcher(key: string): Promise<PatientType[]> {
-  return fetch(key).then((res) => res.json());
+  return fetch(key, {
+    method: "GET",
+    credentials: "include", // クッキーを送信するために必要
+  }).then((res) => res.json());
 }
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
@@ -117,6 +130,33 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
     mutate(patientsFetchUrl);
   };
 
+  // 患者の名前をサジェストするためのリストを準備
+  const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
+    return patients
+      ? patients.map((patient) => ({
+          value: patient.name,
+          id: patient.id.toString(),
+        }))
+      : [];
+  }, [patients]);
+
+  const sexList: SexTypes = useMemo(() => {
+    return {
+      no_answer: {
+        label: "未回答",
+      },
+      man: {
+        label: "男性",
+      },
+      woman: {
+        label: "女性",
+      },
+      neither: {
+        label: "その他",
+      },
+    };
+  }, []);
+
   return (
     <GlobalDoctorContext.Provider
       value={{
@@ -128,6 +168,8 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
         doctorsDoMutate,
         patients,
         patientsMutate,
+        patientNameSuggestions,
+        sexList,
       }}
     >
       {children}

@@ -33,7 +33,7 @@ const useDoctorPatientList = () => {
         header: "操作",
         Cell: ({ row }) => (
           <Link
-            href={`/doctor/medical_records?patients_id=${row.original.id}`}
+            href={`/doctor/medical-records?patients_id=${row.original.id}`}
             passHref
             legacyBehavior
           >

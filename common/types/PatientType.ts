@@ -3,8 +3,9 @@ import { SexTypes } from "./SexTypes";
 export type PatientType = {
   id: number;
   name: string;
-  address: string;
   sex: keyof SexTypes;
+  tel: string;
+  address: string;
   email: string;
-  birth: string;
+  birth: Date;
 }
