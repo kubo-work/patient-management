@@ -7,16 +7,16 @@
       "moduleResolution": "node",
       "skipLibCheck": true,
       "declaration": true,
-      "baseUrl": "./", // 基本となるディレクトリ
+      "baseUrl": "./src", // 基本となるディレクトリ
       "paths": {
-        "@/*": ["src/*"], // srcディレクトリをエイリアスとして設定
+        "@/*": ["*"], // srcディレクトリをエイリアスとして設定
         "@common/*": ["../common/*"] // エイリアスの設定
       }
   },
  "include": [
     "src/**/*.ts", // src内のすべてのtsファイル
     "src/**/*.tsx", // src内のすべてのtsxファイル
-    "../common/**/*.ts" // commonフォルダ内のTypeScriptファイルを含める
+    "../common/**/*.ts", // commonフォルダ内のTypeScriptファイルを含める
 ],
   "exclude": ["node_modules","build"],
 }

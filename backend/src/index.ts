@@ -11,7 +11,6 @@ import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCat
 import pkg from 'pg';
 import PgSession from 'connect-pg-simple';
 import dayjs from "dayjs";
-import { doctorCookieName } from "../../common/util/CookieName";
 
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
@@ -149,7 +148,7 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
         req.session.sessionId = sid;
         req.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
         //req.session.cookie.httpOnly = true;
-        res.cookie(doctorCookieName, sid, {
+        res.cookie("doctor-manager-token", sid, {
             httpOnly: true,
             path: "/doctor",
             secure: true,
