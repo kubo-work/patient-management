@@ -11,6 +11,7 @@ import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCat
 import pkg from 'pg';
 import PgSession from 'connect-pg-simple';
 import dayjs from "dayjs";
+import { doctorCookieName } from "@common/util/CookieName";
 
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
@@ -73,7 +74,6 @@ const prisma = new PrismaClient();
 
 // ログインチェック
 const doctorLoginCheck = (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.headers.cookie)
     if (!req.headers.cookie) {
         return res.status(401).json({ error: "不正なアクセスです。" });
     }
@@ -82,7 +82,7 @@ const doctorLoginCheck = (req: Request, res: Response, next: NextFunction) => {
 
 
 // 患者のデータ取得
-app.get("/doctor/patients/:patient_id"
+app.get("/doctor/patients/:patient_id", doctorLoginCheck
     , async (req: Request, res: Response) => {
         try {
             const { patient_id }: { patient_id: number } = req.body;
@@ -98,7 +98,7 @@ app.get("/doctor/patients/:patient_id"
     })
 
 // 患者のデータ更新
-app.put("/doctor/patients/:patient_id"
+app.put("/doctor/patients/:patient_id", doctorLoginCheck
     , async (req: Request, res: Response) => {
         try {
             const { id, name, sex, tel, email, address, birth }: PatientType = req.body;
@@ -149,7 +149,7 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
         req.session.sessionId = sid;
         req.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
         //req.session.cookie.httpOnly = true;
-        res.cookie("token", sid, {
+        res.cookie(doctorCookieName, sid, {
             httpOnly: true,
             path: "/doctor",
             secure: true,
@@ -168,7 +168,7 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
 
 
 // doctor ログアウト
-app.post("/doctor/logout", async (req: Request, res: Response) => {
+app.post("/doctor/logout", doctorLoginCheck, async (req: Request, res: Response) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
         const sid = authHeader.split(' ')[1];
@@ -185,7 +185,7 @@ app.post("/doctor/logout", async (req: Request, res: Response) => {
 });
 
 // doctor session 情報を取得してログインしているユーザーの情報を取得する
-app.get("/doctor/login_doctor", async (req: Request, res: Response) => {
+app.get("/doctor/login_doctor", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -230,7 +230,7 @@ app.get("/doctor/doctors", doctorLoginCheck, async (req: Request, res: Response)
 })
 
 // 患者一覧を取得する
-app.get("/doctor/patients", async (req: Request, res: Response) => {
+app.get("/doctor/patients", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const allPatients: PatientType[] = await prisma.patients.findMany();
         return res.json(allPatients);
@@ -247,7 +247,7 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag
 
 
 // 選択した患者の診察履歴一覧を取得する
-app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Response) => {
+app.get("/doctor/medical_records/:patient_id", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const { patient_id }: { patient_id: number } = req.body;
         const { all, startDate, endDate } = req.query; // クエリパラメータから日付を取得
@@ -313,7 +313,7 @@ app.get("/doctor/medical_records/:patient_id", async (req: Request, res: Respons
 })
 
 // カテゴリを取得する
-app.get("/doctor/categories", async (req: Request, res: Response) => {
+app.get("/doctor/categories", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const allCategories = await prisma.categories.findMany({
             select: {
@@ -338,7 +338,7 @@ app.get("/doctor/categories", async (req: Request, res: Response) => {
 
 type PutMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & { categories: string[] }
 
-app.put("/doctor/medical_records", async (req: Request, res: Response) => {
+app.put("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = req.body;
         const updated_at: Date = new Date();
@@ -405,7 +405,7 @@ app.put("/doctor/medical_records", async (req: Request, res: Response) => {
 
 type PostMedicalRecordsType = PutMedicalRecordsType & { doctor_id: string };
 
-app.post("/doctor/medical_records", async (req: Request, res: Response) => {
+app.post("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = req.body;
         const result = await prisma.$transaction(async (prisma) => {
@@ -438,7 +438,7 @@ app.post("/doctor/medical_records", async (req: Request, res: Response) => {
     }
 })
 
-app.delete("/doctor/medical_records", async (req: Request, res: Response) => {
+app.delete("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const { id } = req.body;
         const result = await prisma.$transaction(async (prisma) => {

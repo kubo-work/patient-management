@@ -5,10 +5,10 @@ import useSWR, { useSWRConfig } from "swr";
 import { CategoriesType } from "@/../../common/types/CategoriesType";
 import { DoctorType } from "@/../../common/types/DoctorType";
 import { PatientType } from "../../../../common/types/PatientType";
-import { doctorCookieKeyName } from "../../../constants/cookieKey";
 import { CookieValueTypes, getCookie } from "cookies-next";
 import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
 import { SexTypes } from "@/../../common/types/SexTypes";
+import { doctorCookieName } from "../../../../common/util/CookieName";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | null;
@@ -68,7 +68,7 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
-  const sid: CookieValueTypes = getCookie(doctorCookieKeyName);
+  const sid: CookieValueTypes = getCookie(doctorCookieName);
   const loginDoctorAdditionalParam: { sid: CookieValueTypes } = {
     sid,
   };
