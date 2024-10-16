@@ -11,7 +11,7 @@ import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCat
 import pkg from 'pg';
 import PgSession from 'connect-pg-simple';
 import dayjs from "dayjs";
-import { doctorCookieName } from "@common/util/CookieName";
+import { doctorCookieName } from "../../common/util/CookieName";
 
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
