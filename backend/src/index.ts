@@ -149,6 +149,13 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
         req.session.sessionId = sid;
         req.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
         //req.session.cookie.httpOnly = true;
+        res.cookie("token", sid, {
+            httpOnly: true,
+            path: "/doctor",
+            secure: true,
+            sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
+            maxAge: 24 * 60 * 60 * 1000, // 1 hour
+        });
         return res.json({
             message: "ログインに成功しました。",
             userId: req.session.userId,
