@@ -42,7 +42,6 @@ app.use(cors({
         'Authorization',
         'Accept',
         'X-Requested-With',
-        'Cookie'  // ここにCookieを追加
     ]
 }))
 
@@ -63,8 +62,8 @@ app.use(session({
     cookie: {
         domain: process.env.CLIENT_URL,
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-        httpOnly: false, // XSS攻撃を防ぐ
-        sameSite: 'none',
+        httpOnly: true, // XSS攻撃を防ぐ
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000, // セッションの有効期限を設定（例: 24時間）
         path: "/doctor"
     }
@@ -74,6 +73,7 @@ const prisma = new PrismaClient();
 
 // ログインチェック
 const doctorLoginCheck = (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.headers.cookie)
     if (!req.headers.cookie) {
         return res.status(401).json({ error: "不正なアクセスです。" });
     }
@@ -207,7 +207,7 @@ app.get("/doctor/login_doctor", async (req: Request, res: Response) => {
 });
 
 // 医者一覧を取得
-app.get("/doctor/doctors", async (req: Request, res: Response) => {
+app.get("/doctor/doctors", doctorLoginCheck, async (req: Request, res: Response) => {
     try {
         const allDoctors: DoctorType[] = await prisma.doctors.findMany({
             select: {
