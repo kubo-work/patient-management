@@ -1,12 +1,10 @@
 import { useRouter } from "next/navigation";
 import { API_URL } from "../../../constants/url";
-import { CookieValueTypes, deleteCookie, getCookie } from "cookies-next";
-import { doctorCookieKeyName } from "../../../constants/cookieKey";
-import { doctorCookieOptions } from "../../../constants/cookieOption";
-
+import { CookieValueTypes, getCookie } from "cookies-next";
+import { doctorCookieName } from "../../../../common/util/CookieName";
 const useDoctorLogout = () => {
     const router = useRouter();
-    const sid: CookieValueTypes = getCookie(doctorCookieKeyName);
+    const sid: CookieValueTypes = getCookie(doctorCookieName);
     const loginDoctorAdditionalParam: { sid: CookieValueTypes } = {
         sid,
     };
@@ -19,7 +17,6 @@ const useDoctorLogout = () => {
             }
         })
         if (response) {
-            deleteCookie(doctorCookieKeyName, doctorCookieOptions);
             router.push('/doctor/login');
         }
     }
