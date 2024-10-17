@@ -71,10 +71,9 @@ app.use(session({
 
 const prisma = new PrismaClient();
 
-// ログインチェック
-const doctorLoginCheck = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.headers.cookie) {
-        return res.status(401).json({ error: "不正なアクセスです。" });
+const doctorLoginCheck = (request: Request, response: Response, next: NextFunction) => {
+    if (!request.headers.cookie) {
+        return response.status(401).json({ error: "不正なアクセスです。" });
     }
     next(); // セッションがあれば次の処理に進む
 };
@@ -82,25 +81,25 @@ const doctorLoginCheck = (req: Request, res: Response, next: NextFunction) => {
 
 // 患者のデータ取得
 app.get("/doctor/patients/:patient_id", doctorLoginCheck
-    , async (req: Request, res: Response) => {
+    , async (request: Request, response: Response) => {
         try {
-            const { patient_id }: { patient_id: number } = req.body;
+            const { patient_id }: { patient_id: number } = request.body;
             const patient: PatientType = await prisma.patients.findFirst({
                 where: {
                     id: patient_id
                 }
             });
-            return res.json(patient)
+            return response.json(patient)
         } catch (e) {
-            return res.status(400).json({ error: "データの取得に失敗しました。" })
+            return response.status(400).json({ error: "データの取得に失敗しました。" })
         }
     })
 
 // 患者のデータ更新
 app.put("/doctor/patients/:patient_id", doctorLoginCheck
-    , async (req: Request, res: Response) => {
+    , async (request: Request, response: Response) => {
         try {
-            const { id, name, sex, tel, email, address, birth }: PatientType = req.body;
+            const { id, name, sex, tel, email, address, birth }: PatientType = request.body;
             const updated_at: Date = new Date();
             const result = await prisma.patients.update({
                 where: { id },
@@ -114,24 +113,24 @@ app.put("/doctor/patients/:patient_id", doctorLoginCheck
                     updated_at
                 },
             });
-            return res.json(result)
+            return response.json(result)
         } catch (e) {
-            return res.status(400).json({ error: "データの取得に失敗しました。" })
+            return response.status(400).json({ error: "データの取得に失敗しました。" })
         }
     })
 
 
 // doctor 管理画面ログイン
-app.post("/doctor/login", async (req: Request, res: Response) => {
+app.post("/doctor/login", async (request: Request, response: Response) => {
     try {
-        const { email, password }: { email: string; password: string } = req.body;
+        const { email, password }: { email: string; password: string } = request.body;
 
         if (!email) {
-            return res.status(400).json({ error: "メールアドレスが入力されていません。" })
+            return response.status(400).json({ error: "メールアドレスが入力されていません。" })
         }
 
         if (!password) {
-            return res.status(400).json({ error: "パスワードが入力されていません。" })
+            return response.status(400).json({ error: "パスワードが入力されていません。" })
         }
         const doctor: DoctorType = await prisma.doctors.findFirst({
             where: {
@@ -141,54 +140,57 @@ app.post("/doctor/login", async (req: Request, res: Response) => {
             }
         })
         if (!doctor) {
-            return res.status(401).json({ error: "無効なメールアドレスまたはパスワードです。" });
+            return response.status(401).json({ error: "無効なメールアドレスまたはパスワードです。" });
         }
 
-        const sid = req.sessionID;
-        req.session.sessionId = sid;
-        req.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
-        //req.session.cookie.httpOnly = true;
-        res.cookie("doctor-manager-token", sid, {
+        const sessionID = request.sessionID;
+        request.session.sessionId = sessionID;
+        request.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
+        response.cookie("doctor-manager-token", sessionID, {
             httpOnly: true,
             path: "/doctor",
             secure: true,
             sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
             maxAge: 24 * 60 * 60 * 1000, // 1 hour
         });
-        return res.json({
+        return response.json({
             message: "ログインに成功しました。",
-            userId: req.session.userId,
-            sessionId: sid
+            userId: request.session.userId,
+            sessionId: sessionID
         });
     } catch (e) {
-        return res.status(400).json(e);
+        return response.status(400).json(e);
     }
 })
 
 
 // doctor ログアウト
-app.post("/doctor/logout", doctorLoginCheck, async (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization;
+app.post("/doctor/logout", doctorLoginCheck, async (request: Request, response: Response) => {
+    const authHeader = request.headers.authorization;
     if (authHeader) {
-        const sid = authHeader.split(' ')[1];
-        await pool.query('DELETE FROM session WHERE sid = $1', [sid]);
+        const sessionID = authHeader.split(' ')[1];
+        await prisma.session.delete({
+            where: {
+                sid: sessionID
+            }
+        })
     }
 
-    req.session.destroy((err) => {
+    request.session.destroy((err) => {
         if (err) {
-            return res.status(500).json({ message: 'Failed to log out' });
+            return response.status(500).json({ message: 'Failed to log out' });
         }
-        res.clearCookie(sessionName);  // クッキーの削除
-        res.json({ message: 'ログアウトしました。' });
+        response.clearCookie(sessionName);  // クッキーの削除
+        response.json({ message: 'ログアウトしました。' });
     });
 });
 
 // doctor session 情報を取得してログインしているユーザーの情報を取得する
-app.get("/doctor/login_doctor", doctorLoginCheck, async (req: Request, res: Response) => {
+app.get("/doctor/login_doctor", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        const authHeader = req.headers.authorization;
+        const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: "認証トークンがありません。" });
+            return response.status(401).json({ error: "認証トークンがありません。" });
         }
 
         // 'Bearer 'を取り除いてセッションIDを取得
@@ -206,14 +208,14 @@ app.get("/doctor/login_doctor", doctorLoginCheck, async (req: Request, res: Resp
                 ]
             }
         })
-        return res.json(doctor)
+        return response.json(doctor)
     } catch (e) {
-        return res.status(400).json({ error: "データの取得に失敗しました。" });
+        return response.status(400).json({ error: "データの取得に失敗しました。" });
     }
 });
 
 // 医者一覧を取得
-app.get("/doctor/doctors", doctorLoginCheck, async (req: Request, res: Response) => {
+app.get("/doctor/doctors", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
         const allDoctors: DoctorType[] = await prisma.doctors.findMany({
             select: {
@@ -222,19 +224,19 @@ app.get("/doctor/doctors", doctorLoginCheck, async (req: Request, res: Response)
                 email: true
             }
         });
-        return res.json(allDoctors);
+        return response.json(allDoctors);
     } catch (e) {
-        return res.status(400).json({ error: "データの取得に失敗しました。" });
+        return response.status(400).json({ error: "データの取得に失敗しました。" });
     }
 })
 
 // 患者一覧を取得する
-app.get("/doctor/patients", doctorLoginCheck, async (req: Request, res: Response) => {
+app.get("/doctor/patients", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
         const allPatients: PatientType[] = await prisma.patients.findMany();
-        return res.json(allPatients);
+        return response.json(allPatients);
     } catch (e) {
-        return res.status(400).json({ error: "データの取得に失敗しました。" });
+        return response.status(400).json({ error: "データの取得に失敗しました。" });
     }
 })
 
@@ -246,10 +248,10 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag
 
 
 // 選択した患者の診察履歴一覧を取得する
-app.get("/doctor/medical_records/:patient_id", doctorLoginCheck, async (req: Request, res: Response) => {
+app.get("/doctor/medical_records/:patient_id", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        const { patient_id }: { patient_id: number } = req.body;
-        const { all, startDate, endDate } = req.query; // クエリパラメータから日付を取得
+        const { patient_id }: { patient_id: number } = request.body;
+        const { all, startDate, endDate } = request.query; // クエリパラメータから日付を取得
 
         // 現在の日付
         const now = dayjs();
@@ -305,14 +307,14 @@ app.get("/doctor/medical_records/:patient_id", doctorLoginCheck, async (req: Req
                 categories: medical_categories.flatMap((category) => category.categories)
             }
         })
-        return res.json(allMedicalRecords);
+        return response.json(allMedicalRecords);
     } catch (e) {
-        return res.status(400).json({ error: "データの取得に失敗しました。" });
+        return response.status(400).json({ error: "データの取得に失敗しました。" });
     }
 })
 
 // カテゴリを取得する
-app.get("/doctor/categories", doctorLoginCheck, async (req: Request, res: Response) => {
+app.get("/doctor/categories", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
         const allCategories = await prisma.categories.findMany({
             select: {
@@ -329,17 +331,17 @@ app.get("/doctor/categories", doctorLoginCheck, async (req: Request, res: Respon
                 parent_id: null
             }
         });
-        return res.json(allCategories);
+        return response.json(allCategories);
     } catch (e) {
-        return res.status(400).json({ error: "データの取得に失敗しました。" });
+        return response.status(400).json({ error: "データの取得に失敗しました。" });
     }
 });
 
 type PutMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & { categories: string[] }
 
-app.put("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: Response) => {
+app.put("/doctor/medical_records", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = req.body;
+        const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = request.body;
         const updated_at: Date = new Date();
         const medicalRecordId: number = Number(id);
         const categoryNumbers: number[] = categories.map((category) => Number(category))
@@ -396,17 +398,17 @@ app.put("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: R
                 });
             }
         })
-        return res.json({ data: result })
+        return response.json({ data: result })
     } catch (e) {
-        return res.status(400).json({ error: "データの更新に失敗しました。" });
+        return response.status(400).json({ error: "データの更新に失敗しました。" });
     }
 })
 
 type PostMedicalRecordsType = PutMedicalRecordsType & { doctor_id: string };
 
-app.post("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: Response) => {
+app.post("/doctor/medical_records", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = req.body;
+        const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = request.body;
         const result = await prisma.$transaction(async (prisma) => {
             const newMedicalRecord = await prisma.medical_records.create({
                 data: {
@@ -431,15 +433,15 @@ app.post("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: 
                 });
             }
         })
-        return res.json({ data: result })
+        return response.json({ data: result })
     } catch (e) {
-        return res.status(400).json({ error: "データの保存に失敗しました。" });
+        return response.status(400).json({ error: "データの保存に失敗しました。" });
     }
 })
 
-app.delete("/doctor/medical_records", doctorLoginCheck, async (req: Request, res: Response) => {
+app.delete("/doctor/medical_records", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        const { id } = req.body;
+        const { id } = request.body;
         const result = await prisma.$transaction(async (prisma) => {
             const targetId = Number(id);
             await prisma.medical_records.update({
@@ -460,9 +462,9 @@ app.delete("/doctor/medical_records", doctorLoginCheck, async (req: Request, res
                 }
             });
         })
-        return res.json({ data: result })
+        return response.json({ data: result })
     } catch (e) {
-        return res.status(400).json({ error: "データの削除に失敗しました。" });
+        return response.status(400).json({ error: "データの削除に失敗しました。" });
     }
 });
 
