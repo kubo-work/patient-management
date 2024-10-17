@@ -35,8 +35,6 @@ const MedicalRecordForm: FC<Props> = React.memo(
       handleSubmit,
       handleDelete,
       submitError,
-      inputDateTime,
-      setInputDateTime,
     } = useMedicalRecordForm(name, data);
     return (
       <>
@@ -80,8 +78,14 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 valueFormat="YYYY年M月D日 HH:mm"
                 {...form.getInputProps("examination_at")}
                 error={form.errors.examination_at}
-                value={inputDateTime}
-                onChange={setInputDateTime}
+                value={form.values.examination_at}
+                onChange={(value) => {
+                  if (!value) {
+                    return "日時を選択してください。";
+                  }
+                  form.setFieldValue("examination_at", value); // useFormでフィールドの値を更新
+                }}
+                maxDate={dayjs().endOf("day").toDate()}
               />
               {categories?.map((parentCategories) => {
                 const childCategoriesData = parentCategories.children.map(
