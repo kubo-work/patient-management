@@ -29,13 +29,13 @@ export const useDoctorLogin = () => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();  // サーバーからのエラーメッセージを取得
+            const errorData = await response.json();
             setLoginError(errorData.error);
             return;
         } else {
             const data = await response.json()
             setCookie(doctorCookieKeyName, data.sessionId, doctorCookieOptions);
-            router.push('/doctor/dashboard');  // ダッシュボードページに遷移
+            router.push('/doctor/dashboard');
         }
     }
     return { handleLogin, loginError }
