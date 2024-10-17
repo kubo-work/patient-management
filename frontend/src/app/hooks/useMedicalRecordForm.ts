@@ -3,6 +3,7 @@ import { useGlobalDoctor } from "./useGlobalDoctor";
 import { useForm } from "@mantine/form";
 import { MedicalRecordsType } from "../../../../common/types/MedicalRecordsType";
 import { API_URL } from "../../../constants/url";
+import dayjs from "dayjs";
 
 type FormValues = {
     id: string;
@@ -17,7 +18,6 @@ type FormValues = {
 const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => {
     const { patients, loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
-    const [inputDateTime, setInputDateTime] = useState<Date | null>(new Date());
 
     const getName: string = name;
     const getPatient = patients ? patients?.find((patient) => patient.name === getName) : null;
@@ -40,6 +40,13 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             name: (value) => value ? null : "選択してください。",
             doctor_id: (value) => value ? null : "選択してください。",
             categories: (value) => value.length > 0 ? null : "少なくとも1つのカテゴリを選択してください",
+            examination_at: (value) => {
+                if (!value) {
+                    return "日時を選択してください。";
+                }
+                const now = dayjs().startOf('minute');
+                return dayjs(value).isAfter(now) ? "未来の日時は選択できません。" : null;
+            }
         },
     })
 
@@ -61,7 +68,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 doctor_memo: data.doctor_memo,
                 examination_at: new Date(data.examination_at)
             })
-            setInputDateTime(new Date(data.examination_at))
         } else {
             form.setValues({
                 id: "",
@@ -72,7 +78,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 doctor_memo: "",
                 examination_at: new Date()
             })
-            setInputDateTime(new Date())
         }
     }, [loginDoctor, name, data])
 
@@ -80,7 +85,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
     const handleSubmit = async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
 
-        const { id, name, doctor_id, medical_memo, doctor_memo, categories } = values;
+        const { id, name, doctor_id, examination_at, medical_memo, doctor_memo, categories } = values;
         const patientData = patients?.find((patient) => patient.name === name);
         const patient_id = patientData ? Number(patientData.id) : 0;
         const method = id ? "PUT" : "POST";
@@ -93,7 +98,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 patient_id,
                 medical_memo,
                 doctor_memo,
-                examination_at: inputDateTime,
+                examination_at,
                 categories
             }),
             credentials: 'include'
@@ -141,7 +146,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
 
     }
 
-    return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError, inputDateTime, setInputDateTime }
+    return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError }
 }
 
 export default useMedicalRecordForm
