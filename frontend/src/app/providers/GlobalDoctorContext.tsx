@@ -36,7 +36,6 @@ async function loginDoctorFetcher(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${key[1].sid}`,
-      // 他のヘッダーを必要に応じて追加
     },
   }).then((res) => res.json());
 }
@@ -44,21 +43,21 @@ async function loginDoctorFetcher(
 async function categoriesFetcher(key: string): Promise<CategoriesType[]> {
   return fetch(key, {
     method: "GET",
-    credentials: "include", // クッキーを送信するために必要
+    credentials: "include",
   }).then((res) => res.json());
 }
 
 async function doctorsFetcher(key: string): Promise<DoctorType[]> {
   return fetch(key, {
     method: "GET",
-    credentials: "include", // クッキーを送信するために必要
+    credentials: "include",
   }).then((res) => res.json());
 }
 
 async function patientsFetcher(key: string): Promise<PatientType[]> {
   return fetch(key, {
     method: "GET",
-    credentials: "include", // クッキーを送信するために必要
+    credentials: "include",
   }).then((res) => res.json());
 }
 
