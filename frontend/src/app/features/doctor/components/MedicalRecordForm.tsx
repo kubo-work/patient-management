@@ -77,7 +77,7 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 required
                 label="診察日"
                 placeholder="yyyy年M月d日"
-                valueFormat="YYYY年M月D日 HH:mm" // MantineはMoment.jsのフォーマットを使用しています
+                valueFormat="YYYY年M月D日 HH:mm"
                 {...form.getInputProps("examination_at")}
                 error={form.errors.examination_at}
                 value={inputDateTime}
