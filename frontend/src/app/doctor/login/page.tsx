@@ -22,7 +22,7 @@ const page = () => {
         >
           <header className={style.header}>
             <Title order={1} ta="center">
-              医心堂鍼灸整骨院
+              診察管理
             </Title>
           </header>
           <LoginForm styles={style} />

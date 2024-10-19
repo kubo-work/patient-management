@@ -35,7 +35,7 @@ export const useDoctorLogin = () => {
         } else {
             const data = await response.json()
             setCookie(doctorCookieKeyName, data.sessionId, doctorCookieOptions);
-            router.push('/doctor/dashboard');
+            router.push('/doctor/patients-list');
         }
     }
     return { handleLogin, loginError }

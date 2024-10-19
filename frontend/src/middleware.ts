@@ -11,7 +11,7 @@ export function middleware(req: NextRequest) {
             }
         } else {
             if (cookie) {
-                return NextResponse.redirect(new URL('/doctor/dashboard', req.url));
+                return NextResponse.redirect(new URL('/doctor/patients-list', req.url));
             }
         }
     }

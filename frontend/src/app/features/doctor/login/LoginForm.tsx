@@ -36,13 +36,13 @@ const LoginForm: FC<Props> = React.memo((props) => {
       <TextInput
         required
         type="email"
-        label="id"
+        label="メールアドレス"
         placeholder="**@example.com"
         onChange={(e) => form.setFieldValue("email", e.currentTarget.value)}
         value={form.values.email}
       />
       <PasswordInput
-        label="Password"
+        label="パスワード"
         placeholder="Your password"
         required
         mt="md"
@@ -50,7 +50,7 @@ const LoginForm: FC<Props> = React.memo((props) => {
         value={form.values.password}
       />
       <Button fullWidth mt="xl" type="submit">
-        Sign in
+        ログイン
       </Button>
     </form>
   );
