@@ -11,6 +11,13 @@
   gap: 10px;
 }
 
+.headerWrap{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
 .nav{
   button,a{
     width: 100%;

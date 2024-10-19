@@ -23,8 +23,7 @@
 https://patient-management-kubo-works-projects.vercel.app/doctor/login
 
 ## 注意点
-1. ログインに成功すると /doctor/dashboard  に行きますが、この画面は未着手なのでメイン部分は真っ白な状態です。
-2. renderが無料プランの関係で**レスポンスが50秒以上遅れる可能性があります。**
+- renderが無料プランの関係で**レスポンスが50秒以上遅れる可能性があります。**
 
 ## 作成した機能
 - ログイン機能
