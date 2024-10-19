@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const page = () => {
   return (
     <main className={style.loginPage}>
-      <Container p={10} size={420}>
+      <Container p={10} size={420} style={{ width: "90vw" }}>
         <Paper
           withBorder
           shadow="md"
