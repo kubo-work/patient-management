@@ -5,6 +5,7 @@ import {
   Flex,
   MultiSelect,
   Select,
+  Text,
   Textarea,
 } from "@mantine/core";
 import dayjs from "dayjs";
@@ -14,6 +15,8 @@ import { MedicalRecordsType } from "../../../../../../common/types/MedicalRecord
 import useMedicalRecordForm from "@/app/hooks/useMedicalRecordForm";
 import { DateTimePicker } from "@mantine/dates";
 import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
+
+import styles from "./MedicalRecordForm.module.scss";
 
 type Props = {
   name: string;
@@ -49,8 +52,9 @@ const MedicalRecordForm: FC<Props> = React.memo(
           )}
         >
           <Flex direction="column" gap="lg">
-            <Flex gap="md">
+            <Flex gap={{ base: "sm", sm: "lg" }}>
               <Autocomplete
+                style={{ flex: 1 }}
                 label="患者様"
                 placeholder="患者名を入力してください。"
                 data={patientNameSuggestions.map((patient) => patient.value)}
@@ -63,6 +67,7 @@ const MedicalRecordForm: FC<Props> = React.memo(
 
               <Select
                 label="担当者"
+                style={{ flex: 1 }}
                 data={doctorsData}
                 placeholder="担当者を選択してください。"
                 {...form.getInputProps("doctor_id")}
@@ -87,14 +92,62 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 }}
                 maxDate={dayjs().endOf("day").toDate()}
               />
-              {categories?.map((parentCategories) => {
-                const childCategoriesData = parentCategories.children.map(
-                  (childCategory) => ({
-                    value: childCategory.id.toString(),
-                    label: childCategory.treatment,
-                  })
-                );
-                return (
+              <Flex direction="column" gap="md">
+                <Text>
+                  カテゴリ<span style={{ color: "red" }}>*</span>
+                </Text>
+                <Flex
+                  direction="column"
+                  gap="md"
+                  className={styles.categoryWrap}
+                >
+                  {categories?.map((parentCategories, i) => {
+                    const childCategoriesData = parentCategories.children.map(
+                      (childCategory) => ({
+                        value: childCategory.id.toString(),
+                        label: childCategory.treatment,
+                      })
+                    );
+                    return (
+                      <div
+                        className={styles.flexWrap}
+                        key={parentCategories.id}
+                      >
+                        <label
+                          htmlFor={`category${i}`}
+                          className={styles.selectLabel}
+                        >
+                          {parentCategories.treatment}
+                        </label>
+                        <MultiSelect
+                          id={`category${i}`}
+                          placeholder="選択してください"
+                          className={styles.selectCategory}
+                          data={childCategoriesData}
+                          value={form.values.categories.filter((category) =>
+                            childCategoriesData.some(
+                              (child) => child.value === category
+                            )
+                          )}
+                          onChange={(value) => {
+                            // 選択された値をそのままセット
+                            form.setFieldValue("categories", [
+                              ...form.values.categories.filter(
+                                (cat) =>
+                                  !childCategoriesData.some(
+                                    (child) => child.value === cat
+                                  )
+                              ),
+                              ...value,
+                            ]);
+                          }}
+                          error={form.errors.categories}
+                        />
+                      </div>
+                    );
+                    {
+                      /* return (
+                  
                   <MultiSelect
                     key={parentCategories.id}
                     label={parentCategories.treatment}
@@ -119,8 +172,12 @@ const MedicalRecordForm: FC<Props> = React.memo(
                     }}
                     error={form.errors.categories}
                   />
-                );
-              })}
+                ); */
+                    }
+                  })}
+                </Flex>
+              </Flex>
+
               <Textarea
                 label="メモ"
                 value={form.values.medical_memo}
