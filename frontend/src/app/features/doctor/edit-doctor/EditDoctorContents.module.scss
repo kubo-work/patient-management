@@ -1,0 +1,15 @@
+@use "../../../styles/mixin.scss" as *;
+
+.label{
+    width: 200px;
+    @include mobile{
+        width: 100%;
+    }
+}
+
+.input{
+    width: 300px;
+    @include mobile{
+        width: 100%;
+    }
+}
