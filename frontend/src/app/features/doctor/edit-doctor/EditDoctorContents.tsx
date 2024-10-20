@@ -64,27 +64,26 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
               error={form.errors.email}
             />
           </Flex>
-          {!id ||
-            (id === loginDoctor?.id && (
-              <Flex
-                gap="lg"
-                align={{ base: "stretch", sm: "center" }}
-                direction={{ base: "column", sm: "row" }}
-              >
-                <label htmlFor="name" className={styles.label}>
-                  パスワード<span style={{ color: "red" }}>*</span>
-                </label>
-                <PasswordInput
-                  id="password"
-                  placeholder="パスワードを入力してください。"
-                  required
-                  className={styles.input}
-                  value={form.values.password}
-                  {...form.getInputProps("password")}
-                  error={form.errors.password}
-                />
-              </Flex>
-            ))}
+          {(!id || id === loginDoctor?.id) && (
+            <Flex
+              gap="lg"
+              align={{ base: "stretch", sm: "center" }}
+              direction={{ base: "column", sm: "row" }}
+            >
+              <label htmlFor="name" className={styles.label}>
+                パスワード<span style={{ color: "red" }}>*</span>
+              </label>
+              <PasswordInput
+                id="password"
+                placeholder="パスワードを入力してください。"
+                required
+                className={styles.input}
+                value={form.values.password}
+                {...form.getInputProps("password")}
+                error={form.errors.password}
+              />
+            </Flex>
+          )}
           <Flex>
             <Button type="submit">{id ? "更新" : "保存"}</Button>
           </Flex>
