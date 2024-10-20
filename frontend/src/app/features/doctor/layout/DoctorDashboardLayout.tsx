@@ -2,13 +2,14 @@ import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css"; //if using mantine date picker features
 import "mantine-react-table/styles.css"; //make sure MRT styles were imported in your app root (once)
 
-import { AppShell, Burger, Button, Title } from "@mantine/core";
+import { AppShell, Burger, Button, Flex, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import style from "./layout.module.scss";
 import useDoctorLogout from "@/app/hooks/useDoctorLogout";
 import React, { FC, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
 
 type Props = {
   children: ReactNode;
@@ -17,8 +18,9 @@ type Props = {
 const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
   const { children } = props;
   const pathname = usePathname();
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure();
   const { handleClickLogout } = useDoctorLogout();
+  const { loginDoctor } = useGlobalDoctor();
   return (
     <AppShell
       className={style.body}
@@ -32,7 +34,10 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
     >
       <AppShell.Header className={style.header}>
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        <Title order={2}>医心堂鍼灸整骨院</Title>
+        <Flex className={style.headerWrap}>
+          <Title order={2}>診察管理</Title>
+          <Text>{loginDoctor?.name} さん</Text>
+        </Flex>
       </AppShell.Header>
 
       <AppShell.Navbar className={style.nav}>
@@ -45,8 +50,23 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
                 ? style.current
                 : ""
             }
+            onClick={close}
           >
             患者一覧
+          </Button>
+        </Link>
+        <Link href={`/doctor/doctors-list`} passHref legacyBehavior>
+          <Button
+            component="a"
+            className={
+              pathname === `/doctor/doctors-list` ||
+              pathname.indexOf("edit-doctor") !== -1
+                ? style.current
+                : ""
+            }
+            onClick={close}
+          >
+            医者一覧
           </Button>
         </Link>
 
