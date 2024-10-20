@@ -1,14 +1,14 @@
 "use client";
 import useMedicalRecords from "@/app/hooks/useMedicalRecords";
-import React, { useMemo } from "react";
-import { MantineReactTable, MRT_ColumnDef } from "mantine-react-table";
-import { MedicalRecordsType } from "../../../../../../common/types/MedicalRecordsType";
-import { Box, Button, Flex, List, ListItem, Modal } from "@mantine/core";
+import React from "react";
+import { MantineReactTable } from "mantine-react-table";
+import { Box, Button, Flex, Modal } from "@mantine/core";
 import MedicalRecordForm from "../components/MedicalRecordForm";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { PatientType } from "../../../../../../common/types/PatientType";
+import { Notifications } from "@mantine/notifications";
 
 type Props = {
   patientData: PatientType;
@@ -27,57 +27,9 @@ const MedicalRecordsContents = React.memo(
       setSelectedRecord,
       isNewRecord,
       setIsNewRecord,
+      columns,
     } = useMedicalRecords(patients_id);
-    const columns = useMemo<MRT_ColumnDef<MedicalRecordsType>[]>(
-      () => [
-        {
-          accessorKey: "id",
-          header: "ID",
-          maxSize: 50,
-        },
-        {
-          accessorKey: "examination_at",
-          header: "診察日",
-          Cell: ({ row }) => {
-            const examination_at: dayjs.Dayjs = dayjs(
-              row.original.examination_at
-            ).utc();
-            const setTimeZone: dayjs.Dayjs = examination_at.tz("Asia/Tokyo");
-            const format: string = setTimeZone.format("YYYY年M月D日 H:mm");
-            return format;
-          },
-          maxSize: 200,
-        },
-        {
-          accessorKey: "category",
-          header: "施術",
-          Cell: ({ row }) => (
-            <List>
-              {row.original.categories.map((category, i) => (
-                <ListItem key={i}>{category.treatment}</ListItem>
-              ))}
-            </List>
-          ),
-        },
-        {
-          header: "操作",
-          Cell: ({ row }) => (
-            <>
-              <Button
-                onClick={() => {
-                  setIsNewRecord(false);
-                  setSelectedRecord(row.original);
-                }}
-              >
-                編集
-              </Button>
-            </>
-          ),
-          maxSize: 80,
-        },
-      ],
-      [setIsNewRecord, setSelectedRecord]
-    );
+
     return (
       <>
         {/* 診察編集モーダル */}
@@ -89,6 +41,7 @@ const MedicalRecordsContents = React.memo(
           }} // モーダルを閉じるときはnullに戻す
           title={isNewRecord ? "新しい診察を作成" : "診察編集"}
           keepMounted
+          size="lg"
         >
           {(selectedRecord || isNewRecord) && (
             <MedicalRecordForm
@@ -117,6 +70,7 @@ const MedicalRecordsContents = React.memo(
             <MantineReactTable columns={columns} data={medicalRecord} />
           )}
         </Box>
+        <Notifications />
       </>
     );
   }

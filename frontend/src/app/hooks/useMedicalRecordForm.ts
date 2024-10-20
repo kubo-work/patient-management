@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+"use client";
+import { useCallback, useEffect, useState } from "react";
 import { useGlobalDoctor } from "./useGlobalDoctor";
 import { useForm } from "@mantine/form";
 import { MedicalRecordsType } from "../../../../common/types/MedicalRecordsType";
 import { API_URL } from "../../../constants/url";
 import dayjs from "dayjs";
+import { showNotification } from "@mantine/notifications";
+import showSuccessNotification from "../../../constants/showSuccessNotification";
 
 type FormValues = {
     id: string;
@@ -45,7 +48,8 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                     return "日時を選択してください。";
                 }
                 const now = dayjs().startOf('minute');
-                return dayjs(value).isAfter(now) ? "未来の日時は選択できません。" : null;
+                const selectedTime = dayjs(value).startOf('minute');
+                return selectedTime.isAfter(now) ? "未来の日時は選択できません。" : null;
             }
         },
     })
@@ -54,6 +58,16 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         value: doctor.id.toString(),
         label: doctor.name,
     }));
+
+    const showErrorMessage = useCallback(async (response: Response) => {
+        const errorData = await response.json();
+        setSubmitError(errorData.error);
+        return showNotification({
+            message: submitError,
+            color: "red",
+            autoClose: 3000,
+        });
+    }, [submitError])
 
     useEffect(() => {
         if (data) {
@@ -105,15 +119,19 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         });
 
         if (!response.ok) {
-            const errorData = await response.json();  // サーバーからのエラーメッセージを取得
-            setSubmitError(errorData.error);
-            alert(submitError);
+            showErrorMessage(response)
             return;
         } else {
             setSubmitError("")
-            alert("PUT" === method ? "データを更新しました。" : "データを保存しました。")
             doMutate()
             modalClosed();
+            let message = "";
+            if ("PUT" === method) {
+                message = "診察を更新しました。";
+            } else if ("POST" === method) {
+                message = "診察を保存しました。";
+            }
+            message && showSuccessNotification(message)
             return;
         }
     }
@@ -131,13 +149,11 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 credentials: 'include'
             });
             if (!response.ok) {
-                const errorData = await response.json();  // サーバーからのエラーメッセージを取得
-                setSubmitError(errorData.error);
-                alert(submitError);
+                showErrorMessage(response);
                 return;
             } else {
                 setSubmitError("")
-                alert("データを削除しました。")
+                showSuccessNotification("診察を削除しました。")
                 doMutate()
                 modalClosed();
                 return;

@@ -4,6 +4,7 @@ import { getCookie } from "cookies-next";
 
 export function middleware(req: NextRequest) {
     if (req.nextUrl.pathname.startsWith("/doctor")) {
+        // 何故か getCookie のオブジェクトの中身の変数を request と書くとエラーになるので req にする
         const cookie = getCookie(doctorCookieKeyName, { req })
         if (req.nextUrl.pathname !== "/doctor/login") {
             if (!cookie) {
