@@ -14,7 +14,7 @@ type Props = {
   styles: { [key: string]: string };
 };
 
-const LoginForm: FC<Props> = (props) => {
+const LoginForm: FC<Props> = React.memo((props) => {
   const { styles } = props;
   const { form, loginError, handleLogin, visible } = useDoctorLogin();
 
@@ -58,7 +58,7 @@ const LoginForm: FC<Props> = (props) => {
       </form>
     </Box>
   );
-};
+});
 
 LoginForm.displayName = "LoginForm";
 

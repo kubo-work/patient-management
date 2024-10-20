@@ -56,7 +56,8 @@ const useDoctorLogin = () => {
             setCookie(doctorCookieKeyName, data.sessionId, doctorCookieOptions);
             router.push('/doctor/patients-list');
         }
-    }, [router]);
+    }, [router, open, close]);
+
     return { form, handleLogin, loginError, visible }
 }
 
