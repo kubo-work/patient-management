@@ -3,6 +3,7 @@ import { DoctorType } from '../../../../common/types/DoctorType';
 import { useEffect, useState } from 'react';
 import { API_URL } from '../../../constants/url';
 import { useRouter } from 'next/navigation';
+import setShowNotification from '../../../constants/setShowNotification';
 
 type FormValues = {
     name: string;
@@ -74,10 +75,11 @@ const useDoctorEdit = (id: number | null) => {
         if (!response.ok) {
             const errorData = await response.json();  // サーバーからのエラーメッセージを取得
             setSubmitError(errorData.error);
+            setShowNotification(submitError, "red")
             return;
         } else {
-            setSubmitError("")
-            doMutate()
+            setSubmitError("");
+            doMutate();
             router.push(`/doctor/doctors-list?success=${method === "PUT" ? "update" : "new"}`)
         }
     }

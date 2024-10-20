@@ -1,11 +1,11 @@
 import { showNotification } from "@mantine/notifications";
 
-export const showSuccessNotification = (message: string) => {
+export const setShowNotification = (message: string, color: string) => {
   return showNotification({
     message,
-    color: "orange",
+    color,
     autoClose: 3000,
   });
 }
 
-export default showSuccessNotification
+export default setShowNotification

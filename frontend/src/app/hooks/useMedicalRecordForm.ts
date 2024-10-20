@@ -5,8 +5,7 @@ import { useForm } from "@mantine/form";
 import { MedicalRecordsType } from "../../../../common/types/MedicalRecordsType";
 import { API_URL } from "../../../constants/url";
 import dayjs from "dayjs";
-import { showNotification } from "@mantine/notifications";
-import showSuccessNotification from "../../../constants/showSuccessNotification";
+import setShowNotification from "../../../constants/setShowNotification";
 
 type FormValues = {
     id: string;
@@ -62,11 +61,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
     const showErrorMessage = useCallback(async (response: Response) => {
         const errorData = await response.json();
         setSubmitError(errorData.error);
-        return showNotification({
-            message: submitError,
-            color: "red",
-            autoClose: 3000,
-        });
+        return setShowNotification(submitError, "red");
     }, [submitError])
 
     useEffect(() => {
@@ -131,7 +126,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             } else if ("POST" === method) {
                 message = "診察を保存しました。";
             }
-            message && showSuccessNotification(message)
+            message && setShowNotification(message, "orange");
             return;
         }
     }
@@ -153,7 +148,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 return;
             } else {
                 setSubmitError("")
-                showSuccessNotification("診察を削除しました。")
+                setShowNotification("診察を削除しました。", "orange")
                 doMutate()
                 modalClosed();
                 return;
