@@ -48,7 +48,10 @@ const MedicalRecordsContents = React.memo(
               name={patientData.name}
               data={selectedRecord || null}
               mutate={patientMutate}
-              modalClosed={() => setSelectedRecord(null)}
+              modalClosed={() => {
+                setSelectedRecord(null);
+                setIsNewRecord(false);
+              }}
             />
           )}
         </Modal>

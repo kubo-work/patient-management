@@ -145,35 +145,6 @@ const MedicalRecordForm: FC<Props> = React.memo(
                         />
                       </div>
                     );
-                    {
-                      /* return (
-                  
-                  <MultiSelect
-                    key={parentCategories.id}
-                    label={parentCategories.treatment}
-                    placeholder="選択してください"
-                    data={childCategoriesData}
-                    value={form.values.categories.filter((category) =>
-                      childCategoriesData.some(
-                        (child) => child.value === category
-                      )
-                    )}
-                    onChange={(value) => {
-                      // 選択された値をそのままセット
-                      form.setFieldValue("categories", [
-                        ...form.values.categories.filter(
-                          (cat) =>
-                            !childCategoriesData.some(
-                              (child) => child.value === cat
-                            )
-                        ),
-                        ...value,
-                      ]);
-                    }}
-                    error={form.errors.categories}
-                  />
-                ); */
-                    }
                   })}
                 </Flex>
               </Flex>

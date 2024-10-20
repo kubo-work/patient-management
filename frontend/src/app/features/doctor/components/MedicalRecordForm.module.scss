@@ -13,19 +13,7 @@
 .flexWrap{
     display: flex;
     align-items: center;
-    gap:5vw;
-    width: 100%;
-    @include mobile{
-        align-items: stretch;
-        flex-direction: column;
-        gap:1rem;
-    }
-}
-
-.selectWrap{
-    display: flex;
-    align-items: center;
-    gap:5vw;
+    gap:3vw;
     width: 100%;
     @include mobile{
         align-items: stretch;
