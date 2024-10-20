@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useGlobalDoctor } from "./useGlobalDoctor";
 import { useForm } from "@mantine/form";
 import { MedicalRecordsType } from "../../../../common/types/MedicalRecordsType";
@@ -53,10 +53,11 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         },
     })
 
-    const doctorsData = doctors?.map((doctor) => ({
+    const doctorsData = useMemo(() =>
+    (doctors?.map((doctor) => ({
         value: doctor.id.toString(),
         label: doctor.name,
-    }));
+    }))), [doctors]);
 
     const showErrorMessage = useCallback(async (response: Response) => {
         const errorData = await response.json();
@@ -91,7 +92,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
     }, [loginDoctor, name, data])
 
 
-    const handleSubmit = async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
+    const handleSubmit = useCallback(async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
 
         const { id, name, doctor_id, examination_at, medical_memo, doctor_memo, categories } = values;
@@ -129,9 +130,9 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             message && setShowNotification(message, "orange");
             return;
         }
-    }
+    }, [patients, showErrorMessage])
 
-    const handleDelete = async (id: number, doMutate: () => void, modalClosed: () => void) => {
+    const handleDelete = useCallback(async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
         const result = window.confirm("削除しますか？");
         if (result) {
@@ -154,8 +155,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 return;
             }
         }
-
-    }
+    }, [showErrorMessage])
 
     return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError }
 }
