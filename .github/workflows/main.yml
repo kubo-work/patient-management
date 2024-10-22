@@ -22,13 +22,12 @@ jobs:
       - name: Inspect files before checkout
         run: ls -la
 
-      - name: Navigate to client directory
-        run: cd backend
-
       - name: Install dependencies
+        working-directory: backend
         run: npm install
 
       - name: Build the project
+        working-directory: backend
         run: npm run build
 
       - name: Deploy to project
