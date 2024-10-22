@@ -12,7 +12,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to patient-management
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        uses: npm install
+
+      - name: Build the project
+        uses: npm run build
+
+      - name: Deploy to project
         uses: johnbeynon/render-deploy-action@v0.0.8
         with:
           service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
