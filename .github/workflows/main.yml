@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        uses: npm install
+        run: npm install
 
       - name: Build the project
-        uses: npm run build
+        run: npm run build
 
       - name: Deploy to project
         uses: johnbeynon/render-deploy-action@v0.0.8
