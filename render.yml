@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: patient-management
+    env: node
+    plan: free
+    branch: main
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    enVars:
+      - key: DATABASE_URL
+        value: { { secrets.DATABASE_URL } }
