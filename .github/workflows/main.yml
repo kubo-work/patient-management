@@ -31,7 +31,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to project
-        uses: ttskch/render-deploy@v1.0.0
+        uses: johnbeynon/render-deploy-action@v0.0.8
         with:
           service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
           api-key: ${{ secrets.MY_RENDER_API_KEY }}
