@@ -529,3 +529,4 @@ app.delete("/doctor/medical_records", doctorLoginCheck, async (request: Request,
 });
 
 app.listen(PORT, () => console.log("server is running"))
+console.log('test')
