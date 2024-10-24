@@ -10,13 +10,15 @@ on:
     paths:
       - "backend/**"
 
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Deploy to project
       - uses: ttskch/render-deploy@v1.0.0
         with:
           service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
           api-key: ${{ secrets.MY_RENDER_API_KEY }}
-          interval: 20 # optional
-          timeout: 300
+          wait-for-success: true
