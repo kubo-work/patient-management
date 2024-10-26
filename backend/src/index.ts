@@ -146,13 +146,13 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
 
         const sessionID = request.sessionID;
         request.session.sessionId = sessionID;
-        request.session.userId = doctor.id; // 実際のデータベースIDも必要に応じて保存
+        request.session.userId = doctor.id;
         response.cookie("doctor-manager-token", sessionID, {
             httpOnly: true,
             path: "/doctor",
-            secure: true,
-            sameSite: "none", // "strict" | "lax" | "none" (secure must be true)
-            maxAge: 24 * 60 * 60 * 1000, // 1 hour
+            secure: process.env.DOCTOR_SESSION_SECURE === "true",
+            sameSite: "none",
+            maxAge: 24 * 60 * 60 * 1000,
         });
         return response.json({
             message: "ログインに成功しました。",
