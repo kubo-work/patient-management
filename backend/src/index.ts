@@ -65,7 +65,8 @@ app.use(session({
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
         httpOnly: true, // XSS攻撃を防ぐ
         sameSite: 'none',
-        path: "/doctor"
+        path: "/doctor",
+        maxAge: 1 * 24 * 60 * 60 * 1000
     }
 }))
 
