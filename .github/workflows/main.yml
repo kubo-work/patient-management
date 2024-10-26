@@ -1,11 +1,12 @@
 name: Render Deploy
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
       - "backend/**"
+    types: [closed]
   workflow_dispatch:
 
 jobs:
