@@ -1,6 +1,7 @@
-export const doctorCookieOptions: { maxAge: number, path: string, secure: boolean, httpOnly: boolean } = {
+export const doctorCookieOptions: { maxAge: number, path: string, secure: boolean, httpOnly: boolean, sameSite: string } = {
     maxAge: 1 * 24 * 60 * 60,
     path: '/doctor',
     secure: process.env.NEXT_DOCTOR_SESSION_SECURE === 'true', // HTTPSでのみ送信
     httpOnly: false,
+    sameSite: 'none'
 }

@@ -73,7 +73,6 @@ app.use(session({
 const prisma = new PrismaClient();
 
 const doctorLoginCheck = (request: Request, response: Response, next: NextFunction) => {
-    console.log(request.headers.cookie)
     if (!request.headers.cookie) {
         return response.status(401).json({ error: "不正なアクセスです。" });
     }
