@@ -1,30 +1,30 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    reactStrictMode: true,
     async headers() {
         return [
             {
-                source: "/doctor/:path*", // /doctor配下に限定
+                source: "/doctor/:path*",
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: process.env.CLIENT_URL || "https://your-allowed-domain.com", // 環境変数でドメインを管理
+                        value: process.env.NEXT_PUBLIC_API_URL,
                     },
                     {
                         key: "Access-Control-Allow-Credentials",
-                        value: "true", // クッキーを有効にする
+                        value: "true",
                     },
                     {
                         key: "Access-Control-Allow-Methods",
-                        value: "GET,POST,PUT,OPTIONS", // PUTを追加
+                        value: "GET,POST,PUT,OPTIONS",
                     },
                     {
                         key: "Access-Control-Allow-Headers",
-                        value: "Content-Type,Authorization,Accept,X-Requested-With", // 必要なヘッダーのみ許可
+                        value: "Content-Type,Authorization,Accept,X-Requested-With",
                     },
                 ],
             },
         ];
     }
 };
-
 export default nextConfig;
