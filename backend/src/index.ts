@@ -76,7 +76,7 @@ const doctorLoginCheck = (request: Request, response: Response, next: NextFuncti
     if (!request.headers.cookie) {
         return response.status(401).json({ error: "不正なアクセスです。" });
     }
-    next(); // セッションがあれば次の処理に進む
+    next();
 };
 
 
