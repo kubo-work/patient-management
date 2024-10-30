@@ -64,9 +64,9 @@ app.use(session({
         domain: process.env.CLIENT_URL,
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
         httpOnly: true, // XSS攻撃を防ぐ
-        sameSite: 'lax',
+        sameSite: 'none',
         path: "/doctor",
-        maxAge: 1 * 24 * 60 * 60 * 1000
+        maxAge: 24 * 60 * 60 * 1000
     }
 }))
 
@@ -151,7 +151,7 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
             httpOnly: true,
             path: "/doctor",
             secure: process.env.DOCTOR_SESSION_SECURE === "true",
-            sameSite: "lax",
+            sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000,
         });
         return response.json({
