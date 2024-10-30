@@ -1,0 +1,23 @@
+name: Push Actions
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリチェック
+        uses: actions/checkout@v4
+
+      - name: ファイル状況確認
+        run: ls -la
+
+      - name: インストール
+        working-directory: backend
+        run: npm install
+
+      - name: tsc で型チェック
+        working-directory: backend
+        run: npx tsc --noEmit
