@@ -11,7 +11,6 @@ erDiagram
         string birth "誕生日"
         timestamp created_at "作成日"
         timestamp updated_at "更新日"
-        %% timestamp last_hospital_visit_at "最新来院日"
     }
 
     medical_records{
@@ -22,13 +21,15 @@ erDiagram
         timestamp examination_at "診察日"
         timestamp created_at "作成日"
         timestamp updated_at "更新日"
-        %% int deleted_flag "削除"
+        enum deleted_flag "削除"
     }
 
     %% 診察（施術内容をカテゴリ化してテーブル）
     categories{
         int id PK "ID" 
-        string treatment "処置"
+        string treatment "処置内容"
+        %% parent_id 親カテゴリの場合はNULLにする
+        int parent_id "親ID" 
         timestamp created_at "作成日"
         timestamp updated_at "更新日"
     }
