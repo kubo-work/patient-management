@@ -2,6 +2,9 @@ name: Push Actions
 
 on:
   push:
+    paths:
+      - "backend/**"
+      - "frontend/**"
   workflow_dispatch:
 
 jobs:
