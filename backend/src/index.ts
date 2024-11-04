@@ -32,6 +32,7 @@ const PORT: number = 8080;
 const sessionName = "doctor-management";
 
 const ACCESS_CLIENT_URL: string = process.env.CLIENT_URL;
+const ACCESS_CLIENT_DOMAIN: string = process.env.CLIENT_DOMAIN;
 app.use(express.json())
 app.use(cors({
     origin: ACCESS_CLIENT_URL,
@@ -61,7 +62,7 @@ app.use(session({
     saveUninitialized: false,
     name: sessionName,
     cookie: {
-        domain: process.env.CLIENT_URL,
+        domain: ACCESS_CLIENT_DOMAIN,
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
         httpOnly: true, // XSS攻撃を防ぐ
         sameSite: 'none',
