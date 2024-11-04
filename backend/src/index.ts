@@ -157,6 +157,7 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
             secure: process.env.DOCTOR_SESSION_SECURE === "true",
             sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000,
+            domain: ACCESS_CLIENT_DOMAIN,
         });
         return response.json({
             message: "ログインに成功しました。",
