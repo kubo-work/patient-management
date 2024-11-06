@@ -55,14 +55,14 @@ app.set('trust proxy', 1) // trust first proxy
 
 const cookieOptions: CookieOptions = {
     secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-    httpOnly: false,
+    httpOnly: true,
     sameSite: 'none',
     path: "/doctor",
     maxAge: 24 * 60 * 60 * 1000
 }
 
-if (process.env.NODE_ENV === 'production' && process.env.CLIENT_DOMAIN) {
-    cookieOptions.domain = process.env.CLIENT_DOMAIN;
+if (process.env.NODE_ENV === 'production' && ACCESS_CLIENT_DOMAIN) {
+    cookieOptions.domain = ACCESS_CLIENT_DOMAIN;
 }
 
 app.use(session({
