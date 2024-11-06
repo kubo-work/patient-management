@@ -27,7 +27,7 @@ const pool = new Pool({
 
 const PgSessionStore = PgSession(session)
 
-const app: Express = express();
+export const app: Express = express();
 const PORT: number = 8080;
 const sessionName = "doctor-management";
 
@@ -51,6 +51,28 @@ app.use(cors({
 app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 
 app.set('trust proxy', 1) // trust first proxy
+
+type CookieOptions = {
+    secure: boolean;
+    httpOnly: boolean;
+    sameSite: "lax" | "none";
+    path: string;
+    maxAge: number;
+    domain?: string;
+}
+
+const cookieOptions: CookieOptions = {
+    secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
+    httpOnly: true, // XSS攻撃を防ぐ
+    sameSite: 'none',
+    path: "/doctor",
+    maxAge: 24 * 60 * 60 * 1000
+}
+
+if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN) {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+}
+
 app.use(session({
     store: new PgSessionStore({
         pool,
@@ -61,14 +83,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     name: sessionName,
-    cookie: {
-        domain: ACCESS_CLIENT_DOMAIN,
-        secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-        httpOnly: true, // XSS攻撃を防ぐ
-        sameSite: 'none',
-        path: "/doctor",
-        maxAge: 24 * 60 * 60 * 1000
-    }
+    cookie: cookieOptions
 }))
 
 const prisma = new PrismaClient();
@@ -151,14 +166,7 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
         const sessionID = request.sessionID;
         request.session.sessionId = sessionID;
         request.session.userId = doctor.id;
-        response.cookie("doctor-manager-token", sessionID, {
-            httpOnly: true,
-            path: "/doctor",
-            secure: process.env.DOCTOR_SESSION_SECURE === "true",
-            sameSite: "none",
-            maxAge: 24 * 60 * 60 * 1000,
-            domain: ACCESS_CLIENT_DOMAIN,
-        });
+        response.cookie("doctor-manager-token", sessionID, cookieOptions);
         return response.json({
             message: "ログインに成功しました。",
             userId: request.session.userId,
@@ -546,4 +554,6 @@ app.delete("/doctor/medical_records", doctorLoginCheck, async (request: Request,
     }
 });
 
-app.listen(PORT, () => console.log("server is running"))
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => console.log("server is running"));
+}
