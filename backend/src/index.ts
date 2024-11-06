@@ -11,6 +11,7 @@ import { MedicalRecordsCategoryType } from "../../common/types/MedicalRecordsCat
 import pkg from 'pg';
 import PgSession from 'connect-pg-simple';
 import dayjs from "dayjs";
+import { CookieOptions } from "../../common/types/CookieOptions";
 
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
@@ -51,15 +52,6 @@ app.use(cors({
 app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 
 app.set('trust proxy', 1) // trust first proxy
-
-type CookieOptions = {
-    secure: boolean;
-    httpOnly: boolean;
-    sameSite: "lax" | "none";
-    path: string;
-    maxAge: number;
-    domain?: string;
-}
 
 const cookieOptions: CookieOptions = {
     secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
