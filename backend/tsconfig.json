@@ -11,12 +11,13 @@
       "paths": {
         "@/*": ["*"], // srcディレクトリをエイリアスとして設定
         "@common/*": ["../common/*"] // エイリアスの設定
-      }
+      },
+      "types": ["@types/jest","@types/supertest"]
   },
  "include": [
     "src/**/*.ts", // src内のすべてのtsファイル
     "src/**/*.tsx", // src内のすべてのtsxファイル
-    "../common/**/*.ts", // commonフォルダ内のTypeScriptファイルを含める
+    "../common/**/*.ts", "test/index.spec.ts", // commonフォルダ内のTypeScriptファイルとtestのファイル
 ],
   "exclude": ["node_modules","build"],
 }
