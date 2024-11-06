@@ -4,12 +4,7 @@ const cookieOptions: CookieOptions = {
     maxAge: 24 * 60 * 60 * 1000,
     path: '/doctor',
     secure: process.env.NEXT_DOCTOR_SESSION_SECURE === 'production',
-    httpOnly: false,
-    sameSite: "lax"
-}
-
-if (process.env.NEXT_DOCTOR_SESSION_SECURE === "production") {
-    cookieOptions.domain = process.env.NEXT_PUBLIC_API_DOMAIN
+    httpOnly: true,
 }
 
 export const doctorCookieOptions: CookieOptions = cookieOptions
