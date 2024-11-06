@@ -61,8 +61,8 @@ const cookieOptions: CookieOptions = {
     maxAge: 24 * 60 * 60 * 1000
 }
 
-if (process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN) {
-    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+if (process.env.NODE_ENV === 'production' && process.env.CLIENT_DOMAIN) {
+    cookieOptions.domain = process.env.CLIENT_DOMAIN;
 }
 
 app.use(session({
