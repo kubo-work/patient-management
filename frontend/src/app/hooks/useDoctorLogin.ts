@@ -54,7 +54,6 @@ const useDoctorLogin = () => {
         } else {
             const data = await response.json()
             setCookie(doctorCookieKeyName, data.sessionId, doctorCookieOptions);
-            console.log(doctorCookieOptions)
             router.push('/doctor/patients-list');
         }
     }, [router, open, close]);
