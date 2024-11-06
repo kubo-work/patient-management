@@ -1,4 +1,4 @@
-name: Push Actions
+name: Type Check
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  type-check:
     runs-on: ubuntu-latest
     steps:
       - name: リポジトリチェック
