@@ -53,18 +53,6 @@ app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエ�
 
 app.set('trust proxy', 1) // trust first proxy
 
-const cookieOptions: CookieOptions = {
-    secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-    httpOnly: true,
-    sameSite: 'none',
-    path: "/doctor",
-    maxAge: 24 * 60 * 60 * 1000
-}
-
-if (process.env.NODE_ENV === 'production' && ACCESS_CLIENT_DOMAIN) {
-    cookieOptions.domain = ACCESS_CLIENT_DOMAIN;
-}
-
 app.use(session({
     store: new PgSessionStore({
         pool,
@@ -75,7 +63,14 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     name: sessionName,
-    cookie: cookieOptions
+    cookie: {
+        secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
+        httpOnly: true,
+        sameSite: 'none',
+        path: "/doctor",
+        maxAge: 24 * 60 * 60 * 1000,
+        ...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
+    }
 }))
 
 const prisma = new PrismaClient();
@@ -158,7 +153,14 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
         const sessionID = request.sessionID;
         request.session.sessionId = sessionID;
         request.session.userId = doctor.id;
-        response.cookie("doctor-manager-token", sessionID, cookieOptions);
+        response.cookie("doctor-manager-token", sessionID, {
+            secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
+            httpOnly: true,
+            sameSite: 'none',
+            path: "/doctor",
+            maxAge: 24 * 60 * 60 * 1000,
+            ...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
+        });
         return response.json({
             message: "ログインに成功しました。",
             userId: request.session.userId,
