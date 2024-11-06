@@ -1,1 +1,1 @@
-export const doctorCookieKeyName = "doctor-manager";
+export const doctorCookieKeyName = "doctor-manager-frontend";

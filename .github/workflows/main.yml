@@ -21,7 +21,7 @@ jobs:
 
       - name: インストール
         working-directory: backend
-        run: npm install
+        run: npm install --production=false
 
       - name: ビルド
         working-directory: backend

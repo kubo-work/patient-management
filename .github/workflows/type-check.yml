@@ -20,7 +20,7 @@ jobs:
 
       - name: インストール
         working-directory: backend
-        run: npm install
+        run: npm install --production=false
 
       - name: tsc で型チェック
         working-directory: backend
