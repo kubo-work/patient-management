@@ -55,7 +55,7 @@ app.set('trust proxy', 1) // trust first proxy
 
 const cookieOptions: CookieOptions = {
     secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-    httpOnly: true, // XSS攻撃を防ぐ
+    httpOnly: false, // XSS攻撃を防ぐ
     sameSite: 'lax',
     path: "/doctor",
     maxAge: 24 * 60 * 60 * 1000
