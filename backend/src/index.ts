@@ -66,7 +66,7 @@ app.use(session({
     cookie: {
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
         path: "/doctor",
         maxAge: 24 * 60 * 60 * 1000,
         ...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
@@ -156,7 +156,7 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
         response.cookie("doctor-manager-token", sessionID, {
             secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
             httpOnly: true,
-            sameSite: 'lax',
+            sameSite: 'none',
             path: "/doctor",
             maxAge: 24 * 60 * 60 * 1000,
             ...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
