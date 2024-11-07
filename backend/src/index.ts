@@ -66,7 +66,7 @@ app.use(session({
     cookie: {
         secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
         httpOnly: true,
-        sameSite: 'none',
+        sameSite: 'lax',
         path: "/doctor",
         maxAge: 24 * 60 * 60 * 1000,
         ...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
@@ -87,7 +87,7 @@ const doctorLoginCheck = (request: Request, response: Response, next: NextFuncti
 app.get("/doctor/patients/:patient_id", doctorLoginCheck
     , async (request: Request, response: Response) => {
         try {
-            response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+            // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
             const { patient_id }: { patient_id: number } = request.body;
             const patient: PatientType = await prisma.patients.findFirst({
                 where: {
@@ -104,7 +104,7 @@ app.get("/doctor/patients/:patient_id", doctorLoginCheck
 app.put("/doctor/patients/:patient_id", doctorLoginCheck
     , async (request: Request, response: Response) => {
         try {
-            response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+            // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
             const { id, name, sex, tel, email, address, birth }: PatientType = request.body;
             const updated_at: Date = new Date();
             const result = await prisma.patients.update({
@@ -129,7 +129,7 @@ app.put("/doctor/patients/:patient_id", doctorLoginCheck
 // doctor 管理画面ログイン
 app.post("/doctor/login", async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { email, password }: { email: string; password: string } = request.body;
 
         if (!email) {
@@ -156,7 +156,7 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
         response.cookie("doctor-manager-token", sessionID, {
             secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
             httpOnly: true,
-            sameSite: 'none',
+            sameSite: 'lax',
             path: "/doctor",
             maxAge: 24 * 60 * 60 * 1000,
             ...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
@@ -196,7 +196,7 @@ app.post("/doctor/logout", doctorLoginCheck, async (request: Request, response: 
 // doctor session 情報を取得してログインしているユーザーの情報を取得する
 app.get("/doctor/login_doctor", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return response.status(401).json({ error: "認証トークンがありません。" });
@@ -227,7 +227,7 @@ app.get("/doctor/login_doctor", doctorLoginCheck, async (request: Request, respo
 // 医者一覧を取得
 app.get("/doctor/doctors", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const allDoctors: DoctorType[] = await prisma.doctors.findMany({
             select: {
                 id: true,
@@ -245,7 +245,7 @@ app.get("/doctor/doctors", doctorLoginCheck, async (request: Request, response: 
 // 医者データ取得
 app.get("/doctor/doctors/:doctor_id", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const doctor_id = Number(request.params.doctor_id)
         const doctor: DoctorType = await prisma.doctors.findFirst({
             select: {
@@ -267,7 +267,7 @@ type PutRequestDoctorType = Omit<DoctorType, "id">
 // 医者データ更新
 app.put("/doctor/doctors/:doctor_id", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const doctor_id = Number(request.params.doctor_id)
         const { name, email, password }: PutRequestDoctorType = request.body;
         const updated_at: Date = new Date();
@@ -289,7 +289,7 @@ app.put("/doctor/doctors/:doctor_id", doctorLoginCheck, async (request: Request,
 // 医者データ新規作成
 app.post("/doctor/doctors", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { name, email, password }: DoctorType = request.body;
         const result = await prisma.doctors.create({
             data: {
@@ -307,7 +307,7 @@ app.post("/doctor/doctors", doctorLoginCheck, async (request: Request, response:
 // 患者一覧を取得する
 app.get("/doctor/patients", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const allPatients: PatientType[] = await prisma.patients.findMany();
         return response.json(allPatients);
     } catch (e) {
@@ -325,7 +325,7 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag
 // 選択した患者の診察履歴一覧を取得する
 app.get("/doctor/medical_records/:patient_id", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { patient_id }: { patient_id: number } = request.body;
         const { all, startDate, endDate } = request.query; // クエリパラメータから日付を取得
 
@@ -392,7 +392,7 @@ app.get("/doctor/medical_records/:patient_id", doctorLoginCheck, async (request:
 // カテゴリを取得する
 app.get("/doctor/categories", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const allCategories = await prisma.categories.findMany({
             select: {
                 id: true,
@@ -418,7 +418,7 @@ type PutMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & { categori
 
 app.put("/doctor/medical_records", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = request.body;
         const updated_at: Date = new Date();
         const medicalRecordId: number = Number(id);
@@ -486,7 +486,7 @@ type PostMedicalRecordsType = PutMedicalRecordsType & { doctor_id: string };
 
 app.post("/doctor/medical_records", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = request.body;
         const result = await prisma.$transaction(async (prisma) => {
             const newMedicalRecord = await prisma.medical_records.create({
@@ -520,7 +520,7 @@ app.post("/doctor/medical_records", doctorLoginCheck, async (request: Request, r
 
 app.delete("/doctor/medical_records", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
+        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { id } = request.body;
         const result = await prisma.$transaction(async (prisma) => {
             const targetId = Number(id);
