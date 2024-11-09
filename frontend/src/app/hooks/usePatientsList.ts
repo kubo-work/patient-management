@@ -1,26 +1,29 @@
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import { API_URL } from "../../../constants/url";
 import { PatientType } from "../../../../common/types/PatientType";
 import { useState } from "react";
+import { useGlobalDoctor } from "./useGlobalDoctor";
 
-async function fetcher(key: string): Promise<PatientType[]> {
-    return fetch(key).then((res) => res.json());
+async function fetcher([url, token]: [string, string | null]): Promise<PatientType[]> {
+    return token
+        ? fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }).then((res) => res.json())
+        : {};;
 }
 
 export const usePatientsList = () => {
+    const { token } = useGlobalDoctor();
     const [patients, setPatients] = useState<PatientType[] | null>([]);
 
     const fetchUrl: string = `${API_URL}/doctor/patients`
-    const { data, isLoading, error } = useSWR(
-        fetchUrl,
+    const { data, isLoading, error, mutate: doMutate } = useSWR(
+        [fetchUrl, token],
         fetcher
     );
-
-    const { mutate } = useSWRConfig();
-
-    const doMutate = () => {
-        mutate(fetchUrl);
-    }
 
     return {
         data,

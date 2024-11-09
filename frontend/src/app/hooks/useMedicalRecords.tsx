@@ -1,4 +1,4 @@
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import { API_URL } from "../../../constants/url";
 import { MedicalRecordsType } from "@/../../common/types/MedicalRecordsType";
 import { useEffect, useMemo, useState } from "react";
@@ -7,18 +7,26 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { Button, List, ListItem } from "@mantine/core";
 import { MRT_ColumnDef } from "mantine-react-table";
+import { useGlobalDoctor } from "./useGlobalDoctor";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-async function fetcher(key: string): Promise<MedicalRecordsType[]> {
-  return fetch(key, {
-    method: "GET",
-    credentials: "include", // クッキーを送信するために必要
-  }).then((res) => res.json());
+async function fetcher([url, token]: [string, string | null]): Promise<
+  MedicalRecordsType[]
+> {
+  return token
+    ? fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => res.json())
+    : {};
 }
 
 const useMedicalRecords = (patients_id: number) => {
+  const { token } = useGlobalDoctor();
   const fetchUrl = `${API_URL}/doctor/medical_records/${patients_id}`;
   const [medicalRecord, setMedicalRecord] = useState<
     MedicalRecordsType[] | null
@@ -28,16 +36,15 @@ const useMedicalRecords = (patients_id: number) => {
     useState<MedicalRecordsType | null>(null);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
 
-  const { data, isLoading, error } = useSWR(fetchUrl, fetcher);
+  const {
+    data,
+    isLoading,
+    error,
+    mutate: patientMutate,
+  } = useSWR([fetchUrl, token], fetcher);
   useEffect(() => {
     data && setMedicalRecord(data);
   }, [data, setMedicalRecord]);
-
-  const { mutate } = useSWRConfig();
-
-  const patientMutate = () => {
-    mutate(fetchUrl);
-  };
 
   const columns = useMemo<MRT_ColumnDef<MedicalRecordsType>[]>(
     () => [

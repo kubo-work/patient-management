@@ -1,11 +1,11 @@
 import { useRouter } from "next/navigation";
 import { API_URL } from "../../../constants/url";
 import { useCallback, useState } from "react";
-import { doctorCookieKeyName } from "../../../constants/cookieKey";
-import { setCookie } from "cookies-next";
-import { doctorCookieOptions } from "../../../constants/cookieOption";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { setCookie } from "cookies-next";
+import { doctorCookieKeyName } from "../../../constants/cookieKey";
+import { doctorCookieOptions } from "../../../constants/cookieOption";
 
 type FormValues = {
     email: string;
@@ -37,7 +37,7 @@ const useDoctorLogin = () => {
         const response = await fetch(`${API_URL}/doctor/login`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 email,
@@ -53,7 +53,8 @@ const useDoctorLogin = () => {
             return;
         } else {
             const data = await response.json()
-            setCookie(doctorCookieKeyName, data.sessionId, doctorCookieOptions);
+            localStorage.setItem('token', data.token);
+            setCookie(doctorCookieKeyName, data.token, doctorCookieOptions);
             router.push('/doctor/patients-list');
         }
     }, [router, open, close]);
