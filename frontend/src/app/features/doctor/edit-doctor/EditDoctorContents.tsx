@@ -1,4 +1,4 @@
-"use client"; // これを追加してクライアントコンポーネントにする
+"use client";
 
 import useDoctorEdit from "@/app/hooks/useDoctorEdit";
 import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";

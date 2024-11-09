@@ -12,12 +12,23 @@ import pkg from 'pg';
 import PgSession from 'connect-pg-simple';
 import dayjs from "dayjs";
 import { CookieOptions } from "../../common/types/CookieOptions";
+import jwt, { JwtPayload } from 'jsonwebtoken';
+const { sign, verify } = jwt;
 
 // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
         sessionId?: string;
         userId?: number
+    }
+}
+
+declare module "express" {
+    export interface Request {
+        user?: {
+            token: string;
+            userId: number;
+        }
     }
 }
 
@@ -51,8 +62,6 @@ app.use(cors({
 // プリフライトリクエストの処理
 app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 
-app.set('trust proxy', 1) // trust first proxy
-
 app.use(session({
     store: new PgSessionStore({
         pool,
@@ -63,23 +72,36 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     name: sessionName,
-    cookie: {
-        secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-        httpOnly: true,
-        sameSite: 'none',
-        path: "/doctor",
-        maxAge: 24 * 60 * 60 * 1000,
-        //...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
-    }
 }))
+
+
+if (process.env.NODE_ENV === "production") {
+    app.set('trust proxy', 1) // trust first proxy
+}
 
 const prisma = new PrismaClient();
 
+interface CustomJwtPayload extends JwtPayload {
+    userId: string; // JWTのペイロードにuserIdを追加
+}
+
 const doctorLoginCheck = (request: Request, response: Response, next: NextFunction) => {
-    if (!request.headers.cookie) {
-        return response.status(401).json({ error: "不正なアクセスです。" });
+    const authHeader = request.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>" からトークンを取得
+
+    if (!token) {
+        return response.status(401).json({ error: 'ログインしてください。' });
     }
-    next();
+
+    // トークンを検証
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return response.status(403).json({ error: 'ログインの有効期限が切れている可能性があります。' });
+        }
+        const decodedToken = decoded as CustomJwtPayload;
+        request.user = { token, userId: Number(decodedToken.userId) };
+        next();
+    });
 };
 
 
@@ -87,7 +109,6 @@ const doctorLoginCheck = (request: Request, response: Response, next: NextFuncti
 app.get("/doctor/patients/:patient_id", doctorLoginCheck
     , async (request: Request, response: Response) => {
         try {
-            // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
             const { patient_id }: { patient_id: number } = request.body;
             const patient: PatientType = await prisma.patients.findFirst({
                 where: {
@@ -129,7 +150,6 @@ app.put("/doctor/patients/:patient_id", doctorLoginCheck
 // doctor 管理画面ログイン
 app.post("/doctor/login", async (request: Request, response: Response) => {
     try {
-        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { email, password }: { email: string; password: string } = request.body;
 
         if (!email) {
@@ -151,20 +171,12 @@ app.post("/doctor/login", async (request: Request, response: Response) => {
         }
 
         const sessionID = request.sessionID;
-        request.session.sessionId = sessionID;
-        request.session.userId = doctor.id;
-        response.cookie("doctor-manager-token", sessionID, {
-            secure: process.env.DOCTOR_SESSION_SECURE === "true", // HTTPSを使用
-            httpOnly: true,
-            sameSite: 'none',
-            path: "/doctor",
-            maxAge: 24 * 60 * 60 * 1000,
-            //...(process.env.NODE_ENV === 'production' && { domain: ACCESS_CLIENT_DOMAIN })
-        });
+        const userId = doctor.id;
+        const token = sign({ userId, email }, process.env.JWT_SECRET_KEY, { expiresIn: "1d" });
         return response.json({
             message: "ログインに成功しました。",
-            userId: request.session.userId,
-            sessionId: sessionID
+            sessionId: sessionID,
+            token
         });
     } catch (e) {
         return response.status(400).json(e);
@@ -196,15 +208,6 @@ app.post("/doctor/logout", doctorLoginCheck, async (request: Request, response: 
 // doctor session 情報を取得してログインしているユーザーの情報を取得する
 app.get("/doctor/login_doctor", doctorLoginCheck, async (request: Request, response: Response) => {
     try {
-        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
-        const authHeader = request.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return response.status(401).json({ error: "認証トークンがありません。" });
-        }
-
-        // 'Bearer 'を取り除いてセッションIDを取得
-        const sid = authHeader.split(' ')[1];
-        const doctorSess = await pool.query('SELECT sess FROM session WHERE sid = $1 limit 1', [sid]);
         const doctor: DoctorType = await prisma.doctors.findFirst({
             select: {
                 id: true,
@@ -214,7 +217,7 @@ app.get("/doctor/login_doctor", doctorLoginCheck, async (request: Request, respo
             },
             where: {
                 AND: [
-                    { id: Number(doctorSess.rows[0].sess.userId) }
+                    { id: Number(request.user.userId) }
                 ]
             }
         })
@@ -234,6 +237,9 @@ app.get("/doctor/doctors", doctorLoginCheck, async (request: Request, response: 
                 name: true,
                 email: true,
                 password: true
+            },
+            orderBy: {
+                id: "asc"
             }
         });
         return response.json(allDoctors);

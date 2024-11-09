@@ -1,12 +1,10 @@
 import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
 import { API_URL } from "../../../constants/url";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 
 import { CategoriesType } from "@/../../common/types/CategoriesType";
 import { DoctorType } from "@/../../common/types/DoctorType";
 import { PatientType } from "../../../../common/types/PatientType";
-import { doctorCookieKeyName } from "../../../constants/cookieKey";
-import { CookieValueTypes, getCookie } from "cookies-next";
 import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
 import { SexTypes } from "@/../../common/types/SexTypes";
 
@@ -21,44 +19,66 @@ export type GlobalDoctorContextType = {
   patientsMutate: () => void;
   patientNameSuggestions: PatientNameSuggestionsType[];
   sexList: SexTypes;
+  token: string | null;
 };
 
 export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-async function loginDoctorFetcher(
-  key: [string, { sid: CookieValueTypes }]
-): Promise<DoctorType> {
-  return fetch(key[0], {
-    method: "GET",
-    credentials: "include", // クッキーを送信するために必要
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key[1].sid}`,
-    },
-  }).then((res) => res.json());
+async function loginDoctorFetcher([url, token]: [
+  string,
+  string | null
+]): Promise<DoctorType> {
+  return token
+    ? fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => res.json())
+    : {};
 }
 
-async function categoriesFetcher(key: string): Promise<CategoriesType[]> {
-  return fetch(key, {
-    method: "GET",
-    credentials: "include",
-  }).then((res) => res.json());
+async function categoriesFetcher([url, token]: [
+  string,
+  string | null
+]): Promise<CategoriesType[]> {
+  return token
+    ? fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => res.json())
+    : {};
 }
 
-async function doctorsFetcher(key: string): Promise<DoctorType[]> {
-  return fetch(key, {
-    method: "GET",
-    credentials: "include",
-  }).then((res) => res.json());
+async function doctorsFetcher([url, token]: [string, string | null]): Promise<
+  DoctorType[]
+> {
+  return token
+    ? fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => res.json())
+    : {};
 }
 
-async function patientsFetcher(key: string): Promise<PatientType[]> {
-  return fetch(key, {
-    method: "GET",
-    credentials: "include",
-  }).then((res) => res.json());
+async function patientsFetcher([url, token]: [string, string | null]): Promise<
+  PatientType[]
+> {
+  return token
+    ? fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then((res) => res.json())
+    : {};
 }
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
@@ -67,10 +87,8 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
-  const sid: CookieValueTypes = getCookie(doctorCookieKeyName);
-  const loginDoctorAdditionalParam: { sid: CookieValueTypes } = {
-    sid,
-  };
+
+  const [token, setToken] = useState<string | null>(null);
 
   // ログインしている医者 データのステート管理
   const [loginDoctor, setLoginDoctor] = useState<DoctorType | null>(null);
@@ -81,19 +99,30 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   // 患者一覧データのステート管理
   const [patients, setPatients] = useState<PatientType[] | null>([]);
 
-  const { data: loginDoctorData } = useSWR(
-    [loginDoctorFetchUrl, loginDoctorAdditionalParam],
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    setToken(savedToken);
+  }, []);
+
+  const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
+    [loginDoctorFetchUrl, token],
     loginDoctorFetcher
   );
 
-  const { data: categoriesData } = useSWR(
-    categoriesFetchUrl,
+  const { data: categoriesData, mutate: categoriesDoMutate } = useSWR(
+    [categoriesFetchUrl, token],
     categoriesFetcher
   );
 
-  const { data: doctorsData } = useSWR(doctorsFetchUrl, doctorsFetcher);
+  const { data: doctorsData, mutate: doctorsDoMutate } = useSWR(
+    [doctorsFetchUrl, token],
+    doctorsFetcher
+  );
 
-  const { data: patientsData } = useSWR(patientsFetchUrl, patientsFetcher);
+  const { data: patientsData, mutate: patientsMutate } = useSWR(
+    [patientsFetchUrl, token],
+    patientsFetcher
+  );
 
   useEffect(() => {
     loginDoctorData && setLoginDoctor(loginDoctorData);
@@ -110,24 +139,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   useEffect(() => {
     patientsData && setPatients(patientsData);
   }, [patientsData, setPatients]);
-
-  const { mutate } = useSWRConfig();
-
-  const loginDoMutate = () => {
-    mutate(loginDoctorFetchUrl);
-  };
-
-  const categoriesDoMutate = () => {
-    mutate(categoriesFetchUrl);
-  };
-
-  const doctorsDoMutate = () => {
-    mutate(doctorsFetchUrl);
-  };
-
-  const patientsMutate = () => {
-    mutate(patientsFetchUrl);
-  };
 
   // 患者の名前をサジェストするためのリストを準備
   const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
@@ -169,6 +180,7 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
         patientsMutate,
         patientNameSuggestions,
         sexList,
+        token,
       }}
     >
       {children}

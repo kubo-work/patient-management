@@ -18,7 +18,7 @@ type FormValues = {
 }
 
 const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => {
-    const { patients, loginDoctor, categories, doctors } = useGlobalDoctor();
+    const { patients, loginDoctor, categories, doctors, token } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
 
     const getName: string = name;
@@ -101,7 +101,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         const method = id ? "PUT" : "POST";
         const response = await fetch(`${API_URL}/doctor/medical_records`, {
             method,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({
                 id: id ? Number(id) : 0,
                 doctor_id: Number(doctor_id),
@@ -111,7 +111,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 examination_at,
                 categories
             }),
-            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -130,7 +129,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             message && setShowNotification(message, "orange");
             return;
         }
-    }, [patients, showErrorMessage])
+    }, [patients, showErrorMessage, token])
 
     const handleDelete = useCallback(async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
@@ -138,7 +137,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         if (result) {
             const response = await fetch(`${API_URL}/doctor/medical_records`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                     id,
                 }),
@@ -155,7 +154,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 return;
             }
         }
-    }, [showErrorMessage])
+    }, [showErrorMessage, token])
 
     return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError }
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { API_URL } from '../../../constants/url';
 import { useRouter } from 'next/navigation';
 import setShowNotification from '../../../constants/setShowNotification';
+import { useGlobalDoctor } from './useGlobalDoctor';
 
 type FormValues = {
     name: string;
@@ -11,14 +12,17 @@ type FormValues = {
     password: string;
 }
 
-async function getDoctorFetcher(id: number): Promise<DoctorType | null> {
-    return fetch(`${API_URL}/doctor/doctors/${id}`, {
+async function getDoctorFetcher([id, token]: [number, string | null]): Promise<DoctorType | null> {
+    return token ? fetch(`${API_URL}/doctor/doctors/${id}`, {
         method: "GET",
-        credentials: "include",
-    }).then((res) => res.json());
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then((res) => res.json()) : {};
 }
 
 const useDoctorEdit = (id: number | null) => {
+    const { token } = useGlobalDoctor();
     const router = useRouter();
 
     const [submitError, setSubmitError] = useState<string>("");
@@ -40,11 +44,11 @@ const useDoctorEdit = (id: number | null) => {
 
     useEffect(() => {
         const getDoctor = async (id: number) => {
-            const data = await getDoctorFetcher(id)
+            const data = await getDoctorFetcher([id, token])
             data && setDoctorData(data)
         }
         id && getDoctor(id)
-    }, [id])
+    }, [id, token])
 
     useEffect(() => {
         if (doctorData) {
@@ -63,13 +67,12 @@ const useDoctorEdit = (id: number | null) => {
         const fetchUrl = id ? `${API_URL}/doctor/doctors/${id}` : `${API_URL}/doctor/doctors`
         const response = await fetch(fetchUrl, {
             method,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify({
                 name,
                 email,
                 password,
             }),
-            credentials: 'include'
         });
 
         if (!response.ok) {
