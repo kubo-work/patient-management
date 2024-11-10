@@ -7,7 +7,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { Button, List, ListItem } from "@mantine/core";
 import { MRT_ColumnDef } from "mantine-react-table";
-import { useGlobalDoctor } from "./useGlobalDoctor";
+import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -26,7 +26,7 @@ async function fetcher([url, token]: [string, string | null]): Promise<
 }
 
 const useMedicalRecords = (patients_id: number) => {
-  const { token } = useGlobalDoctor();
+  const { token } = useGlobalDoctorLogin();
   const fetchUrl = `${API_URL}/doctor/medical_records/${patients_id}`;
   const [medicalRecord, setMedicalRecord] = useState<
     MedicalRecordsType[] | null

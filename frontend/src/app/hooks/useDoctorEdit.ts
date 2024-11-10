@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { API_URL } from '../../../constants/url';
 import { useRouter } from 'next/navigation';
 import setShowNotification from '../../../constants/setShowNotification';
-import { useGlobalDoctor } from './useGlobalDoctor';
+import { useGlobalDoctorLogin } from './useGlobalDoctorLogin';
 
 type FormValues = {
     name: string;
@@ -22,7 +22,7 @@ async function getDoctorFetcher([id, token]: [number, string | null]): Promise<D
 }
 
 const useDoctorEdit = (id: number | null) => {
-    const { token } = useGlobalDoctor();
+    const { token } = useGlobalDoctorLogin();
     const router = useRouter();
 
     const [submitError, setSubmitError] = useState<string>("");

@@ -2,6 +2,7 @@
 import { usePathname } from "next/navigation";
 import DoctorDashboardLayout from "../features/doctor/layout/DoctorDashboardLayout";
 import GlobalDoctorProvider from "../providers/GlobalDoctorContext";
+import GlobalDoctorLoginProvider from "../providers/GlobalDoctorLoginContext";
 
 export default function Layout({
   children,
@@ -10,12 +11,14 @@ export default function Layout({
 }>) {
   const pathname = usePathname();
   if ("/doctor/login" === pathname) {
-    return <>{children}</>;
+    return <GlobalDoctorLoginProvider>{children}</GlobalDoctorLoginProvider>;
   } else {
     return (
-      <GlobalDoctorProvider>
-        <DoctorDashboardLayout>{children}</DoctorDashboardLayout>
-      </GlobalDoctorProvider>
+      <GlobalDoctorLoginProvider>
+        <GlobalDoctorProvider>
+          <DoctorDashboardLayout>{children}</DoctorDashboardLayout>
+        </GlobalDoctorProvider>
+      </GlobalDoctorLoginProvider>
     );
   }
 }

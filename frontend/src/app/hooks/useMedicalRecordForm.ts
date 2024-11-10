@@ -6,6 +6,7 @@ import { MedicalRecordsType } from "../../../../common/types/MedicalRecordsType"
 import { API_URL } from "../../../constants/url";
 import dayjs from "dayjs";
 import setShowNotification from "../../../constants/setShowNotification";
+import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
 type FormValues = {
     id: string;
@@ -18,7 +19,8 @@ type FormValues = {
 }
 
 const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => {
-    const { patients, loginDoctor, categories, doctors, token } = useGlobalDoctor();
+    const { token } = useGlobalDoctorLogin();
+    const { patients, loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
 
     const getName: string = name;
