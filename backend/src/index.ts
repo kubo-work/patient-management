@@ -94,7 +94,7 @@ const doctorLoginCheck = (request: Request, response: Response, next: NextFuncti
     }
 
     // トークンを検証
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
         if (err) {
             return response.status(403).json({ error: 'ログインの有効期限が切れている可能性があります。' });
         }

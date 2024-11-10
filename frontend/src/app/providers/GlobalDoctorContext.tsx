@@ -7,6 +7,7 @@ import { DoctorType } from "@/../../common/types/DoctorType";
 import { PatientType } from "../../../../common/types/PatientType";
 import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
 import { SexTypes } from "@/../../common/types/SexTypes";
+import { useGlobalDoctorLogin } from "../hooks/useGlobalDoctorLogin";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | null;
@@ -19,7 +20,6 @@ export type GlobalDoctorContextType = {
   patientsMutate: () => void;
   patientNameSuggestions: PatientNameSuggestionsType[];
   sexList: SexTypes;
-  token: string | null;
 };
 
 export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
@@ -83,12 +83,11 @@ async function patientsFetcher([url, token]: [string, string | null]): Promise<
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
+  const { isLogin, token } = useGlobalDoctorLogin();
   const loginDoctorFetchUrl = `${API_URL}/doctor/login_doctor`;
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
-
-  const [token, setToken] = useState<string | null>(null);
 
   // ログインしている医者 データのステート管理
   const [loginDoctor, setLoginDoctor] = useState<DoctorType | null>(null);
@@ -98,11 +97,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const [doctors, setDoctors] = useState<DoctorType[] | null>([]);
   // 患者一覧データのステート管理
   const [patients, setPatients] = useState<PatientType[] | null>([]);
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    setToken(savedToken);
-  }, []);
 
   const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
     [loginDoctorFetchUrl, token],
@@ -125,20 +119,20 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    loginDoctorData && setLoginDoctor(loginDoctorData);
-  }, [loginDoctorData, setLoginDoctor]);
+    isLogin && loginDoctorData && setLoginDoctor(loginDoctorData);
+  }, [isLogin, loginDoctorData, setLoginDoctor]);
 
   useEffect(() => {
-    categoriesData && setCategories(categoriesData);
-  }, [categoriesData, setCategories]);
+    isLogin && categoriesData && setCategories(categoriesData);
+  }, [isLogin, categoriesData, setCategories]);
 
   useEffect(() => {
-    doctorsData && setDoctors(doctorsData);
-  }, [doctorsData, setDoctors]);
+    isLogin && doctorsData && setDoctors(doctorsData);
+  }, [isLogin, doctorsData, setDoctors]);
 
   useEffect(() => {
-    patientsData && setPatients(patientsData);
-  }, [patientsData, setPatients]);
+    isLogin && patientsData && setPatients(patientsData);
+  }, [isLogin, patientsData, setPatients]);
 
   // 患者の名前をサジェストするためのリストを準備
   const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
@@ -180,7 +174,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
         patientsMutate,
         patientNameSuggestions,
         sexList,
-        token,
       }}
     >
       {children}

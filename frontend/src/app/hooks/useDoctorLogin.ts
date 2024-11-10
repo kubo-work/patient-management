@@ -6,6 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { setCookie } from "cookies-next";
 import { doctorCookieKeyName } from "../../../constants/cookieKey";
 import { doctorCookieOptions } from "../../../constants/cookieOption";
+import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
 type FormValues = {
     email: string;
@@ -14,6 +15,7 @@ type FormValues = {
 
 const useDoctorLogin = () => {
     const router = useRouter();
+    const { setIsLogin } = useGlobalDoctorLogin();
     const [visible, { open, close }] = useDisclosure(false);
     const [loginError, setLoginError] = useState<string>("");
 
@@ -55,9 +57,10 @@ const useDoctorLogin = () => {
             const data = await response.json()
             localStorage.setItem('token', data.token);
             setCookie(doctorCookieKeyName, data.token, doctorCookieOptions);
+            setIsLogin(true);
             router.push('/doctor/patients-list');
         }
-    }, [router, open, close]);
+    }, [router, open, close, setIsLogin]);
 
     return { form, handleLogin, loginError, visible }
 }

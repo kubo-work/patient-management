@@ -2,7 +2,7 @@ import useSWR from "swr";
 import { API_URL } from "../../../constants/url";
 import { PatientType } from "../../../../common/types/PatientType";
 import { useState } from "react";
-import { useGlobalDoctor } from "./useGlobalDoctor";
+import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
 async function fetcher([url, token]: [string, string | null]): Promise<PatientType[]> {
     return token
@@ -16,7 +16,7 @@ async function fetcher([url, token]: [string, string | null]): Promise<PatientTy
 }
 
 export const usePatientsList = () => {
-    const { token } = useGlobalDoctor();
+    const { token } = useGlobalDoctorLogin();
     const [patients, setPatients] = useState<PatientType[] | null>([]);
 
     const fetchUrl: string = `${API_URL}/doctor/patients`
