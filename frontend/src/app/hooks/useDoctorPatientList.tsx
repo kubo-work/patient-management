@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import { PatientType } from "../../../../common/types/PatientType";
 import { sexList } from "../../../constants/sexList";
 import Link from "next/link";
-import { Button } from "@mantine/core";
+import { Button, Flex } from "@mantine/core";
 
 const useDoctorPatientList = () => {
   const columns = useMemo<MRT_ColumnDef<PatientType>[]>(
@@ -32,13 +32,22 @@ const useDoctorPatientList = () => {
       {
         header: "操作",
         Cell: ({ row }) => (
-          <Link
-            href={`/doctor/medical-records?patients_id=${row.original.id}`}
-            passHref
-            legacyBehavior
-          >
-            <Button component="a">選択</Button>
-          </Link>
+          <Flex gap={4}>
+            <Link
+              href={`/doctor/medical-records?patients_id=${row.original.id}`}
+              passHref
+              legacyBehavior
+            >
+              <Button component="a">診察履歴</Button>
+            </Link>
+            <Link
+              href={`/doctor/edit-patient/${row.original.id}`}
+              passHref
+              legacyBehavior
+            >
+              <Button component="a">患者情報</Button>
+            </Link>
+          </Flex>
         ),
         maxSize: 80,
       },

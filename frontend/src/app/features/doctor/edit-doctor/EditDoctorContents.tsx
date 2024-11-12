@@ -5,7 +5,7 @@ import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
 import { TextInput, Flex, Button, PasswordInput, Alert } from "@mantine/core";
 import React, { FC } from "react";
 
-import styles from "./EditDoctorContents.module.scss";
+import styles from "../components/styles/EditFlexInput.module.scss";
 
 type Props = {
   id: number | null;
