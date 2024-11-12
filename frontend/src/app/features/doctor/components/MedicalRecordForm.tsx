@@ -16,7 +16,7 @@ import useMedicalRecordForm from "@/app/hooks/useMedicalRecordForm";
 import { DateTimePicker } from "@mantine/dates";
 import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
 
-import styles from "./MedicalRecordForm.module.scss";
+import styles from "./styles/MedicalRecordForm.module.scss";
 
 type Props = {
   name: string;

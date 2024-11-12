@@ -9,11 +9,7 @@ type Props = {
 };
 
 const ModalPatientForm: FC<Props> = React.memo(({ patientData }) => {
-  const { sexList } = useGlobalDoctor();
-  const sexListData = Object.entries(sexList).map(([key, value]) => ({
-    value: key,
-    label: value.label,
-  }));
+  const { sexListData } = useGlobalDoctor();
   const form = useForm({
     initialValues: {
       patient_id: patientData?.id,

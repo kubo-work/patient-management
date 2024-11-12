@@ -27,14 +27,6 @@ describe("API テスト", () => {
     });
 
     test("Loginの成功", async () => {
-        // try {
-        //     const response = await request(app).post("/doctor/login").send(testLoginPostData);
-        //     console.log(request)
-        //     expect(response.status).toBe(200);
-        //     expect(response.body.message).toBe("ログインに成功しました。");
-        // } catch (error) {
-        //     console.error("Error in login test:", error);
-        // }
         const response = await request(app).post("/doctor/login").send(testLoginPostData);
         expect(response.status).toBe(200);
         expect(response.body.message).toBe("ログインに成功しました。");

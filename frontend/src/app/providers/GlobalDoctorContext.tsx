@@ -7,6 +7,7 @@ import { DoctorType } from "@/../../common/types/DoctorType";
 import { PatientType } from "../../../../common/types/PatientType";
 import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
 import { SexTypes } from "@/../../common/types/SexTypes";
+import { SexListData } from "@/../../common/types/SexListData";
 import { useGlobalDoctorLogin } from "../hooks/useGlobalDoctorLogin";
 
 export type GlobalDoctorContextType = {
@@ -20,6 +21,7 @@ export type GlobalDoctorContextType = {
   patientsMutate: () => void;
   patientNameSuggestions: PatientNameSuggestionsType[];
   sexList: SexTypes;
+  sexListData: SexListData[];
 };
 
 export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
@@ -161,6 +163,13 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
     };
   }, []);
 
+  const sexListData: SexListData[] = Object.entries(sexList).map(
+    ([key, value]) => ({
+      value: key as keyof SexTypes,
+      label: value.label,
+    })
+  );
+
   return (
     <GlobalDoctorContext.Provider
       value={{
@@ -174,6 +183,7 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
         patientsMutate,
         patientNameSuggestions,
         sexList,
+        sexListData,
       }}
     >
       {children}
