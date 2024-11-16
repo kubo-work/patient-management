@@ -1,6 +1,6 @@
 import { Container, Paper, Title } from "@mantine/core";
 import { Metadata } from "next";
-import React from "react";
+import React, { Suspense } from "react";
 import style from "./page.module.scss";
 import LoginForm from "@/app/features/doctor/login/LoginForm";
 
@@ -25,7 +25,9 @@ const page = () => {
               診察管理
             </Title>
           </header>
-          <LoginForm styles={style} />
+          <Suspense>
+            <LoginForm styles={style} />
+          </Suspense>
         </Paper>
       </Container>
     </main>

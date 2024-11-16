@@ -1,6 +1,6 @@
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { API_URL } from "../../../constants/url";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { setCookie } from "cookies-next";
@@ -15,9 +15,19 @@ type FormValues = {
 
 const useDoctorLogin = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { setIsLogin } = useGlobalDoctorLogin();
     const [visible, { open, close }] = useDisclosure(false);
     const [loginError, setLoginError] = useState<string>("");
+    const status = searchParams.get("status");
+
+    useEffect(() => {
+        if (status) {
+            if ("error" === status) {
+                setLoginError("ログインの有効期限が切れた可能性があります。")
+            }
+        }
+    }, [status])
 
     const form = useForm({
         initialValues: {
