@@ -7,6 +7,7 @@ import React, { FC } from "react";
 import styles from "../components/styles/EditFlexInput.module.scss";
 import usePatientEdit from "@/app/hooks/usePatientEdit";
 import { DateInput } from "@mantine/dates";
+import dayjs from "dayjs";
 
 type Props = {
   id: number | null;
@@ -130,6 +131,7 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
               {...form.getInputProps("birth")}
               error={form.errors.birth}
               value={form.values.birth}
+              maxDate={dayjs().endOf("day").toDate()}
               onChange={(value) => {
                 if (!value) {
                   return "生年月日を選択してください。";
