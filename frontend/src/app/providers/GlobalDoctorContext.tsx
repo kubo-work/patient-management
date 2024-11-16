@@ -85,7 +85,7 @@ async function patientsFetcher([url, token]: [string, string | null]): Promise<
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
-  const { isLogin, token } = useGlobalDoctorLogin();
+  const { token } = useGlobalDoctorLogin();
   const loginDoctorFetchUrl = `${API_URL}/doctor/login_doctor`;
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
@@ -121,20 +121,20 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   );
 
   useEffect(() => {
-    isLogin && loginDoctorData && setLoginDoctor(loginDoctorData);
-  }, [isLogin, loginDoctorData, setLoginDoctor]);
+    token && loginDoctorData && setLoginDoctor(loginDoctorData);
+  }, [token, loginDoctorData, setLoginDoctor]);
 
   useEffect(() => {
-    isLogin && categoriesData && setCategories(categoriesData);
-  }, [isLogin, categoriesData, setCategories]);
+    token && categoriesData && setCategories(categoriesData);
+  }, [token, categoriesData, setCategories]);
 
   useEffect(() => {
-    isLogin && doctorsData && setDoctors(doctorsData);
-  }, [isLogin, doctorsData, setDoctors]);
+    token && doctorsData && setDoctors(doctorsData);
+  }, [token, doctorsData, setDoctors]);
 
   useEffect(() => {
-    isLogin && patientsData && setPatients(patientsData);
-  }, [isLogin, patientsData, setPatients]);
+    token && patientsData && setPatients(patientsData);
+  }, [token, patientsData, setPatients]);
 
   // 患者の名前をサジェストするためのリストを準備
   const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
