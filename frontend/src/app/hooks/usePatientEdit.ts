@@ -5,6 +5,7 @@ import { useForm } from "@mantine/form";
 import { API_URL } from "../../../constants/url";
 import setShowNotification from "../../../constants/setShowNotification";
 import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
 
 type FormValues = {
     name: string;
@@ -46,18 +47,25 @@ const usePatientEdit = (id: number | null) => {
             name: (value) => value === "" && "お名前を入力してください。",
             email: (value) =>
                 /^\S+@\S+$/.test(value) ? null : "メールアドレスを入力してください。",
-            ...!id && { password: (value) => value === "" && "パスワードを入力してください。" },
             tel: (value) => value === "" && "電話番号を入力してください。",
             address: (value) => value === "" && "住所を入力してください。",
-            birth: (value) => !value && "生年月日を入力してください。",
+            birth: (value) => {
+                if (!value) {
+                    return "生年月日を入力してください。";
+                }
+                const now = dayjs().startOf('minute');
+                const selectedTime = dayjs(value).startOf('minute');
+                return selectedTime.isAfter(now) ? "未来の日付は選択できません。" : null;
+            }
         },
     });
 
     useEffect(() => {
+        console.log(id)
         const getPatient = async (id: number) => {
             const data = await getPatientFetcher([id, token])
-            data && setPatientData(data)
             console.log(data)
+            data && setPatientData(data)
         }
         id && getPatient(id)
     }, [id, token])
@@ -90,6 +98,7 @@ const usePatientEdit = (id: number | null) => {
                 tel,
                 address,
                 birth,
+                ...id && { id }
             }),
         });
 

@@ -111,7 +111,7 @@ app.get("/doctor/token_check", verifyAuthToken, (request: Request, response: Res
 app.get("/doctor/patients/:patient_id", verifyAuthToken
     , async (request: Request, response: Response) => {
         try {
-            const { patient_id }: { patient_id: number } = request.body;
+            const patient_id = Number(request.params.patient_id)
             const patient: PatientType = await prisma.patients.findFirst({
                 select: {
                     id: true,
@@ -124,6 +124,9 @@ app.get("/doctor/patients/:patient_id", verifyAuthToken
                 },
                 where: {
                     id: patient_id
+                },
+                orderBy: {
+                    id: "asc"
                 }
             });
             return response.json(patient)
@@ -153,6 +156,31 @@ app.put("/doctor/patients/:patient_id", verifyAuthToken
             return response.json(result)
         } catch (e) {
             return response.status(400).json({ error: "データの更新に失敗しました。" })
+        }
+    })
+
+// 患者のデータ作成
+app.post("/doctor/patients", verifyAuthToken
+    , async (request: Request, response: Response) => {
+        try {
+            const { name, sex, tel, email, address, birth }: PatientType = request.body;
+            const updated_at: Date = new Date();
+            const password = dayjs(birth).format("YYYYMMDD");
+            const result = await prisma.patients.create({
+                data: {
+                    name,
+                    sex,
+                    tel,
+                    email,
+                    address,
+                    birth,
+                    password,
+                    updated_at
+                },
+            });
+            return response.json(result)
+        } catch (e) {
+            return response.status(400).json({ error: "データの登録に失敗しました。" })
         }
     })
 
@@ -301,7 +329,6 @@ app.put("/doctor/doctors/:doctor_id", verifyAuthToken, async (request: Request, 
 // 医者データ新規作成
 app.post("/doctor/doctors", verifyAuthToken, async (request: Request, response: Response) => {
     try {
-        // response.setHeader('Access-Control-Allow-Origin', ACCESS_CLIENT_URL)
         const { name, email, password }: DoctorType = request.body;
         const result = await prisma.doctors.create({
             data: {
