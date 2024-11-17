@@ -60,7 +60,6 @@ const GlobalDoctorLoginProvider = (props: { children: ReactNode }) => {
           },
         });
         if (!response.ok) {
-          console.log(response);
           logoutAction("error");
         }
       };

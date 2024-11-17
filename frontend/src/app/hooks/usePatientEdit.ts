@@ -61,10 +61,8 @@ const usePatientEdit = (id: number | null) => {
     });
 
     useEffect(() => {
-        console.log(id)
         const getPatient = async (id: number) => {
             const data = await getPatientFetcher([id, token])
-            console.log(data)
             data && setPatientData(data)
         }
         id && getPatient(id)
