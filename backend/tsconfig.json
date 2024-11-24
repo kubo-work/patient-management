@@ -4,14 +4,15 @@
       "module": "ESNext", // ESモジュールを使用する場合
       "target": "ES2021", // ターゲットのバージョン
       "esModuleInterop": true,
-      "moduleResolution": "node",
+      "moduleResolution": "Node",
+      "resolveJsonModule": true,
       "skipLibCheck": true,
       "declaration": true,
       "baseUrl": "./src", // 基本となるディレクトリ
-      "paths": {
-        "@/*": ["*"], // srcディレクトリをエイリアスとして設定
-        "@common/*": ["../common/*"] // エイリアスの設定
-      },
+      // "paths": {
+      //   "$/*": ["*"], // srcディレクトリをエイリアスとして設定
+      //   "$common/*": ["../common/*"] // エイリアスの設定
+      // },
       "types": ["@types/jest","@types/supertest"]
   },
  "include": [
