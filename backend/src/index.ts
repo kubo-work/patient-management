@@ -2,8 +2,6 @@ import express from "express";
 import session from 'express-session';
 import type { Express } from "express";
 import cors from "cors";
-import pkg from 'pg';
-import PgSession from 'connect-pg-simple';
 import doctorLogin from "./doctor/login.js";
 import doctorLogout from "./doctor/logout.js";
 import doctorPatients from "./doctor/patients.js";
