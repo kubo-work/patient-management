@@ -12,6 +12,13 @@ const config: Config = {
     moduleNameMapper: {
         "^(\\.\\.?\\/.+)\\.jsx?$": "$1"
     },
-    extensionsToTreatAsEsm: ['.ts']
+    clearMocks: true,
+    preset: 'ts-jest',
+    extensionsToTreatAsEsm: ['.ts'],
+    testEnvironment: 'node',
+    setupFilesAfterEnv: [
+        '<rootDir>/test/doctor/login.spec.ts',
+        '<rootDir>/test/doctor/login_doctor.spec.ts',
+    ],
 };
 module.exports = config;
