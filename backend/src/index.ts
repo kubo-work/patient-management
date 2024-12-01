@@ -20,19 +20,11 @@ declare module 'express-session' {
     }
 }
 
-const { Pool } = pkg;
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-})
-
-const PgSessionStore = PgSession(session)
-
 export const app: Express = express();
 const PORT: number = 8080;
 export const sessionName = "doctor-management";
 
 const ACCESS_CLIENT_URL: string = process.env.CLIENT_URL;
-const ACCESS_CLIENT_DOMAIN: string = process.env.CLIENT_DOMAIN;
 app.use(express.json())
 app.use(cors({
     origin: ACCESS_CLIENT_URL,
