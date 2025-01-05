@@ -15,6 +15,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@faker-js/faker": "^9.3.0",
     "@prisma/client": "^5.19.1",
     "@types/jest": "^29.5.14",
     "@types/supertest": "^6.0.2",

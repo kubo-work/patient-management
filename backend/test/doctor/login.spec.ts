@@ -1,7 +1,7 @@
 import request from "supertest";
 import { prismaMock } from "../prismaMock";
 import { app } from "../../src/index";
-import { mockSetDoctorData } from "./const/mockLoginDoctorData";
+import { mockSetDoctorData } from "./mockData/mockLoginDoctorData";
 
 type mockLoginPostData = {
     email: string;
