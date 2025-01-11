@@ -8,9 +8,11 @@ type mockLoginPostData = {
     password: string
 }
 
+const { email, password } = mockSetDoctorData[0]
+
 const mockLoginPostData: mockLoginPostData = {
-    email: mockSetDoctorData.email,
-    password: mockSetDoctorData.password
+    email,
+    password
 }
 
 describe("ログインのテスト", () => {
@@ -20,7 +22,7 @@ describe("ログインのテスト", () => {
     })
 
     test("ログインの成功", async () => {
-        prismaMock.doctors.findFirst.mockResolvedValue(mockSetDoctorData);
+        prismaMock.doctors.findFirst.mockResolvedValue(mockSetDoctorData[0]);
         const response = await request(app).post("/doctor/login").send(mockLoginPostData);
         expect(response.status).toBe(200);
         expect(response.body.message).toBe("ログインに成功しました。");
