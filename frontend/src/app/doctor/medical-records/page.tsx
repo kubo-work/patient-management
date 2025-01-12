@@ -1,12 +1,21 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { API_URL } from "../../../../constants/url";
 import { Metadata } from "next";
 import { PatientType } from "../../../../../common/types/PatientType";
 import { Title } from "@mantine/core";
 import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
+import { doctorCookieKeyName } from "../../../../constants/cookieKey";
+import { getCookie } from "cookies-next";
 
 const getPatients = async (patients_id: number) => {
-  return await fetch(`${API_URL}/doctor/patients/${patients_id}`)
+  const token = getCookie(doctorCookieKeyName, { cookies });
+  return await fetch(`${API_URL}/doctor/patients/${patients_id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
     .then((res) => {
       const data: Promise<PatientType> = res.json();
       return data;
