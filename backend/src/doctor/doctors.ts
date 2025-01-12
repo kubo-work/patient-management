@@ -37,6 +37,12 @@ const router = Router();
 router.get("/", verifyAuthToken, async (_, response: Response) => {
     try {
         const allDoctors: DoctorType[] = await prisma.doctors.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                password: true
+            },
             orderBy: {
                 id: "asc"
             }
@@ -53,6 +59,12 @@ router.get("/:doctor_id", verifyAuthToken, async (request: Request, response: Re
     try {
         const doctor_id = Number(request.params.doctor_id)
         const doctor: DoctorType = await prisma.doctors.findFirst({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                password: true
+            },
             where: { id: doctor_id },
         });
         const parseDoctor: GetDoctor = getDoctorSchema.parse(doctor);
