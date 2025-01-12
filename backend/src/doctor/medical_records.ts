@@ -18,7 +18,7 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag
 // 選択した患者の診察履歴一覧を取得する
 router.get("/:patient_id", verifyAuthToken, async (request: Request, response: Response) => {
     try {
-        const { patient_id }: { patient_id: number } = request.body;
+        const patient_id = Number(request.params.patient_id);
         const { all, startDate, endDate } = request.query; // クエリパラメータから日付を取得
 
         // 現在の日付
