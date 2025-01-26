@@ -2,12 +2,23 @@ import request from "supertest";
 import { app } from "../../src/index";
 import { prismaMock } from "../prismaMock";
 import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData";
-const { id, name, email, password, created_at, updated_at } = mockSetDoctorData[0];
+import { mockReset } from "jest-mock-extended";
+const { id, name, email, password } = mockSetDoctorData[0];
 const mockSendDoctorData = { id, name, email, password }
 
 describe("ログインしている医者データ取得テスト", () => {
 
-    afterAll(() => {
+    beforeEach(async () => {
+        mockReset(prismaMock)
+        await prismaMock.$connect();
+        await prismaMock.doctors.createMany({
+            data: mockSetDoctorData,
+        });
+    });
+
+    afterEach(async () => {
+        await prismaMock.doctors.deleteMany();
+        await prismaMock.$disconnect();
         jest.clearAllMocks();
     })
 
@@ -31,8 +42,8 @@ describe("ログインしている医者データ取得テスト", () => {
         });
         const response = await request(app).get("/doctor/login_doctor")
             .set("Authorization", `Bearer ${testToken}`)
-        expect(response.status).toBe(400);
-        expect(response.body.error).toBe("データの取得に失敗しました。");
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe("指定された医師が見つかりません。");
     })
 
 })

@@ -1,6 +1,7 @@
 import { DoctorType } from "../../../../common/types/DoctorType";
 import { faker } from '@faker-js/faker';
 import jwt from 'jsonwebtoken';
+import { secretKey } from "../../../src/jwt_secret_key";
 const { sign } = jwt;
 
 export type mockDoctorsData = DoctorType & {
@@ -20,7 +21,15 @@ export const mockSetDoctorData: mockDoctorsData[] = Array.from({ length: 3 }, ()
     }
 ));
 
-export const testToken = sign({ userId: mockSetDoctorData[0].id, email: mockSetDoctorData[0].email }, process.env.JWT_SECRET_KEY, { expiresIn: "1d" });
+export const testToken = secretKey ? sign({ userId: mockSetDoctorData[0].id, email: mockSetDoctorData[0].email }, secretKey, { expiresIn: "1d" }) : "";
 
+const { email, password } = mockSetDoctorData[0]
 
-
+export type mockLoginPostData = {
+    email: string;
+    password: string
+}
+export const mockLoginPostData: mockLoginPostData = {
+    email,
+    password
+}

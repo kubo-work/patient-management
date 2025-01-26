@@ -22,7 +22,7 @@ export const app: Express = express();
 const PORT: number = 8080;
 export const sessionName = "doctor-management";
 
-const ACCESS_CLIENT_URL: string = process.env.CLIENT_URL;
+const ACCESS_CLIENT_URL: string | undefined = process.env.CLIENT_URL;
 app.use(express.json())
 app.use(cors({
     origin: ACCESS_CLIENT_URL,
@@ -41,7 +41,7 @@ app.use(cors({
 app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 
 app.use(session({
-    secret: process.env.DOCTOR_SESSION_SECRET_KEY,
+    secret: ACCESS_CLIENT_URL || "",
     resave: false,
     saveUninitialized: false,
     name: sessionName,

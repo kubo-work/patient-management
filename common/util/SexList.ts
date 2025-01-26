@@ -1,4 +1,4 @@
-import { SexTypes } from "../../common/types/SexTypes";
+import { SexTypes } from "../types/SexTypes";
 
 export const sexList: SexTypes = {
     no_answer: {
@@ -13,4 +13,4 @@ export const sexList: SexTypes = {
     neither: {
         label: "その他"
     }
-}
+} as const

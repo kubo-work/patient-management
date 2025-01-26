@@ -7,6 +7,7 @@
       "moduleResolution": "Node",
       "resolveJsonModule": true,
       "skipLibCheck": true,
+      "strictNullChecks":true,
       "declaration": true,
       "baseUrl": "./src", // 基本となるディレクトリ
       // "paths": {
@@ -18,7 +19,8 @@
  "include": [
     "src/**/*.ts", // src内のすべてのtsファイル
     "src/**/*.tsx", // src内のすべてのtsxファイル
-    "../common/**/*.ts", "test/**/**.ts", // commonフォルダ内のTypeScriptファイルとtestのファイル
+    "../common/**/*.ts", // commonフォルダ内のTypeScriptファイル
+    "test/**/**.ts", // testのファイル
 ],
   "exclude": ["node_modules","build"],
 }
