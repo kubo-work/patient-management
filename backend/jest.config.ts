@@ -16,9 +16,9 @@ const config: Config = {
     preset: 'ts-jest',
     extensionsToTreatAsEsm: ['.ts'],
     testEnvironment: 'node',
-    setupFilesAfterEnv: [
-        '<rootDir>/test/doctor/login.spec.ts',
-        '<rootDir>/test/doctor/login_doctor.spec.ts',
-    ],
+    // setupFilesAfterEnv: [
+    //     '<rootDir>/test/doctor/login.spec.ts',
+    //     '<rootDir>/test/doctor/login_doctor.spec.ts',
+    // ],
 };
 module.exports = config;

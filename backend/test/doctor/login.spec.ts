@@ -1,29 +1,18 @@
 import request from "supertest";
 import { prismaMock } from "../prismaMock";
 import { app } from "../../src/index";
-import { mockSetDoctorData } from "./mockData/mockLoginDoctorData";
-
-type mockLoginPostData = {
-    email: string;
-    password: string
-}
-
-const { email, password } = mockSetDoctorData[0]
-
-const mockLoginPostData: mockLoginPostData = {
-    email,
-    password
-}
+import { mockLoginPostData, mockSetDoctorData } from "./mockData/mockLoginDoctorData";
 
 describe("ログインのテスト", () => {
 
-    beforeEach(() => {
+    afterEach(async () => {
         jest.clearAllMocks();
     })
 
     test("ログインの成功", async () => {
         prismaMock.doctors.findFirst.mockResolvedValue(mockSetDoctorData[0]);
         const response = await request(app).post("/doctor/login").send(mockLoginPostData);
+
         expect(response.status).toBe(200);
         expect(response.body.message).toBe("ログインに成功しました。");
     });
