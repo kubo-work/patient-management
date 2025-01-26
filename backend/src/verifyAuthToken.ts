@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import { secretKey } from "./jwt_secret_key.js";
 const { verify } = jwt;
 
 declare module "express" {
@@ -23,8 +24,11 @@ export const verifyAuthToken = (request: Request, response: Response, next: Next
         return response.status(401).json({ error: 'ログインしてください。' });
     }
 
+    if (!secretKey) {
+        return response.status(401).json({ error: "トークンの設定が無効です。" });
+    }
     // トークンを検証
-    verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    verify(token, secretKey, (err, decoded) => {
         if (err) {
             return response.status(403).json({ error: 'ログインの有効期限が切れている可能性があります。' });
         }

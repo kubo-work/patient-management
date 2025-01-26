@@ -16,7 +16,7 @@ const getCategorySchema = z.object({
 
 const getCategoriesSchema = z.array(getCategorySchema);
 
-type GetCategory = z.infer<typeof getCategorySchema>;
+type GetCategorySchema = z.infer<typeof getCategorySchema>;
 
 const router = Router();
 
@@ -38,7 +38,7 @@ router.get("/", verifyAuthToken, async (_, response: Response) => {
                 parent_id: null
             }
         });
-        const parseCategories: GetCategory[] = getCategoriesSchema.parse(allCategories);
+        const parseCategories: GetCategorySchema[] = getCategoriesSchema.parse(allCategories);
         return response.json(parseCategories);
     } catch (e) {
         return response.status(400).json({ error: "データの取得に失敗しました。" });

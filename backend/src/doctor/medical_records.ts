@@ -6,10 +6,58 @@ import dayjs from "dayjs";
 import { delFlag } from "@prisma/client";
 import { prisma } from "../prisma.js";
 import { MedicalRecordsCategoryType } from "../../../common/types/MedicalRecordsCategoryType";
+import { z } from "zod";
+
+const getMedicalRecordSchema = z.object({
+    id: z.number(),
+    patient_id: z.number(),
+    examination_at: z.date(),
+    medical_memo: z.string(),
+    doctor_memo: z.string(),
+    doctor_id: z.number(),
+    medical_categories: z.array(z.object({
+        categories: z.object({
+            id: z.number(),
+            treatment: z.string(),
+        }),
+    })),
+});
+
+const getMedicalRecordsSchema = z.array(getMedicalRecordSchema);
+
+type GetMedicalRecordSchema = z.infer<typeof getMedicalRecordSchema>;
+
+const createMedicalRecordSchemaObject = {
+    patient_id: z.number(),
+    doctor_id: z.number(),
+    medical_memo: z.string(),
+    doctor_memo: z.string(),
+    examination_at: z.string().transform((val) => new Date(val))
+}
+
+const updateMedicalRecordSchemaObject = {
+    ...createMedicalRecordSchemaObject,
+    updated_at: z.date()
+}
+
+const createMedicalRecordSchema = z.object(createMedicalRecordSchemaObject);
+const updateMedicalRecordSchema = z.object(updateMedicalRecordSchemaObject);
+
+type CreateMedicalRecordSchema = z.infer<typeof createMedicalRecordSchema>;
+type UpdateMedicalRecordSchema = z.infer<typeof updateMedicalRecordSchema>;
+
+const createMedicalCategorySchema = z.object({
+    medical_record_id: z.number(),
+    category_id: z.number()
+})
+
+const createMedicalCategoriesSchema = z.array(createMedicalCategorySchema);
+
+type CreateMedicalCategory = z.infer<typeof createMedicalCategorySchema>;
 
 const router = Router();
 
-type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories" | "delFlag"> & {
+type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & {
     medical_categories: {
         categories: BasicCategoriesType;
     }[]
@@ -63,7 +111,8 @@ router.get("/:patient_id", verifyAuthToken, async (request: Request, response: R
                 id: "desc"
             }
         });
-        const allMedicalRecords: MedicalRecordsType[] = resultAllMedicalRecords.map((result) => {
+        const parseMedicalRecords: GetMedicalRecordSchema[] = getMedicalRecordsSchema.parse(resultAllMedicalRecords);
+        const allMedicalRecords: MedicalRecordsType[] = parseMedicalRecords.map((result) => {
             const { id, patient_id, doctor_id, examination_at, medical_memo, doctor_memo, medical_categories } = result;
             return {
                 id,
@@ -90,16 +139,17 @@ router.put("/", verifyAuthToken, async (request: Request, response: Response) =>
         const medicalRecordId: number = Number(id);
         const categoryNumbers: number[] = categories.map((category) => Number(category))
         const result = await prisma.$transaction(async (prisma) => {
+            const validatedMedicalRecord: UpdateMedicalRecordSchema = updateMedicalRecordSchema.parse({
+                patient_id,
+                doctor_id,
+                medical_memo,
+                doctor_memo,
+                examination_at,
+                updated_at
+            });
             await prisma.medical_records.update({
                 where: { id: medicalRecordId },
-                data: {
-                    patient_id,
-                    doctor_id,
-                    medical_memo,
-                    doctor_memo,
-                    examination_at,
-                    updated_at
-                },
+                data: validatedMedicalRecord,
             });
             // 1. 現在の medical_categories を取得
             const existingCategories = await prisma.medical_categories.findMany({
@@ -137,8 +187,10 @@ router.put("/", verifyAuthToken, async (request: Request, response: Response) =>
                     category_id: categoryId,
                 }));
 
+                const validatedMedicalCategories: CreateMedicalCategory[] = createMedicalCategoriesSchema.parse(newMedicalCategories);
+
                 await prisma.medical_categories.createMany({
-                    data: newMedicalCategories,
+                    data: validatedMedicalCategories,
                 });
             }
         })
@@ -154,14 +206,15 @@ router.post("/", verifyAuthToken, async (request: Request, response: Response) =
     try {
         const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = request.body;
         const result = await prisma.$transaction(async (prisma) => {
+            const validatedMedicalRecord: CreateMedicalRecordSchema = createMedicalRecordSchema.parse({
+                patient_id,
+                doctor_id,
+                medical_memo,
+                doctor_memo,
+                examination_at
+            });
             const newMedicalRecord = await prisma.medical_records.create({
-                data: {
-                    doctor_id,
-                    patient_id,
-                    medical_memo,
-                    doctor_memo,
-                    examination_at
-                }
+                data: validatedMedicalRecord
             });
 
             const medicalRecordId = newMedicalRecord.id;
@@ -172,13 +225,15 @@ router.post("/", verifyAuthToken, async (request: Request, response: Response) =
                         category_id: Number(category)
                     }
                 ))
+                const validatedMedicalCategories: CreateMedicalCategory[] = createMedicalCategoriesSchema.parse(postMedicalCategoriesData);
                 await prisma.medical_categories.createMany({
-                    data: postMedicalCategoriesData
+                    data: validatedMedicalCategories
                 });
             }
         })
         return response.json({ data: result })
     } catch (e) {
+        console.log(e)
         return response.status(400).json({ error: "データの保存に失敗しました。" });
     }
 })

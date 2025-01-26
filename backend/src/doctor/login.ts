@@ -2,7 +2,18 @@ import { Request, Response, Router } from "express";
 import { DoctorType } from "../../../common/types/DoctorType.js";
 import { prisma } from "../prisma.js";
 import jwt from 'jsonwebtoken';
+import { secretKey } from "../jwt_secret_key.js";
+import { z } from "zod";
 const { sign } = jwt;
+
+const getDoctorSchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string(),
+    password: z.string(),
+});
+
+type GetDoctorSchema = z.infer<typeof getDoctorSchema>;
 
 const router = Router();
 router.post("/", async (request: Request, response: Response) => {
@@ -16,7 +27,7 @@ router.post("/", async (request: Request, response: Response) => {
         if (!password) {
             return response.status(400).json({ error: "パスワードが入力されていません。" })
         }
-        const doctor: DoctorType = await prisma.doctors.findFirst({
+        const doctor: DoctorType | null = await prisma.doctors.findFirst({
             where: {
                 AND: [
                     { email }, { password }
@@ -27,9 +38,13 @@ router.post("/", async (request: Request, response: Response) => {
             return response.status(401).json({ error: "無効なメールアドレスまたはパスワードです。" });
         }
 
+        const parseDoctor: GetDoctorSchema = getDoctorSchema.parse(doctor);
         const sessionID = request.sessionID;
         const userId = doctor.id;
-        const token = sign({ userId, email }, process.env.JWT_SECRET_KEY, { expiresIn: "1d" });
+        if (!secretKey) {
+            return response.status(401).json({ error: "トークンの設定が無効です。" });
+        }
+        const token = sign({ userId, email }, secretKey, { expiresIn: "1d" });
         return response.json({
             message: "ログインに成功しました。",
             sessionId: sessionID,

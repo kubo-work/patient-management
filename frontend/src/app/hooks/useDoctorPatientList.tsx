@@ -1,7 +1,7 @@
 import { MRT_ColumnDef } from "mantine-react-table";
 import React, { useMemo } from "react";
 import { PatientType } from "../../../../common/types/PatientType";
-import { sexList } from "../../../constants/sexList";
+import { sexList } from "../../../../common/util/SexList";
 import Link from "next/link";
 import { Button, Flex } from "@mantine/core";
 
