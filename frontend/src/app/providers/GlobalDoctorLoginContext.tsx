@@ -5,6 +5,7 @@ import {
   ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { doctorCookieKeyName } from "../../../constants/cookieKey";
@@ -14,7 +15,6 @@ import { API_URL } from "../../../constants/url";
 
 export type GlobalDoctorLoginContextType = {
   token: string | null;
-  setToken: (token: string | null) => void;
   isLogin: boolean;
   setIsLogin: (bool: boolean) => void;
   logoutAction: (status: string) => void;
@@ -29,7 +29,6 @@ const GlobalDoctorLoginProvider = (props: { children: ReactNode }) => {
   const { children } = props;
   const router = useRouter();
   const [isLogin, setIsLogin] = useState<boolean>(false);
-  const [token, setToken] = useState<string | null>(null);
   const loadCookie = getCookie(doctorCookieKeyName);
 
   const logoutAction = useCallback(
@@ -46,32 +45,30 @@ const GlobalDoctorLoginProvider = (props: { children: ReactNode }) => {
     loadCookie && setIsLogin(true);
   }, [loadCookie]);
 
-  useEffect(() => {
-    isLogin ? setToken(localStorage.getItem("token")) : setToken(null);
+  const token = useMemo(() => {
+    return isLogin ? localStorage.getItem("token") : null;
   }, [isLogin]);
 
-  useEffect(() => {
+  const verifyAuthToken = useCallback(async () => {
     if (token) {
-      const verifyAuthToken = async () => {
-        const response = await fetch(`${API_URL}/doctor/token_check`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          logoutAction("error");
-        }
-      };
-      verifyAuthToken();
+      const response = await fetch(`${API_URL}/doctor/token_check`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        logoutAction("error");
+      }
     }
   }, [token, logoutAction]);
+
+  verifyAuthToken();
 
   return (
     <GlobalDoctorLoginContext.Provider
       value={{
         token,
-        setToken,
         isLogin,
         setIsLogin,
         logoutAction,
