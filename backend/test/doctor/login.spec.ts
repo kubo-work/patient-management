@@ -1,7 +1,17 @@
 import request from "supertest";
 import { prismaMock } from "../prismaMock";
 import { app } from "../../src/index";
-import { mockLoginPostData, mockSetDoctorData } from "./mockData/mockLoginDoctorData";
+import { mockSetDoctorData } from "./mockData/mockLoginDoctorData";
+
+type mockLoginPostData = {
+    email: string;
+    password: string
+}
+
+const mockLoginPostData: mockLoginPostData = {
+    email: mockSetDoctorData[0].email,
+    password: mockSetDoctorData[0].password
+}
 
 describe("ログインのテスト", () => {
 

@@ -2,7 +2,7 @@ import { verifyAuthToken } from "../verifyAuthToken.js";
 import { Request, Response, Router } from "express";
 import { DoctorType } from "../../../common/types/DoctorType";
 import { prisma } from "../prisma.js";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 const baseDoctorSchema = {
     name: z.string(),
@@ -77,20 +77,35 @@ router.get("/:doctor_id", verifyAuthToken, async (request: Request, response: Re
 type PutRequestDoctorType = Omit<DoctorType, "id">
 
 // 医者データ更新
-router.put("/:doctor_id", verifyAuthToken, async (request: Request, response: Response) => {
+router.put("/:doctor_id", async (request: Request, response: Response) => {
     try {
         const doctor_id = Number(request.params.doctor_id)
         const { name, email, password }: PutRequestDoctorType = request.body;
         const updated_at: Date = new Date();
 
-        const validatedData: UpdateDoctorSchema = updateDoctorSchema.parse({ name, email, password, updated_at });
+        const parsedData: {
+            success: true;
+            data: UpdateDoctorSchema;
+        } | {
+            success: false;
+            error: ZodError;
+        } = updateDoctorSchema.safeParse({ name, email, password, updated_at });
+        if (!parsedData.success) {
+            return response.status(400).json({
+                error: "入力データが不正です。",
+            });
+        }
         const result = await prisma.doctors.update({
             where: { id: doctor_id },
-            data: validatedData
+            data: parsedData.data
         });
         return response.json(result)
     } catch (e) {
-        return response.status(400).json({ error: "データの更新に失敗しました。" });
+        if (e.code === "P2025") {
+            return response.status(404).json({ error: "指定された医師が見つかりません。" });
+        } else {
+            return response.status(400).json({ error: "データの更新に失敗しました。" });
+        }
     }
 })
 
@@ -98,13 +113,20 @@ router.put("/:doctor_id", verifyAuthToken, async (request: Request, response: Re
 router.post("/", verifyAuthToken, async (request: Request, response: Response) => {
     try {
         const { name, email, password }: DoctorType = request.body;
-        const validatedData: CreateDoctorSchema = createDoctorSchema.parse({ name, email, password });
+        const parsedData: {
+            success: true;
+            data: CreateDoctorSchema;
+        } | {
+            success: false;
+            error: ZodError;
+        } = createDoctorSchema.safeParse({ name, email, password });
+        if (!parsedData.success) {
+            return response.status(400).json({
+                error: "入力データが不正です。",
+            });
+        }
         const result = await prisma.doctors.create({
-            data: {
-                name: validatedData.name,
-                email: validatedData.email,
-                password: validatedData.password
-            },
+            data: parsedData.data
         });
         return response.json({ data: result })
     } catch (e) {
