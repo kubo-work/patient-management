@@ -62,6 +62,7 @@ const GlobalDoctorLoginProvider = (props: { children: ReactNode }) => {
       }
     }
   }, [token, logoutAction]);
+
   verifyAuthToken();
 
   return (

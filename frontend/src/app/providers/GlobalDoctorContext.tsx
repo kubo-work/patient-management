@@ -91,25 +91,30 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
 
+  // ログインしている医者 データのステート管理
   const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
     [loginDoctorFetchUrl, token],
     loginDoctorFetcher
   );
 
+  // カテゴリ一覧データのステート管理
   const { data: categoriesData, mutate: categoriesDoMutate } = useSWR(
     [categoriesFetchUrl, token],
     categoriesFetcher
   );
 
+  // 医者一覧データのステート管理
   const { data: doctorsData, mutate: doctorsDoMutate } = useSWR(
     [doctorsFetchUrl, token],
     doctorsFetcher
   );
 
+  // 患者一覧データのステート管理
   const { data: patientsData, mutate: patientsMutate } = useSWR(
     [patientsFetchUrl, token],
     patientsFetcher
   );
+
   // 患者の名前をサジェストするためのリストを準備
   const patientNameSuggestions: PatientNameSuggestionsType[] | undefined =
     useMemo(
