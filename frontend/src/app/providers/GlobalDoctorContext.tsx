@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useMemo } from "react";
 import { API_URL } from "../../../constants/url";
 import useSWR from "swr";
 
@@ -11,15 +11,15 @@ import { SexListData } from "@/../../common/types/SexListData";
 import { useGlobalDoctorLogin } from "../hooks/useGlobalDoctorLogin";
 
 export type GlobalDoctorContextType = {
-  loginDoctor: DoctorType | null;
+  loginDoctor: DoctorType | undefined;
   loginDoMutate: () => void;
-  categories: CategoriesType[] | null;
+  categories: CategoriesType[] | undefined;
   categoriesDoMutate: () => void;
-  doctors: DoctorType[] | null;
+  doctors: DoctorType[] | undefined;
   doctorsDoMutate: () => void;
-  patients: PatientType[] | null;
+  patients: PatientType[] | undefined;
   patientsMutate: () => void;
-  patientNameSuggestions: PatientNameSuggestionsType[];
+  patientNameSuggestions: PatientNameSuggestionsType[] | undefined;
   sexList: SexTypes;
   sexListData: SexListData[];
 };
@@ -40,7 +40,7 @@ async function loginDoctorFetcher([url, token]: [
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => res.json())
-    : {};
+    : undefined;
 }
 
 async function categoriesFetcher([url, token]: [
@@ -54,7 +54,7 @@ async function categoriesFetcher([url, token]: [
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => res.json())
-    : {};
+    : undefined;
 }
 
 async function doctorsFetcher([url, token]: [string, string | null]): Promise<
@@ -67,7 +67,7 @@ async function doctorsFetcher([url, token]: [string, string | null]): Promise<
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => res.json())
-    : {};
+    : undefined;
 }
 
 async function patientsFetcher([url, token]: [string, string | null]): Promise<
@@ -80,7 +80,7 @@ async function patientsFetcher([url, token]: [string, string | null]): Promise<
           Authorization: `Bearer ${token}`,
         },
       }).then((res) => res.json())
-    : {};
+    : undefined;
 }
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
@@ -90,15 +90,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
-
-  // ログインしている医者 データのステート管理
-  const [loginDoctor, setLoginDoctor] = useState<DoctorType | null>(null);
-  // カテゴリ一覧データのステート管理
-  const [categories, setCategories] = useState<CategoriesType[] | null>([]);
-  // 医者一覧データのステート管理
-  const [doctors, setDoctors] = useState<DoctorType[] | null>([]);
-  // 患者一覧データのステート管理
-  const [patients, setPatients] = useState<PatientType[] | null>([]);
 
   const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
     [loginDoctorFetchUrl, token],
@@ -119,32 +110,18 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
     [patientsFetchUrl, token],
     patientsFetcher
   );
-
-  useEffect(() => {
-    token && loginDoctorData && setLoginDoctor(loginDoctorData);
-  }, [token, loginDoctorData, setLoginDoctor]);
-
-  useEffect(() => {
-    token && categoriesData && setCategories(categoriesData);
-  }, [token, categoriesData, setCategories]);
-
-  useEffect(() => {
-    token && doctorsData && setDoctors(doctorsData);
-  }, [token, doctorsData, setDoctors]);
-
-  useEffect(() => {
-    token && patientsData && setPatients(patientsData);
-  }, [token, patientsData, setPatients]);
-
   // 患者の名前をサジェストするためのリストを準備
-  const patientNameSuggestions: PatientNameSuggestionsType[] = useMemo(() => {
-    return patients
-      ? patients.map((patient) => ({
-          value: patient.name,
-          id: patient.id.toString(),
-        }))
-      : [];
-  }, [patients]);
+  const patientNameSuggestions: PatientNameSuggestionsType[] | undefined =
+    useMemo(
+      () =>
+        patientsData
+          ? patientsData.map((patient) => ({
+              value: patient.name,
+              id: patient.id.toString(),
+            }))
+          : undefined,
+      [patientsData]
+    );
 
   const sexList: SexTypes = useMemo(() => {
     return {
@@ -173,13 +150,13 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   return (
     <GlobalDoctorContext.Provider
       value={{
-        loginDoctor,
+        loginDoctor: loginDoctorData,
         loginDoMutate,
-        categories,
+        categories: categoriesData,
         categoriesDoMutate,
-        doctors,
+        doctors: doctorsData,
         doctorsDoMutate,
-        patients,
+        patients: patientsData,
         patientsMutate,
         patientNameSuggestions,
         sexList,
