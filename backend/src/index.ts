@@ -47,6 +47,12 @@ if (process.env.NODE_ENV === "production") {
     app.set('trust proxy', 1) // trust first proxy
 }
 
+app.use((request, response, next) => {
+    response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+});
+
+
 app.use("/doctor/login", doctorLogin);
 app.use("/doctor/logout", doctorLogout);
 app.use("/doctor/patients", doctorPatients);
