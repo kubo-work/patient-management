@@ -35,7 +35,8 @@ app.use(cors({
         'Authorization',
         'Accept',
         'X-Requested-With',
-        'Access-Control-Allow-Origin'
+        'Access-Control-Allow-Origin',
+        'Access-Control-Allow-Credentials'
     ]
 }))
 
