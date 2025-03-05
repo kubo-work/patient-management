@@ -39,8 +39,6 @@ router.post("/", async (request: Request, response: Response) => {
             return response.status(401).json({ error: "無効なメールアドレスまたはパスワードです。" });
         }
 
-        const parseDoctor: GetDoctorSchema = getDoctorSchema.parse(doctor);
-        const sessionID = request.sessionID;
         const userId = doctor.id;
         if (!secretKey) {
             return response.status(401).json({ error: "トークンの設定が無効です。" });
@@ -51,6 +49,7 @@ router.post("/", async (request: Request, response: Response) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             maxAge: 1000 * 60 * 60,
+            domain: process.env.CLIENT_DOMAIN
         });
 
         return response.json({
