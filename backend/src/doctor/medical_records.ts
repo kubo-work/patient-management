@@ -99,12 +99,12 @@ router.get("/:patient_id", verifyAuthToken, async (request: Request, response: R
             where: {
                 AND: [
                     { patient_id }, { delFlag: delFlag.ACTIVE },
-                    all && typeof all === "boolean" ? {} : {
-                        examination_at: {
-                            gte: validStartDate,
-                            lte: validEndDate,
-                        }
-                    }
+                    // all && typeof all === "boolean" ? {} : {
+                    //     examination_at: {
+                    //         gte: validStartDate,
+                    //         lte: validEndDate,
+                    //     }
+                    // }
                 ]
             },
             orderBy: {
@@ -233,7 +233,6 @@ router.post("/", verifyAuthToken, async (request: Request, response: Response) =
         })
         return response.json({ data: result })
     } catch (e) {
-        console.log(e)
         return response.status(400).json({ error: "データの保存に失敗しました。" });
     }
 })

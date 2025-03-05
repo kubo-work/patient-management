@@ -8,7 +8,6 @@ import { PatientType } from "../../../../common/types/PatientType";
 import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
 import { SexTypes } from "@/../../common/types/SexTypes";
 import { SexListData } from "@/../../common/types/SexListData";
-import { useGlobalDoctorLogin } from "../hooks/useGlobalDoctorLogin";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | undefined;
@@ -28,64 +27,50 @@ export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-async function loginDoctorFetcher([url, token]: [
-  string,
-  string | null
-]): Promise<DoctorType> {
-  return token
-    ? fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => res.json())
-    : undefined;
-}
+const loginDoctorFetcher = async (
+  url: string
+): Promise<DoctorType | undefined> =>
+  await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  }).then((res) => res.json());
 
-async function categoriesFetcher([url, token]: [
-  string,
-  string | null
-]): Promise<CategoriesType[]> {
-  return token
-    ? fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => res.json())
-    : undefined;
-}
+const categoriesFetcher = async (
+  url: string
+): Promise<CategoriesType[] | undefined> =>
+  await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  }).then((res) => res.json());
 
-async function doctorsFetcher([url, token]: [string, string | null]): Promise<
-  DoctorType[]
-> {
-  return token
-    ? fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => res.json())
-    : undefined;
-}
+const doctorsFetcher = async (url: string): Promise<DoctorType[] | undefined> =>
+  await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  }).then((res) => res.json());
 
-async function patientsFetcher([url, token]: [string, string | null]): Promise<
-  PatientType[]
-> {
-  return token
-    ? fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => res.json())
-    : undefined;
-}
+const patientsFetcher = async (
+  url: string
+): Promise<PatientType[] | undefined> =>
+  await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  }).then((res) => res.json());
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
-  const { token } = useGlobalDoctorLogin();
   const loginDoctorFetchUrl = `${API_URL}/doctor/login_doctor`;
   const categoriesFetchUrl = `${API_URL}/doctor/categories`;
   const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
@@ -93,25 +78,25 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
 
   // ログインしている医者 データの管理
   const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
-    [loginDoctorFetchUrl, token],
+    loginDoctorFetchUrl,
     loginDoctorFetcher
   );
 
   // カテゴリ一覧データの管理
   const { data: categoriesData, mutate: categoriesDoMutate } = useSWR(
-    [categoriesFetchUrl, token],
+    categoriesFetchUrl,
     categoriesFetcher
   );
 
   // 医者一覧データの管理
   const { data: doctorsData, mutate: doctorsDoMutate } = useSWR(
-    [doctorsFetchUrl, token],
+    doctorsFetchUrl,
     doctorsFetcher
   );
 
   // 患者一覧データの管理
   const { data: patientsData, mutate: patientsMutate } = useSWR(
-    [patientsFetchUrl, token],
+    patientsFetchUrl,
     patientsFetcher
   );
 

@@ -4,6 +4,7 @@ import { prisma } from "../prisma.js";
 import jwt from 'jsonwebtoken';
 import { secretKey } from "../jwt_secret_key.js";
 import { z } from "zod";
+import { doctorCookieName } from "../../../common/util/CookieName.js";
 const { sign } = jwt;
 
 const getDoctorSchema = z.object({
@@ -45,10 +46,15 @@ router.post("/", async (request: Request, response: Response) => {
             return response.status(401).json({ error: "トークンの設定が無効です。" });
         }
         const token = sign({ userId, email }, secretKey, { expiresIn: "1d" });
+        response.cookie(doctorCookieName, token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 1000 * 60 * 60,
+        });
+
         return response.json({
             message: "ログインに成功しました。",
-            sessionId: sessionID,
-            token
         });
     } catch (e) {
         return response.status(400).json(e);

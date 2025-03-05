@@ -7,26 +7,20 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { Button, List, ListItem } from "@mantine/core";
 import { MRT_ColumnDef } from "mantine-react-table";
-import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-async function fetcher([url, token]: [string, string | null]): Promise<
-  MedicalRecordsType[]
-> {
-  return token
-    ? fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => res.json())
-    : {};
-}
+const getMedicalRecordsFetcher = async (
+  url: string
+): Promise<MedicalRecordsType[] | undefined> =>
+  fetch(url, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  }).then((res) => res.json());
 
 const useMedicalRecords = (patients_id: number) => {
-  const { token } = useGlobalDoctorLogin();
   const fetchUrl = `${API_URL}/doctor/medical_records/${patients_id}`;
   const [medicalRecord, setMedicalRecord] = useState<
     MedicalRecordsType[] | null
@@ -41,7 +35,7 @@ const useMedicalRecords = (patients_id: number) => {
     isLoading,
     error,
     mutate: patientMutate,
-  } = useSWR([fetchUrl, token], fetcher);
+  } = useSWR(fetchUrl, getMedicalRecordsFetcher);
   useEffect(() => {
     data && setMedicalRecord(data);
   }, [data, setMedicalRecord]);

@@ -4,7 +4,7 @@ import { API_URL } from "../../../constants/url";
 
 const useDoctorLogout = () => {
     const router = useRouter();
-    const { setIsLogin, logoutAction } = useGlobalDoctorLogin();
+    const { setIsLogin } = useGlobalDoctorLogin();
     const handleClickLogout = async () => {
         await fetch(`${API_URL}/doctor/logout`, {
             method: "POST",
@@ -14,7 +14,6 @@ const useDoctorLogout = () => {
             credentials: 'include'
         });
         setIsLogin(false);
-        logoutAction("");
         router.push('/doctor/login');
     }
     return { handleClickLogout }
