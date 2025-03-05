@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { secretKey } from "./jwt_secret_key.js";
+import { doctorCookieName } from "../../common/util/CookieName.js";
 const { verify } = jwt;
 
 declare module "express" {
@@ -17,14 +18,14 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 export const verifyAuthToken = (request: Request, response: Response, next: NextFunction) => {
-    const authHeader = request.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>" からトークンを取得
+    const token = request.cookies[doctorCookieName];
 
     if (!token) {
         return response.status(401).json({ error: 'ログインしてください。' });
     }
 
     if (!secretKey) {
+        response.clearCookie(doctorCookieName);
         return response.status(401).json({ error: "トークンの設定が無効です。" });
     }
     // トークンを検証

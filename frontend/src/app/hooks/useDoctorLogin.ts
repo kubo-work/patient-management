@@ -3,9 +3,7 @@ import { API_URL } from "../../../constants/url";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { setCookie } from "cookies-next";
-import { doctorCookieKeyName } from "../../../constants/cookieKey";
-import { doctorCookieOptions } from "../../../constants/cookieOption";
+
 import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
 type FormValues = {
@@ -64,9 +62,6 @@ const useDoctorLogin = () => {
             close();
             return;
         } else {
-            const data = await response.json()
-            localStorage.setItem('token', data.token);
-            setCookie(doctorCookieKeyName, data.token, doctorCookieOptions);
             setIsLogin(true);
             router.push('/doctor/patients-list');
         }

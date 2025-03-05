@@ -1,4 +1,3 @@
-import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 import { useEffect, useState } from "react";
 import { PatientType } from "../../../../common/types/PatientType";
 import { useForm } from "@mantine/form";
@@ -17,17 +16,15 @@ type FormValues = {
     password?: string;
 }
 
-async function getPatientFetcher([id, token]: [number, string | null]): Promise<PatientType | null> {
-    return token ? fetch(`${API_URL}/doctor/patients/${id}`, {
+const getPatientFetcher = async (id: number): Promise<PatientType | undefined> => (
+    await fetch(`${API_URL}/doctor/patients/${id}`, {
         method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    }).then((res) => res.json()) : {};
-}
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    }).then((res) => res.json())
+)
 
 const usePatientEdit = (id: number | null) => {
-    const { token } = useGlobalDoctorLogin();
     const router = useRouter();
 
     const [submitError, setSubmitError] = useState<string>("");
@@ -62,11 +59,11 @@ const usePatientEdit = (id: number | null) => {
 
     useEffect(() => {
         const getPatient = async (id: number) => {
-            const data = await getPatientFetcher([id, token])
+            const data = await getPatientFetcher(id);
             data && setPatientData(data)
         }
         id && getPatient(id)
-    }, [id, token])
+    }, [id])
 
     useEffect(() => {
         if (patientData) {
@@ -88,7 +85,8 @@ const usePatientEdit = (id: number | null) => {
         const fetchUrl = id ? `${API_URL}/doctor/patients/${id}` : `${API_URL}/doctor/patients`
         const response = await fetch(fetchUrl, {
             method,
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
                 name,
                 email,

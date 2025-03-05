@@ -10,6 +10,8 @@ import loggedInDoctor from "./doctor/login_doctor.js";
 import doctorsData from "./doctor/doctors.js";
 import doctorCategories from "./doctor/categories.js";
 import doctorMedicalRecords from "./doctor/medical_records.js";
+import cookieParser from "cookie-parser";
+
 // // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
@@ -37,16 +39,8 @@ app.use(cors({
     ]
 }))
 
-// // プリフライトリクエストの処理
-app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 
-app.use(session({
-    secret: ACCESS_CLIENT_URL || "",
-    resave: false,
-    saveUninitialized: false,
-    name: sessionName,
-}))
-
+app.use(cookieParser());
 
 if (process.env.NODE_ENV === "production") {
     app.set('trust proxy', 1) // trust first proxy
