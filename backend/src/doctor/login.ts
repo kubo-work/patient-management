@@ -49,7 +49,7 @@ router.post("/", async (request: Request, response: Response) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: "none",
             maxAge: 1000 * 60 * 60,
-            //domain: process.env.CLIENT_DOMAIN
+            domain: process.env.CLIENT_DOMAIN
         });
 
         return response.json({
