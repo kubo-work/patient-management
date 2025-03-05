@@ -39,7 +39,7 @@ app.use(cors({
     ]
 }))
 
-
+app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 app.use(cookieParser());
 
 if (process.env.NODE_ENV === "production") {
