@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { secretKey } from "../jwt_secret_key.js";
 import { z } from "zod";
 import { doctorCookieName } from "../../../common/util/CookieName.js";
-import { app } from "index.js";
+import { app } from "../index.js";
 import cors from "cors";
 const { sign } = jwt;
 
@@ -63,7 +63,7 @@ router.post("/", async (request: Request, response: Response) => {
                 'Accept',
                 'X-Requested-With',
             ]
-        }))
+        }));
         return response.json({
             message: "ログインに成功しました。",
         });
