@@ -8,7 +8,7 @@ const nextConfig = {
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: process.env.NEXT_PUBLIC_API_URL,
+                        value: process.env.NEXT_PUBLIC_FRONT_URL,
                     },
                     {
                         key: "Access-Control-Allow-Credentials",
