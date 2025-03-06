@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken';
 import { secretKey } from "../jwt_secret_key.js";
 import { z } from "zod";
 import { doctorCookieName } from "../../../common/util/CookieName.js";
+import { app } from "index.js";
+import cors from "cors";
 const { sign } = jwt;
 
 const getDoctorSchema = z.object({
@@ -51,7 +53,17 @@ router.post("/", async (request: Request, response: Response) => {
             maxAge: 1000 * 60 * 60,
             ...(process.env.NODE_ENV === "production" && { domain: process.env.SERVER_DOMAIN })
         });
-
+        app.use(cors({
+            origin: process.env.CLIENT_URL,
+            optionsSuccessStatus: 200,
+            credentials: true,
+            allowedHeaders: [
+                'Content-Type',
+                'Authorization',
+                'Accept',
+                'X-Requested-With',
+            ]
+        }))
         return response.json({
             message: "ログインに成功しました。",
         });
