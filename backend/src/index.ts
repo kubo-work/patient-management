@@ -40,17 +40,25 @@ app.use(cors({
     ]
 }))
 
+// // プリフライトリクエストの処理
 app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
+
+app.use(session({
+    secret: ACCESS_CLIENT_URL || "",
+    resave: false,
+    saveUninitialized: false,
+    name: sessionName,
+}))
 app.use(cookieParser());
 
 if (process.env.NODE_ENV === "production") {
     app.set('trust proxy', 1) // trust first proxy
 }
 
-app.use((request, response, next) => {
-    response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    next();
-});
+// app.use((request, response, next) => {
+//     response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+//     next();
+// });
 
 
 app.use("/doctor/login", doctorLogin);
