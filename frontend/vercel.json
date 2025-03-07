@@ -1,8 +1,0 @@
-{
-    "rewrites": [
-      {
-        "source": "/api/:path*",
-        "destination": "https://patient-management-wm3o.onrender.com"
-      }
-    ]
-  }
