@@ -11,7 +11,8 @@ import doctorsData from "./doctor/doctors.js";
 import doctorCategories from "./doctor/categories.js";
 import doctorMedicalRecords from "./doctor/medical_records.js";
 import cookieParser from "cookie-parser";
-
+import pkg from 'pg';
+import PgSession from 'connect-pg-simple';
 // // SessionDataに独自の型を生やす
 declare module 'express-session' {
     interface SessionData {
@@ -44,7 +45,18 @@ app.use(cors({
 // // プリフライトリクエストの処理
 app.options('*', cors()); // これがあれば、すべてのOPTIONSリクエストに対応
 
+const { Pool } = pkg;
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+})
+
+const PgSessionStore = PgSession(session)
 app.use(session({
+    store: new PgSessionStore({
+        pool,
+        tableName: "session",
+        createTableIfMissing: true
+    }),
     secret: ACCESS_CLIENT_URL || "",
     resave: false,
     saveUninitialized: false,
