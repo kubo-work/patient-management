@@ -20,7 +20,7 @@
 - バックエンド : render
 
 ## ログインURL
-https://patient-management-kubo-works-projects.vercel.app/doctor/login
+https://www.patient-management-kubo-works-projects.com/doctor/login
 
 ## 注意点
 - renderが無料プランの関係で**レスポンスが50秒以上遅れる可能性があります。**
