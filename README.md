@@ -22,6 +22,10 @@
 ## ログインURL
 https://www.patient-management-kubo-works-projects.com/doctor/login
 
+## デモアカウント
+ログインID: test_doctor@example.com  
+パスワード: test
+
 ## 注意点
 - renderが無料プランの関係で**レスポンスが50秒以上遅れる可能性があります。**
 
