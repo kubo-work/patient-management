@@ -3,15 +3,22 @@
 私が毎週お世話になっている整骨院様向けに作成した患者管理アプリです。
 実際にこういうのが欲しいと言われた機能をヒアリングして作成しました。  
 
-## 使用した言語やライブラリ ※一部です
+## 使用した言語やライブラリ
 - フロントエンド
-    - NextJS
+    - Next.js
     - React
-    - mantine ui
+    - Mantine UI
 - バックエンド
-    - NodeJS
-    - express
-    - prisma
+    - Node.js
+    - Express
+    - Prisma
+    - Zod
+    - Jest
+    - Supertest
+    - Faker
+- インフラ・CI/CD
+    - GitHub Actions（型チェック、ビルド、Renderへの自動デプロイ）
+
 
 ## デプロイ先
 - フロントエンド : vercel
@@ -33,8 +40,7 @@ https://www.patient-management-kubo-works-projects.com/doctor/login
 - 診察履歴確認
 - 診察編集機能
 - 診察削除機能
-
-## 未着手の機能
 - 患者作成機能
 - 患者情報編集機能
+
 
