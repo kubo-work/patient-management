@@ -41,35 +41,22 @@ const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
       </AppShell.Header>
 
       <AppShell.Navbar className={style.nav}>
-        <Link href={`/doctor/patients-list`} passHref legacyBehavior>
-          <Button
-            component="a"
-            className={
-              pathname === `/doctor/patients-list` ||
-              pathname.indexOf("medical-records") !== -1
-                ? style.current
-                : ""
-            }
-            onClick={close}
-          >
-            患者一覧
-          </Button>
-        </Link>
-        <Link href={`/doctor/doctors-list`} passHref legacyBehavior>
-          <Button
-            component="a"
-            className={
-              pathname === `/doctor/doctors-list` ||
-              pathname.indexOf("edit-doctor") !== -1
-                ? style.current
-                : ""
-            }
-            onClick={close}
-          >
-            医者一覧
-          </Button>
-        </Link>
-
+        <Button
+          component={Link}
+          onClick={close}
+          href="/doctor/patients-list"
+          className={style.link}
+        >
+          患者一覧
+        </Button>
+        <Button
+          component={Link}
+          onClick={close}
+          href="/doctor/doctors-list"
+          className={style.link}
+        >
+          医者一覧
+        </Button>
         <Button onClick={handleClickLogout}>ログアウト</Button>
       </AppShell.Navbar>
 
