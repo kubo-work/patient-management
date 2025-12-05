@@ -33,20 +33,18 @@ const useDoctorPatientList = () => {
         header: "操作",
         Cell: ({ row }) => (
           <Flex gap={4}>
-            <Link
+            <Button
+              component={Link}
               href={`/doctor/medical-records?patients_id=${row.original.id}`}
-              passHref
-              legacyBehavior
             >
-              <Button component="a">診察履歴</Button>
-            </Link>
-            <Link
+              診察履歴
+            </Button>
+            <Button
+              component={Link}
               href={`/doctor/edit-patient/${row.original.id}`}
-              passHref
-              legacyBehavior
             >
-              <Button component="a">患者情報</Button>
-            </Link>
+              患者情報
+            </Button>
           </Flex>
         ),
         maxSize: 80,

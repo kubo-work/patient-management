@@ -25,13 +25,12 @@ const useDoctorsList = () => {
       {
         header: "操作",
         Cell: ({ row }) => (
-          <Link
+          <Button
+            component={Link}
             href={`/doctor/edit-doctor/${row.original.id}`}
-            passHref
-            legacyBehavior
           >
-            <Button component="a">編集</Button>
-          </Link>
+            編集
+          </Button>
         ),
         maxSize: 80,
       },

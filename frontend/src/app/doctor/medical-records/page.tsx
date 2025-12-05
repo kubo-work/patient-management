@@ -10,7 +10,7 @@ const getPatients = async (
   patients_id: number
 ): Promise<PatientType | undefined> => {
   const cookieStore = cookies();
-  const token = cookieStore.get(doctorCookieName)?.value || "";
+  const token = (await cookieStore).get(doctorCookieName)?.value || "";
   return await fetch(`${API_URL}/doctor/patients/${patients_id}`, {
     method: "GET",
     headers: {
@@ -22,7 +22,7 @@ const getPatients = async (
   }).then((res) => res.json());
 };
 type QueryParamType = {
-  searchParams: { [patients_id: string]: number | undefined };
+  searchParams: Promise<{ [patients_id: string]: number | undefined }>;
 };
 
 export async function generateMetadata({
@@ -30,7 +30,7 @@ export async function generateMetadata({
 }: QueryParamType): Promise<Metadata> {
   // メタデータ（タイトル）設定
   const errorTitle = "Not Found";
-  const patients_id = searchParams.patients_id;
+  const patients_id = (await searchParams).patients_id;
   if (!patients_id) {
     return { title: errorTitle };
   }
@@ -44,7 +44,7 @@ export async function generateMetadata({
 }
 
 const Page = async ({ searchParams }: QueryParamType) => {
-  const patients_id = searchParams.patients_id;
+  const patients_id = (await searchParams).patients_id;
   if (!patients_id) {
     notFound();
   }

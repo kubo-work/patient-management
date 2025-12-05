@@ -11,9 +11,9 @@ const TableHeader: FC<Props> = ({ url, textLabel }) => {
   return (
     <Box pt={10} pb={40}>
       <Flex justify="center" gap={50}>
-        <Link href={url} passHref legacyBehavior>
-          <Button component="a">{textLabel}</Button>
-        </Link>
+        <Button component={Link} href={url}>
+          {textLabel}
+        </Button>
       </Flex>
     </Box>
   );

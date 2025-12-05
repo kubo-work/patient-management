@@ -3,15 +3,15 @@ import { Title } from "@mantine/core";
 import { Metadata } from "next";
 
 type PageParams = {
-  params: { doctor_id: string };
+  params: Promise<{ doctor_id: string }>;
 };
 
 export const metadata: Metadata = {
   title: "お医者さんを編集",
 };
 
-const Page = (params: PageParams) => {
-  const { doctor_id } = params.params;
+const Page = async ({ params }: PageParams) => {
+  const { doctor_id } = await params;
   const setId = Number(doctor_id);
   return (
     <>
