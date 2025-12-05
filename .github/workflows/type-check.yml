@@ -15,6 +15,13 @@ jobs:
       - name: リポジトリチェック
         uses: actions/checkout@v4
 
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
       - name: ファイル状況確認
         run: ls -la
 
