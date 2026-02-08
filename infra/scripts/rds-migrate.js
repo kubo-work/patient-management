@@ -5,7 +5,7 @@ try {
     console.log("🗄 Triggering CodeBuild migration...");
 
     const result = execSync(
-        "aws codebuild start-build --project-name patient-management-dev-migrate --region ap-northeast-1 --profile dev",
+        "aws codebuild start-build --project-name patient-management-dev-migrate --region ap-northeast-1 --profile patient",
         {
             encoding: "utf-8",
         }
