@@ -1,8 +1,8 @@
 # infra/codebuild.tf
 resource "aws_codebuild_project" "migrate" {
-  name         = "${var.project}-${var.environment}-migrate"
-  service_role = aws_iam_role.codebuild_role.arn
-
+  name           = "${var.project}-${var.environment}-migrate"
+  service_role   = aws_iam_role.codebuild_role.arn
+  source_version = "feature/terraform"
   artifacts {
     type = "NO_ARTIFACTS"
   }
@@ -21,8 +21,15 @@ resource "aws_codebuild_project" "migrate" {
   }
 
   source {
-    type      = "NO_SOURCE"
-    buildspec = file("${path.module}/buildspec.yml")
+    type      = "GITHUB"
+    location  = "https://github.com/kubo-work/patient-management.git"
+    buildspec = "infra/buildspec.yml"
+
+    # ブランチを指定
+    git_clone_depth = 1
+    git_submodules_config {
+      fetch_submodules = false
+    }
   }
 
   vpc_config {
