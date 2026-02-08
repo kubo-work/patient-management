@@ -1,0 +1,13 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "main": "rds-down.js",
+  "scripts": {
+    "rds-plan": "node rds-plan.js",
+    "rds-up": "node rds-up.js",
+    "rds-migrate": "node rds-migrate.js",
+    "rds-down": "node rds-down.js",
+    "rds-destroy": "node rds-destroy.js"
+  },
+  "type": "module"
+}
