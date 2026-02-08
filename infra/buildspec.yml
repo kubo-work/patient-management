@@ -5,15 +5,14 @@ phases:
     runtime-versions:
       nodejs: 22
     commands:
-      - echo "Installing dependencies..."
-      - cd backend/aws
-      - npm ci
+      - echo "Installing Prisma CLI only..."
+      - npm install -g prisma
 
   build:
     commands:
       - echo "Running Prisma migration..."
       - echo "Database URL is set"
-      - npx prisma migrate deploy
+      - npx prisma migrate deploy --schema=./aws/schema.prisma
       - echo "Migration completed successfully!"
 
 artifacts:

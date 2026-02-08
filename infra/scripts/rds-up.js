@@ -1,3 +1,5 @@
+// terraform applyを実行するスクリプト
+// ※ backend/.envにDATABASE_KEYを追加する
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";

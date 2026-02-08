@@ -1,3 +1,5 @@
+// terraform destroyを実行するスクリプト
+// ※ backend/.envからDATABASE_KEYを削除する
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";

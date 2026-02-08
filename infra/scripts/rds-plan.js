@@ -1,3 +1,4 @@
+// terraform planを実行するスクリプト
 import { execSync } from "child_process";
 
 try {

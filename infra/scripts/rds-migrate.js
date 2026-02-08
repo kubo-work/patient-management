@@ -1,4 +1,4 @@
-// infra/scripts/rds-migrate.js
+// CodeBuildを起動してマイグレーションを実行するスクリプト
 import { execSync } from "child_process";
 
 try {
