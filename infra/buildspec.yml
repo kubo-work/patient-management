@@ -13,7 +13,8 @@ phases:
       - echo "Running Prisma migration..."
       - echo "Database URL is set"
       - cd backend
-      - npx prisma migrate deploy --schema=./aws/schema.prisma
+      - export DATABASE_URL=$AWS_RDS_DATABASE_URL
+      - npx prisma migrate deploy
       - echo "Migration completed successfully!"
 
 artifacts:
