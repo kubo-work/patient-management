@@ -12,6 +12,7 @@ phases:
     commands:
       - echo "Running Prisma migration..."
       - echo "Database URL is set"
+      - cd backend
       - npx prisma migrate deploy --schema=./aws/schema.prisma
       - echo "Migration completed successfully!"
 
