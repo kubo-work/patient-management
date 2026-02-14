@@ -21,18 +21,11 @@ resource "aws_codebuild_project" "migrate" {
   }
 
   source {
-    type      = "GITHUB"
-    location  = "https://github.com/kubo-work/patient-management.git"
-    buildspec = "infra/buildspec.yml"
-
-    # ブランチを指定
+    type            = "GITHUB"
+    location        = "https://github.com/kubo-work/patient-management.git"
+    buildspec       = "infra/buildspec.yml"
     git_clone_depth = 1
 
-    # 認証情報を追加
-    auth {
-      type     = "OAUTH"
-      resource = "arn:aws:codeconnections:ap-northeast-1:438465142992:connection/111ba49c-d62e-4028-a074-c514a1f0013f"
-    }
     git_submodules_config {
       fetch_submodules = false
     }
