@@ -59,7 +59,11 @@ resource "aws_iam_role_policy" "codebuild_vpc" {
           "ec2:DescribeSecurityGroups",
           "ec2:DescribeDhcpOptions",
           "ec2:DescribeVpcs",
-          "ec2:CreateNetworkInterfacePermission"
+          "ec2:CreateNetworkInterfacePermission",
+          "codestar-connections:UseConnection",
+          "codestar-connections:ListConnections",
+          "codestar-connections:GetConnection",
+          "codestar-connections:UseConnection"
         ]
         Resource = "*"
       }
