@@ -8,7 +8,7 @@ import { DATABASE_KEY } from "./const.js";
 try {
     console.log("Destroying Terraform...");
 
-    execSync("terraform destroy -auto-approve", {
+    execSync("terraform destroy -auto-approve -lock=false", {
         cwd: "..",
         stdio: "inherit",
     });
