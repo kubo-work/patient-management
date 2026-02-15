@@ -1,7 +1,7 @@
 name: Database Migration
 
 on:
-  workflow_dispatch: # 手動実行のみ
+  workflow_dispatch: # 手動実行
 
 jobs:
   migrate:
