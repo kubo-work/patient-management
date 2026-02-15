@@ -1,5 +1,6 @@
-// terraform applyを実行するスクリプト
+// terraform applyを実行し、GitHub Secretsも設定するスクリプト
 // ※ backend/.envにDATABASE_KEYを追加する
+// ※ GitHub SecretsにAWS_ROLE_ARNを設定する（GitHub Actions用）
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -41,8 +42,27 @@ try {
     fs.writeFileSync(envPath, content);
 
     console.log("✅ .env updated with database URL");
-    console.log("🎉 RDS infrastructure is ready!");
-    console.log("\n💡 Run 'npm run rds-migrate' to apply database schema");
+    
+    // GitHub Secretsに DATABASE_URL を設定
+    console.log("\nSetting up GitHub Actions...");
+    try {
+        // GitHub CLIで DATABASE_URL を設定
+        execSync(`echo "${dbUrl}" | gh secret set DATABASE_URL --body-stdin`, {
+            stdio: "inherit",
+        });
+        
+        console.log("✅ GitHub Secret DATABASE_URL configured");
+    } catch (ghError) {
+        console.warn("⚠️  Could not set GitHub Secret automatically");
+        console.warn("   Please run manually:");
+        console.warn(`   terraform output -raw database_url | gh secret set DATABASE_URL --body-stdin`);
+        console.warn(`   Error: ${ghError.message}`);
+    }
+    
+    console.log("\n🎉 RDS infrastructure is ready!");
+    console.log("\n📝 Next steps:");
+    console.log("   1. Run 'npm run rds-migrate' to apply database schema (local)");
+    console.log("   2. Or use GitHub Actions: Go to Actions tab > Database Migration > Run workflow");
 } catch (err) {
     console.error("❌ Error:", err.message);
 }
