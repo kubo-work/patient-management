@@ -1,7 +1,12 @@
 name: Database Migration
 
 on:
-  workflow_dispatch:  # 手動実行のみ
+  workflow_dispatch:  # 手動実行
+  push:  # 一時的に追加（ワークフローを認識させるため）
+    branches:
+      - feature/terraform
+    paths:
+      - '.github/workflows/db-migration.yml'
 
 jobs:
   migrate:
