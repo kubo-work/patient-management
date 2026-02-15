@@ -1,0 +1,64 @@
+name: Database Migration
+
+on:
+  workflow_dispatch:  # 手動実行のみ
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    permissions:
+      id-token: write   # AWS認証用
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+      
+      - name: Get database URL from Parameter Store
+        id: get-db-url
+        run: |
+          DB_URL=$(aws ssm get-parameter \
+            --name "/patient-management/${{ inputs.environment }}/rds/database_url" \
+            --with-decryption \
+            --query Parameter.Value \
+            --output text)
+          echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+          echo "✅ Database URL retrieved from Parameter Store"
+      
+      - name: Install Prisma
+        run: |
+          cd backend
+          npm install prisma --save-dev
+      
+      - name: Run Prisma migration
+        run: |
+          cd backend
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+      
+      - name: Migration completed
+        run: |
+          echo "✅ Database migration completed successfully!"
