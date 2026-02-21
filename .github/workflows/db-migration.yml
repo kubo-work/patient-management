@@ -1,0 +1,33 @@
+name: Database Migration
+
+on:
+  workflow_dispatch: # 手動実行
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Prisma
+        run: |
+          cd backend
+          npm install prisma --save-dev
+
+      - name: Run Prisma migration
+        run: |
+          cd backend
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Migration completed
+        run: |
+          echo "✅ Database migration completed successfully!"
