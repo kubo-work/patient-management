@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "rds-down.js",
   "scripts": {
-    "rds-plan": "node rds-plan.js",
-    "rds-up": "node rds-up.js",
-    "rds-migrate": "node rds-migrate.js",
-    "rds-down": "node rds-down.js",
-    "rds-destroy": "node rds-destroy.js"
+    "aws-plan": "node aws-plan.js",
+    "aws-apply": "node aws-apply.js",
+    "aws-migrate": "node aws-migrate.js",
+    "aws-down": "node aws-down.js",
+    "aws-destroy": "node aws-destroy.js"
   },
   "type": "module"
 }
