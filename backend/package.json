@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node build/backend/src/index.js",
+    "start:aws": "node_modules/.bin/prisma migrate deploy && node build/backend/src/index.js",
     "dev": "nodemon",
     "test": "node --env-file=./.env.test node_modules/.bin/jest",
     "test-debug": "node --env-file=./.env.test node_modules/.bin/jest --silent=false --verbose false"
