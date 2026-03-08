@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": "../",
       "outDir": "build",
       "module": "ESNext", // ESモジュールを使用する場合
       "target": "ES2021", // ターゲットのバージョン
