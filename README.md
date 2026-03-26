@@ -33,6 +33,7 @@ https://www.patient-management-kubo-works-projects.com/doctor/login
 
 ## 注意点
 - renderが無料プランの関係で**レスポンスが50秒以上遅れる可能性があります。**
+- terraform (infra ディレクトリ内のファイル)設定は現在作成途中のため未完成です。
 
 ## 作成した機能
 - ログイン機能
