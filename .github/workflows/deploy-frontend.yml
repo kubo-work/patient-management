@@ -28,8 +28,8 @@ jobs:
         run: npm ci
 
       - name: ビルド（静的エクスポート）
-        working-directory: frontend
-        run: npm run build
+        working-directory: . # ルートから実行
+        run: cd frontend && npm run build
         env:
           NEXT_PUBLIC_API_URL: "https://api-aws.patient-management-kubo-works-projects.com"
           NEXT_PUBLIC_FRONT_URL: "https://aws.patient-management-kubo-works-projects.com"
