@@ -38,3 +38,27 @@ resource "aws_security_group" "app_runner_sg" {
     Name = "${var.project}-${var.environment}-app-runner-sg"
   }
 }
+
+resource "aws_security_group" "vpc_endpoint_sg" {
+  name        = "${var.project}-${var.environment}-vpc-endpoint-sg"
+  vpc_id      = aws_vpc.main.id
+  description = "VPC Endpoint Security Group"
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project}-${var.environment}-vpc-endpoint-sg"
+  }
+}

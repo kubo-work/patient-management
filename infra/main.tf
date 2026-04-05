@@ -1,4 +1,10 @@
 terraform {
+  backend "s3" {
+    bucket  = "terraform-state-patient-management-dev-kubo"
+    key     = "terraform.tfstate"
+    region  = "ap-northeast-1"
+    profile = "patient"
+  }
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,34 +19,17 @@ provider "aws" {
   profile                  = "patient"
 }
 
+provider "aws" {
+  alias                    = "us_east_1"
+  region                   = "us-east-1"
+  shared_credentials_files = ["~/.aws/credentials"]
+  profile                  = "patient"
+}
+
 # ------------------------------------------------------------
 # Data
 # ------------------------------------------------------------
 data "aws_region" "current" {}
-
-# ------------------------------------------------------------
-# Variables
-# ------------------------------------------------------------
-variable "project" {
-  type = string
-}
-
-variable "environment" {
-  type = string
-}
-
-variable "db_name" {
-  type = string
-}
-
-variable "db_username" {
-  type = string
-}
-
-variable "db_password" {
-  type = string
-}
-
 locals {
   vpc_cidr_block = "10.0.0.0/16"
   # public_subnet_cidr_blocks  = ["10.0.3.0/24", "10.0.4.0/24"]

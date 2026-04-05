@@ -1,5 +1,6 @@
 resource "aws_secretsmanager_secret" "database_url" {
-  name = "${var.project}-${var.environment}-database-url"
+  name                    = "${var.project}-${var.environment}-database-url"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "database_url" {
