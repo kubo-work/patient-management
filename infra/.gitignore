@@ -3,3 +3,4 @@
 *.tfstate.*
 *.tfvars
 .env
+node_modules

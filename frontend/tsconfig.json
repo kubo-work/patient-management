@@ -24,7 +24,8 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@patient/common/*": ["../common/*"]
     },
     "target": "ES2017"
   },
@@ -33,7 +34,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "../common/util/SexList.ts",
+    "../common/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
