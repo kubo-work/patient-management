@@ -13,6 +13,7 @@ resource "aws_iam_policy" "patient_management" {
           "secretsmanager:*",
           "rds:*",
           "cloudwatch:*",
+          "logs:*",
           "s3:*",
           "route53:*",
           "ec2:*",

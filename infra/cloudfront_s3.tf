@@ -66,9 +66,10 @@ resource "aws_s3_bucket_policy" "front" {
 
 # Route53 → CloudFront
 resource "aws_route53_record" "front" {
-  zone_id = aws_route53_zone.front.zone_id
-  name    = local.front_domain
-  type    = "A"
+  zone_id         = aws_route53_zone.front.zone_id
+  name            = local.front_domain
+  type            = "A"
+  allow_overwrite = true
   alias {
     name                   = aws_cloudfront_distribution.front.domain_name
     zone_id                = aws_cloudfront_distribution.front.hosted_zone_id

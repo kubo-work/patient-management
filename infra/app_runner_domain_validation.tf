@@ -5,9 +5,10 @@ resource "aws_route53_record" "api_apprunner_validation" {
   for_each = {
     for r in aws_apprunner_custom_domain_association.api.certificate_validation_records : r.name => r
   }
-  zone_id = aws_route53_zone.api.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  ttl     = 60
-  records = [each.value.value]
+  zone_id         = aws_route53_zone.api.zone_id
+  name            = each.value.name
+  type            = each.value.type
+  ttl             = 60
+  records         = [each.value.value]
+  allow_overwrite = true
 }
