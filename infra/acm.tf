@@ -14,11 +14,12 @@ resource "aws_route53_record" "front_cert_validation" {
       type   = dvo.resource_record_type
     }
   }
-  zone_id = aws_route53_zone.front.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
+  zone_id         = aws_route53_zone.front.zone_id
+  name            = each.value.name
+  type            = each.value.type
+  records         = [each.value.record]
+  ttl             = 60
+  allow_overwrite = true
 }
 
 resource "aws_acm_certificate_validation" "front" {
@@ -41,11 +42,12 @@ resource "aws_route53_record" "api_cert_validation" {
       type   = dvo.resource_record_type
     }
   }
-  zone_id = aws_route53_zone.api.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
+  zone_id         = aws_route53_zone.api.zone_id
+  name            = each.value.name
+  type            = each.value.type
+  records         = [each.value.record]
+  ttl             = 60
+  allow_overwrite = true
 }
 
 resource "aws_acm_certificate_validation" "api" {

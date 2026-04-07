@@ -21,6 +21,8 @@ resource "aws_db_instance" "postgres" {
   backup_window           = "02:00-06:00"
   skip_final_snapshot     = true
 
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+
   db_name  = var.db_name
   username = var.db_username
   password = var.db_password

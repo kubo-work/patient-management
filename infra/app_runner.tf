@@ -1,15 +1,24 @@
+data "aws_apprunner_hosted_zone_id" "current" {}
+
 resource "aws_apprunner_custom_domain_association" "api" {
   domain_name = local.api_domain
   service_arn = aws_apprunner_service.app.arn
 }
 
-# App Runnerが発行するCNAMEをRoute53に登録
+# App Runner 向けは apex（このゾーン名＝api ドメイン）のため CNAME は不可。Route 53 の ALIAS（A）を使う。
+# https://docs.aws.amazon.com/apprunner/latest/dg/manage-custom-domains-route53.html
 resource "aws_route53_record" "api" {
   zone_id = aws_route53_zone.api.zone_id
   name    = local.api_domain
-  type    = "CNAME"
-  ttl     = 60
-  records = [aws_apprunner_custom_domain_association.api.dns_target]
+  type    = "A"
+
+  allow_overwrite = true
+
+  alias {
+    name                   = aws_apprunner_custom_domain_association.api.dns_target
+    zone_id                = data.aws_apprunner_hosted_zone_id.current.id
+    evaluate_target_health = true
+  }
 }
 
 
@@ -145,7 +154,8 @@ resource "aws_iam_role_policy" "app_runner_instance_secrets" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["secretsmanager:GetSecretValue"]
-      Resource = "${aws_secretsmanager_secret.database_url.arn}-*"
+      # シークレット ARN は既に ...-6文字 形式。末尾に "-*" を付けると GetSecretValue と一致しないことがある
+      Resource = aws_secretsmanager_secret.database_url.arn
     }]
   })
 }
