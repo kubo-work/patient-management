@@ -15,4 +15,6 @@ backend/.env.development
 backend/.env.test
 backend/.env.production
 infra/terraform.tfvars
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
 infra/.env

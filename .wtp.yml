@@ -1,0 +1,22 @@
+version: "1.0"
+defaults:
+  # ワークツリーが作成されるベースディレクトリ
+  base_dir: "../worktrees"
+hooks:
+  post_create:
+    # backendの.envファイルをコピー
+    - type: copy
+      from: "backend/.env"
+      to: "backend/.env"
+
+    # frontendの.envファイルをコピー
+    - type: copy
+      from: "frontend/.env"
+      to: "frontend/.env"
+
+    # 新しいワークツリー内でコマンドを自動実行（必要に応じて）
+    - type: command
+      command: "cd backend && npm install"
+
+    - type: command
+      command: "cd frontend && npm install"
