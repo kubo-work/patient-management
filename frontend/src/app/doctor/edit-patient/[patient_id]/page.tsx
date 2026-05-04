@@ -3,6 +3,7 @@ import { Title } from "@mantine/core";
 import { Metadata } from "next";
 
 // 静的エクスポート用（実データはクライアントサイドで SWR が取得）
+export const dynamicParams = false;
 export function generateStaticParams() {
   return [];
 }
