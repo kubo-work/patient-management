@@ -19,7 +19,7 @@ jobs:
       - name: Node.js セットアップ
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -31,8 +31,17 @@ jobs:
         working-directory: . # ルートから実行
         run: cd frontend && npm run build
         env:
+          DEPLOY_TARGET: aws
           NEXT_PUBLIC_API_URL: "https://api-aws.patient-management-kubo-works-projects.com"
           NEXT_PUBLIC_FRONT_URL: "https://aws.patient-management-kubo-works-projects.com"
+
+      - name: ビルド出力確認
+        run: |
+          if [ ! -d frontend/out ]; then
+            echo "::error::frontend/out が存在しません。next build が output: export モードで実行されたか確認してください。"
+            exit 1
+          fi
+          ls -la frontend/out
 
       - name: AWS 認証設定
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,6 +59,7 @@ jobs:
           aws s3 sync frontend/out s3://aws.patient-management-kubo-works-projects.com \
             --delete \
             --cache-control "no-cache" \
+            --exclude "*" \
             --include "*.html"
 
       - name: CloudFront キャッシュ無効化
