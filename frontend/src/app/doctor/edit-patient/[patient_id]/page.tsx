@@ -2,6 +2,11 @@ import EditPatientContents from "@/app/features/doctor/edit-patient/EditPatientC
 import { Title } from "@mantine/core";
 import { Metadata } from "next";
 
+// 静的エクスポート用（実データはクライアントサイドで SWR が取得）
+export function generateStaticParams() {
+  return [];
+}
+
 type PageParams = {
   params: Promise<{ patient_id: string }>;
 };
