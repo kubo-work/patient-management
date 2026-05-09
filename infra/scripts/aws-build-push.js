@@ -11,6 +11,14 @@ const REPO_ROOT = resolve(INFRA_DIR, "..");
 
 config({ path: resolve(INFRA_DIR, ".env") });
 
+// backend/.env の DATABASE_URL を SUPABASE_URL として自動取得
+if (!process.env.TF_VAR_supabase_url) {
+    const backendEnv = config({ path: resolve(REPO_ROOT, "backend", ".env"), override: false });
+    if (backendEnv.parsed?.DATABASE_URL) {
+        process.env.TF_VAR_supabase_url = backendEnv.parsed.DATABASE_URL;
+    }
+}
+
 const PROFILE = process.env.AWS_PROFILE;
 const REGION = "ap-northeast-1";
 const env = { ...process.env };
@@ -64,12 +72,20 @@ try {
     run(`docker push ${ecrUrl}:${tag}`);
     run(`docker push ${ecrUrl}:latest`);
 
-    // 6. ECS サービス強制再デプロイ
-    console.log("\n🚀 Forcing ECS service redeploy...");
+    // 6. ECS サービス強制再デプロイ（最新タスク定義を明示指定）
+    console.log("\n🚀 Forcing ECS service redeploy with latest task definition...");
     const cluster = capture("terraform output -raw ecs_cluster_name", { cwd: INFRA_DIR });
     const service = capture("terraform output -raw ecs_service_name", { cwd: INFRA_DIR });
+
+    // ignore_changes = [task_definition] のため terraform apply はサービスを更新しない。
+    // ここで最新タスク定義 ARN を取得してサービスに明示的に反映させる。
+    const taskDefFamily = cluster.replace("-cluster", "-backend");
+    const latestTaskDefArn = capture(
+        `aws ecs describe-task-definition --task-definition ${taskDefFamily} --query taskDefinition.taskDefinitionArn --output text --region ${REGION} --profile ${PROFILE}`
+    );
+    console.log(`   Task definition: ${latestTaskDefArn}`);
     run(
-        `aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment --region ${REGION} --profile ${PROFILE} --output text > /dev/null`
+        `aws ecs update-service --cluster ${cluster} --service ${service} --task-definition ${latestTaskDefArn} --force-new-deployment --region ${REGION} --profile ${PROFILE} --output text > /dev/null`
     );
 
     console.log("\n✅ Build & deploy triggered!");

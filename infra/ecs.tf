@@ -78,6 +78,26 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+# ECS Exec（aws ecs execute-command）に必要な SSM 権限
+resource "aws_iam_role_policy" "ecs_task_ssm" {
+  name = "ssm-exec"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ssmmessages:CreateControlChannel",
+        "ssmmessages:CreateDataChannel",
+        "ssmmessages:OpenControlChannel",
+        "ssmmessages:OpenDataChannel"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
 # ------------------------------------------------------------
 # ECS Task Definition (Fargate)
 # command で Prisma migrate deploy → API 起動
@@ -113,9 +133,11 @@ resource "aws_ecs_task_definition" "backend" {
     ]
 
     environment = [
-      { name = "NODE_ENV", value = "production" },
-      { name = "PORT", value = "8080" },
-      { name = "CLIENT_URL", value = var.client_url },
+      { name = "NODE_ENV",        value = "production" },
+      { name = "PORT",            value = "8080" },
+      { name = "CLIENT_URL",      value = var.client_url },
+      { name = "JWT_SECRET_KEY",  value = var.jwt_secret_key },
+      { name = "SUPABASE_URL",    value = var.supabase_url },
     ]
 
     secrets = [

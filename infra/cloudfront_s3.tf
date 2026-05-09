@@ -2,6 +2,29 @@ resource "aws_s3_bucket" "front" {
   bucket = local.front_domain
 }
 
+# URL リライト: /doctor → /doctor/index.html（S3 は REST API 経由のためディレクトリ index を返さない）
+resource "aws_cloudfront_function" "url_rewrite" {
+  name    = "${var.project}-${var.environment}-url-rewrite"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+
+  code = <<-EOT
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+      uri = uri.replace(/^(\/doctor\/edit-patient\/)([^\/]+)(\/.*)?$/, '$10/index.html');
+      uri = uri.replace(/^(\/doctor\/edit-doctor\/)([^\/]+)(\/.*)?$/, '$10/index.html');
+      if (uri.endsWith('/')) {
+        uri += 'index.html';
+      } else if (!uri.split('/').pop().includes('.')) {
+        uri += '/index.html';
+      }
+      request.uri = uri;
+      return request;
+    }
+  EOT
+}
+
 resource "aws_cloudfront_origin_access_control" "front" {
   name                              = "s3-front-oac"
   origin_access_control_origin_type = "s3"
@@ -28,6 +51,10 @@ resource "aws_cloudfront_distribution" "front" {
     forwarded_values {
       query_string = false
       cookies { forward = "none" }
+    }
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.url_rewrite.arn
     }
   }
 

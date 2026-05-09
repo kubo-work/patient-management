@@ -28,6 +28,16 @@ variable "client_url" {
   default = ""
 }
 
+variable "jwt_secret_key" {
+  type    = string
+  default = ""
+}
+
+variable "supabase_url" {
+  type    = string
+  default = ""
+}
+
 variable "image_tag" {
   type    = string
   default = "latest"
