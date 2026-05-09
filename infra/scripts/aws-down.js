@@ -9,11 +9,23 @@ const INFRA_DIR = resolve(__dirname, "..");
 config({ path: resolve(INFRA_DIR, ".env") });
 
 const PROFILE = process.env.AWS_PROFILE;
+const REGION = "ap-northeast-1";
 const env = { ...process.env };
+
+const REQUIRED_VARS = ["AWS_PROFILE", "TF_VAR_db_name", "TF_VAR_db_username", "TF_VAR_db_password"];
+const missing = REQUIRED_VARS.filter((k) => !process.env[k]);
+if (missing.length > 0) {
+    console.error("❌ 必須の環境変数が infra/.env に設定されていません:");
+    for (const k of missing) console.error(`   ${k}`);
+    process.exit(1);
+}
 
 const mode = process.argv[2] || "all";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 10_000;
+
+const CLUSTER = "patient-management-dev-cluster";
+const SERVICE = "patient-management-dev-backend";
 
 function run(cmd, opts = {}) {
     return execSync(cmd, { cwd: INFRA_DIR, stdio: "inherit", env, ...opts });
@@ -89,46 +101,116 @@ function detachIamPolicy(policyName) {
     }
 }
 
+// ECS サービスを desired_count=0 → 削除する（ENI 残留による subnet 削除失敗を防ぐ）
+async function drainAndDeleteEcsService() {
+    try {
+        const serviceArns = execSync(
+            `aws ecs list-services --cluster ${CLUSTER} --query "serviceArns" --output text --region ${REGION} --profile ${PROFILE} 2>/dev/null`,
+            { cwd: INFRA_DIR, stdio: "pipe" }
+        ).toString().trim();
+
+        if (!serviceArns || !serviceArns.includes(SERVICE)) {
+            console.log("  ℹ️  No ECS service found. Skipping.");
+            return;
+        }
+
+        console.log(`  🔻 Scaling ${SERVICE} to 0...`);
+        execSync(
+            `aws ecs update-service --cluster ${CLUSTER} --service ${SERVICE} --desired-count 0 --region ${REGION} --profile ${PROFILE} --output text > /dev/null`,
+            { cwd: INFRA_DIR, stdio: "pipe" }
+        );
+
+        console.log("  ⏳ Waiting for tasks to stop (up to ~3 min)...");
+        try {
+            execSync(
+                `aws ecs wait services-stable --cluster ${CLUSTER} --services ${SERVICE} --region ${REGION} --profile ${PROFILE}`,
+                { cwd: INFRA_DIR, stdio: "pipe" }
+            );
+        } catch {
+            console.warn("  ⚠️ services-stable wait timed out, proceeding to delete-service anyway");
+        }
+
+        console.log(`  🗑  Deleting service ${SERVICE}...`);
+        execSync(
+            `aws ecs delete-service --cluster ${CLUSTER} --service ${SERVICE} --force --region ${REGION} --profile ${PROFILE} --output text > /dev/null`,
+            { cwd: INFRA_DIR, stdio: "pipe" }
+        );
+
+        // state からも除外（Terraform destroy が二重削除しないように）
+        stateRm("aws_ecs_service.backend");
+        console.log("  ✅ ECS service deleted");
+    } catch (err) {
+        console.warn(`  ⚠️ Could not drain/delete ECS service: ${err.message}`);
+    }
+}
+
+// ECR イメージを全削除（force_delete=true なら不要だが安全側）
+function emptyEcrRepository(repoName) {
+    try {
+        const imagesJson = execSync(
+            `aws ecr list-images --repository-name ${repoName} --query "imageIds" --output json --region ${REGION} --profile ${PROFILE} 2>/dev/null`,
+            { cwd: INFRA_DIR, stdio: "pipe" }
+        ).toString().trim();
+
+        if (!imagesJson || imagesJson === "[]") return;
+
+        execSync(
+            `aws ecr batch-delete-image --repository-name ${repoName} --image-ids '${imagesJson}' --region ${REGION} --profile ${PROFILE} --output text > /dev/null`,
+            { cwd: INFRA_DIR, stdio: "pipe" }
+        );
+        console.log(`  🗑  Emptied ECR repo: ${repoName}`);
+    } catch {
+        // 未作成 or 既に空
+    }
+}
+
+// 孤立した Elastic IP を release（NAT Gateway 削除後に確実に課金停止させる）
+function releaseOrphanedEips() {
+    try {
+        const json = execSync(
+            `aws ec2 describe-addresses --filters "Name=tag:Name,Values=patient-management-dev-nat-eip" --query "Addresses" --output json --region ${REGION} --profile ${PROFILE}`,
+            { cwd: INFRA_DIR, stdio: "pipe" }
+        ).toString();
+
+        const addresses = JSON.parse(json);
+        for (const addr of addresses) {
+            if (addr.AssociationId) {
+                console.log(`  ℹ️  EIP ${addr.PublicIp} は ${addr.AssociationId} にアタッチ中（NAT GW 残存？）`);
+                continue;
+            }
+            execSync(
+                `aws ec2 release-address --allocation-id ${addr.AllocationId} --region ${REGION} --profile ${PROFILE}`,
+                { cwd: INFRA_DIR, stdio: "pipe" }
+            );
+            console.log(`  ✅ Released orphaned EIP: ${addr.PublicIp} (${addr.AllocationId})`);
+        }
+    } catch (err) {
+        console.warn(`  ⚠️ Could not check/release EIP: ${err.message}`);
+    }
+}
+
 try {
     if (mode === "domain") {
-        // Route53ゾーンのみ削除（インフラはそのまま残す）
+        // Route53 ゾーンのみ削除（インフラはそのまま残す）
         console.log("\n🗑️  Destroying Route53 zones only...");
         await destroyWithRetry(
-            "terraform destroy -target=aws_route53_zone.front -target=aws_route53_zone.api -auto-approve -lock=false -refresh=false",
+            "terraform destroy -target=aws_route53_zone.front -target=aws_route53_zone.api -auto-approve -input=false -lock=false -refresh=false",
             "Route53 destroy"
         );
         console.log("\n✅ Route53 zones destroyed!");
         console.log("📝 Note: インフラ（RDS / ACM / S3+CloudFront 等）はそのまま残っています");
-
     } else {
         // Route53 を state から除外してから全破棄（DNS は AWS 上に保持される）
         console.log("\n🗂  Removing Route53 from Terraform state (preserving DNS in AWS)...");
         stateRm("aws_route53_zone.front", "aws_route53_zone.api");
 
-        // App Runner サービスを CLI で削除（CREATE_FAILED 等 Terraform が検知できない状態でも確実に消す）
-        console.log("\n🗑️  Deleting App Runner service via CLI (if exists)...");
-        try {
-            const serviceArn = execSync(
-                `aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='patient-management-dev-app-runner'].ServiceArn" --output text --region ap-northeast-1 --profile ${PROFILE}`,
-                { cwd: INFRA_DIR, stdio: "pipe" }
-            ).toString().trim();
+        // ECS サービスを CLI で先に空にして削除（ENI 残留 → subnet 削除失敗を防ぐ）
+        console.log("\n🗑️  Draining and deleting ECS service via CLI (if exists)...");
+        await drainAndDeleteEcsService();
 
-            if (serviceArn) {
-                console.log(`  🔍 Found: ${serviceArn}`);
-                execSync(
-                    `aws apprunner delete-service --service-arn ${serviceArn} --region ap-northeast-1 --profile ${PROFILE}`,
-                    { cwd: INFRA_DIR, stdio: "pipe" }
-                );
-                console.log("  ✅ Delete requested. Waiting 30s for App Runner to finish...");
-                await sleep(30_000);
-                // state からも除去（Terraform が二重削除しないよう）
-                stateRm("aws_apprunner_service.app", "aws_apprunner_custom_domain_association.api");
-            } else {
-                console.log("  ℹ️  No App Runner service found. Skipping.");
-            }
-        } catch (err) {
-            console.warn(`  ⚠️ Could not delete App Runner service: ${err.message}`);
-        }
+        // ECR イメージを空に（force_delete=true でも保険）
+        console.log("\n🗑️  Emptying ECR repository (if exists)...");
+        emptyEcrRepository("patient-management-dev-backend");
 
         // IAM ポリシーを先にデタッチ（アタッチされたまま削除しようとすると 409 ConflictError）
         console.log("\n🔓 Detaching IAM policies before destroy...");
@@ -136,9 +218,13 @@ try {
 
         console.log("\n🗑️  Destroying all infrastructure (excluding Route53)...");
         await destroyWithRetry(
-            "terraform destroy -auto-approve -lock=false -refresh=false",
+            "terraform destroy -auto-approve -input=false -lock=false -refresh=false",
             "Infrastructure destroy"
         );
+
+        // destroy 後の保険: 孤立 EIP（NAT GW 削除に失敗してもアタッチが外れていれば release）
+        console.log("\n🔍 Checking for orphaned Elastic IPs (NAT Gateway 残存対策)...");
+        releaseOrphanedEips();
 
         console.log("\n✅ Infrastructure destroyed!");
         console.log("📝 Note: Route53ゾーンは AWS 上に保持されています（state からは除外済み）");
@@ -146,7 +232,6 @@ try {
         console.log("   再構築する場合は npm run aws-apply-domain → npm run aws-apply の順に実行してください");
         console.log("   S3バケットにファイルがある場合は先に手動で空にしてから destroy してください");
     }
-
 } catch (err) {
     console.error("\n❌ Error:", err.message);
     console.error("\n💡 ネットワーク接続エラーの場合、以下を試してください:");

@@ -1,1 +1,0 @@
-export const DATABASE_KEY = "AWS_RDS_DATABASE_URL";
