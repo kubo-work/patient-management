@@ -17,9 +17,9 @@ resource "aws_iam_policy" "patient_management" {
           "s3:*",
           "route53:*",
           "ec2:*",
-          "apprunner:*",
-          "codestar-connections:*",
-          "codebuild:*",
+          "ecs:*",
+          "ecr:*",
+          "elasticloadbalancing:*",
           "acm:*"
         ]
         Resource = "*"

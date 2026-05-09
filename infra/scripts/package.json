@@ -1,17 +1,13 @@
 {
   "name": "scripts",
   "version": "1.0.0",
-  "main": "rds-down.js",
   "scripts": {
     "aws-setup": "node aws-setup.js",
-    "aws-plan-domain": "node aws-plan-domain.js",
     "aws-apply": "node aws-apply.js all",
     "aws-apply-domain": "node aws-apply.js domain",
-    "aws-migrate": "node aws-migrate.js",
+    "aws-build-push": "node aws-build-push.js",
     "aws-down": "node aws-down.js all",
     "aws-down-domain": "node aws-down.js domain",
-    "aws-destroy": "node aws-destroy.js",
-    "aws-destroy-domain": "node aws-destroy.js domain",
     "aws-teardown": "node aws-teardown.js"
   },
   "type": "module",

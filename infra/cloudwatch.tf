@@ -2,24 +2,6 @@
 # CloudWatch Log Groups
 # ============================================================
 
-resource "aws_cloudwatch_log_group" "rds_postgresql" {
-  name              = "/aws/rds/instance/${aws_db_instance.postgres.identifier}/postgresql"
-  retention_in_days = 14
-
-  tags = {
-    Name = "${var.project}-${var.environment}-rds-postgresql-logs"
-  }
-}
-
-resource "aws_cloudwatch_log_group" "rds_upgrade" {
-  name              = "/aws/rds/instance/${aws_db_instance.postgres.identifier}/upgrade"
-  retention_in_days = 14
-
-  tags = {
-    Name = "${var.project}-${var.environment}-rds-upgrade-logs"
-  }
-}
-
 # ============================================================
 # CloudWatch Alarms - RDS
 # ============================================================
@@ -151,37 +133,94 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx" {
 }
 
 # ============================================================
-# CloudWatch Alarms - App Runner
+# CloudWatch Alarms - ALB
 # ============================================================
 
-resource "aws_cloudwatch_metric_alarm" "app_runner_5xx" {
-  alarm_name          = "${var.project}-${var.environment}-app-runner-5xx-high"
+resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
+  alarm_name          = "${var.project}-${var.environment}-alb-5xx-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
-  metric_name         = "Http5xxCount"
-  namespace           = "AWS/AppRunner"
+  metric_name         = "HTTPCode_Target_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
   period              = 300
   statistic           = "Sum"
   threshold           = 10
-  alarm_description   = "App Runner 5xxエラーが10件を超えました"
+  alarm_description   = "ALB ターゲットからの 5xx エラーが 10 件を超えました"
 
   dimensions = {
-    ServiceName = aws_apprunner_service.app.service_name
+    LoadBalancer = aws_lb.api.arn_suffix
+    TargetGroup  = aws_lb_target_group.api.arn_suffix
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "app_runner_request_latency" {
-  alarm_name          = "${var.project}-${var.environment}-app-runner-latency-high"
+resource "aws_cloudwatch_metric_alarm" "alb_target_response_time" {
+  alarm_name          = "${var.project}-${var.environment}-alb-latency-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
-  metric_name         = "RequestLatency"
-  namespace           = "AWS/AppRunner"
+  metric_name         = "TargetResponseTime"
+  namespace           = "AWS/ApplicationELB"
   period              = 300
   extended_statistic  = "p99"
-  threshold           = 5000
-  alarm_description   = "App Runner リクエストのp99レイテンシが5秒を超えました"
+  threshold           = 5
+  alarm_description   = "ALB ターゲットの p99 応答時間が 5 秒を超えました"
 
   dimensions = {
-    ServiceName = aws_apprunner_service.app.service_name
+    LoadBalancer = aws_lb.api.arn_suffix
+    TargetGroup  = aws_lb_target_group.api.arn_suffix
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
+  alarm_name          = "${var.project}-${var.environment}-alb-unhealthy-hosts"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "UnHealthyHostCount"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 0
+  alarm_description   = "ALB に異常なターゲットがあります"
+
+  dimensions = {
+    LoadBalancer = aws_lb.api.arn_suffix
+    TargetGroup  = aws_lb_target_group.api.arn_suffix
+  }
+}
+
+# ============================================================
+# CloudWatch Alarms - ECS
+# ============================================================
+
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
+  alarm_name          = "${var.project}-${var.environment}-ecs-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "ECS サービスの CPU 使用率が 80% を超えました"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    ServiceName = aws_ecs_service.backend.name
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_memory" {
+  alarm_name          = "${var.project}-${var.environment}-ecs-memory-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "ECS サービスのメモリ使用率が 80% を超えました"
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    ServiceName = aws_ecs_service.backend.name
   }
 }

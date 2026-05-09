@@ -84,10 +84,14 @@ try {
     run("terraform init", { cwd: INFRA_DIR });
 
     // 6. tf files を一時退避
+    // aws_iam_policy.patient_management だけを target apply するため、
+    // 他リソース（ACM/CloudFront/ALB/ECS/ECR）への依存を切り離す
     console.log("\n📦 Temporarily moving tf files...");
     run("mv acm.tf acm.tf.bak", { cwd: INFRA_DIR });
     run("mv cloudfront_s3.tf cloudfront_s3.tf.bak", { cwd: INFRA_DIR });
-    run("mv app_runner.tf app_runner.tf.bak", { cwd: INFRA_DIR });
+    run("mv alb.tf alb.tf.bak", { cwd: INFRA_DIR });
+    run("mv ecs.tf ecs.tf.bak", { cwd: INFRA_DIR });
+    run("mv ecr.tf ecr.tf.bak", { cwd: INFRA_DIR });
 
 
     try {
@@ -119,12 +123,14 @@ try {
             console.log("✅ AWSPatientManagementPolicy applied");
         }
     } finally {
-        // 9. 必ず両方戻す
+        // 9. 必ず全部戻す
         console.log("\n📦 Restoring tf files...");
         run("mv acm.tf.bak acm.tf", { cwd: INFRA_DIR });
         run("mv cloudfront_s3.tf.bak cloudfront_s3.tf", { cwd: INFRA_DIR });
-        run("mv app_runner.tf.bak app_runner.tf", { cwd: INFRA_DIR });
-        console.log("✅ tf files restored");;
+        run("mv alb.tf.bak alb.tf", { cwd: INFRA_DIR });
+        run("mv ecs.tf.bak ecs.tf", { cwd: INFRA_DIR });
+        run("mv ecr.tf.bak ecr.tf", { cwd: INFRA_DIR });
+        console.log("✅ tf files restored");
     }
 
     // 10. AWSPatientManagementPolicy をアタッチ

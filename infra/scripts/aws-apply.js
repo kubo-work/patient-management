@@ -9,6 +9,28 @@ const INFRA_DIR = resolve(__dirname, "..");
 config({ path: resolve(INFRA_DIR, ".env") });
 
 const env = { ...process.env };
+const PROFILE = process.env.AWS_PROFILE;
+
+const REQUIRED_VARS = [
+    "AWS_PROFILE",
+    "TF_VAR_project",
+    "TF_VAR_environment",
+    "TF_VAR_db_name",
+    "TF_VAR_db_username",
+    "TF_VAR_db_password",
+];
+const missing = REQUIRED_VARS.filter((k) => !process.env[k]);
+if (missing.length > 0) {
+    console.error("❌ 必須の環境変数が infra/.env に設定されていません:");
+    for (const k of missing) console.error(`   ${k}`);
+    process.exit(1);
+}
+
+const dbPassword = process.env.TF_VAR_db_password ?? "";
+if (dbPassword.length < 8) {
+    console.error("❌ TF_VAR_db_password は 8 文字以上にしてください（RDS の制約）");
+    process.exit(1);
+}
 
 const mode = process.argv[2] || "all";
 
@@ -26,11 +48,104 @@ function tryImport(resource, id) {
     }
 }
 
+// 指定リソース名がすでに state に存在するか
+function isInState(resource) {
+    try {
+        const list = execSync("terraform state list", {
+            cwd: INFRA_DIR,
+            stdio: "pipe",
+            env,
+        }).toString();
+        return list.split("\n").includes(resource);
+    } catch {
+        return false;
+    }
+}
+
+// Route53 ゾーンの重複検出（同名ゾーンが AWS 上に複数あったら apply 中断）
+function ensureSingleHostedZone(name) {
+    const raw = execSync(
+        `aws route53 list-hosted-zones --query "HostedZones[?Name=='${name}'].Id" --output text --profile ${PROFILE}`,
+        { cwd: INFRA_DIR, stdio: "pipe", env }
+    ).toString().trim();
+
+    if (!raw) return null; // 未作成
+
+    const zoneIds = raw
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((s) => s.replace("/hostedzone/", ""));
+
+    if (zoneIds.length > 1) {
+        console.error(`\n❌ Duplicate Route53 hosted zones detected for "${name}":`);
+        for (const id of zoneIds) {
+            console.error(`     - ${id}`);
+        }
+        console.error("   AWS コンソール で不要な方を削除してから再実行してください。");
+        console.error("   （NS レコードに対応する 1 つを残す）");
+        process.exit(1);
+    }
+
+    return zoneIds[0];
+}
+
+// Route53 ゾーンを厳格に import（silent fail 禁止）
+// import 失敗 → 重複ゾーン生成リスクのため即中断する
+function importRoute53ZoneSafe(resource, name) {
+    if (isInState(resource)) {
+        // すでに state にあれば何もしない（apply で同じリソースが扱われる）
+        return;
+    }
+    const zoneId = ensureSingleHostedZone(name);
+    if (!zoneId) {
+        // AWS 上にゾーンが無いので新規作成させる（import しない）
+        return;
+    }
+
+    try {
+        execSync(`terraform import ${resource} ${zoneId}`, {
+            cwd: INFRA_DIR,
+            stdio: "pipe",
+            env,
+        });
+        console.log(`✅ Imported: ${resource} (${zoneId})`);
+    } catch (err) {
+        console.error(`\n❌ Route53 ゾーン import 失敗: ${resource} (${zoneId})`);
+        console.error("   このまま apply を続けると AWS 上に重複ゾーンが作られるため中断します。");
+        console.error(`   原因: ${err.message.split("\n").slice(0, 5).join("\n   ")}`);
+        console.error("\n💡 対処:");
+        console.error("   1. AWS 認証エラーなら infra/.env を確認");
+        console.error("   2. 既に state にある場合は terraform state list で確認");
+        console.error("   3. それ以外の理由なら手動で terraform import を実行してから再実行");
+        process.exit(1);
+    }
+
+    // 念のため import 後に state に存在することを確認
+    if (!isInState(resource)) {
+        console.error(`\n❌ Route53 ゾーン import 後に state へ反映されていません: ${resource}`);
+        console.error("   重複ゾーン生成リスクがあるため apply を中断します。");
+        process.exit(1);
+    }
+}
+
 try {
+    // S3 バックエンドへの再接続が必要な場合に備えて毎回 init
+    console.log("🔧 Running terraform init...");
+    execSync("terraform init -reconfigure -input=false", {
+        cwd: INFRA_DIR,
+        stdio: "inherit",
+        env,
+    });
+
     if (mode === "domain") {
         console.log("\n🚀 Applying Route53 only...");
+
+        // domain モードでも apply 前に重複ゾーン検出は行う（誤って 2 つ目を作らない）
+        importRoute53ZoneSafe("aws_route53_zone.front", "aws.patient-management-kubo-works-projects.com.");
+        importRoute53ZoneSafe("aws_route53_zone.api", "api-aws.patient-management-kubo-works-projects.com.");
+
         execSync(
-            "terraform apply -target=aws_route53_zone.front -target=aws_route53_zone.api -auto-approve",
+            "terraform apply -target=aws_route53_zone.front -target=aws_route53_zone.api -auto-approve -input=false",
             { cwd: INFRA_DIR, stdio: "inherit", env }
         );
         console.log("\n✅ Route53 created!");
@@ -38,129 +153,114 @@ try {
         console.log("   1. terraform output front_name_servers / api_name_servers でNSレコードを確認");
         console.log("   2. お名前.comのネームサーバーをRoute53に変更");
         console.log("   3. DNS伝播後に npm run aws-apply を実行");
-
     } else {
-        // Step0: for_each の原因ファイルを退避してから既存リソースをimport
-        console.log("\n📦 Temporarily moving app_runner_domain_validation.tf...");
-        execSync("mv app_runner_domain_validation.tf app_runner_domain_validation.tf.bak", { cwd: INFRA_DIR, env });
+        console.log("\n🔍 Importing existing AWS resources into Terraform state...");
 
+        // IAM
+        tryImport("aws_iam_role.ecs_task_execution", `${process.env.TF_VAR_project ?? "patient-management"}-${process.env.TF_VAR_environment ?? "dev"}-ecs-task-execution-role`);
+        tryImport("aws_iam_role.ecs_task", `${process.env.TF_VAR_project ?? "patient-management"}-${process.env.TF_VAR_environment ?? "dev"}-ecs-task-role`);
+
+        // RDS 関連の付随リソース
+        tryImport("aws_db_parameter_group.postgres", "patient-management-dev-parameter-group");
+        tryImport("aws_secretsmanager_secret.database_url", "patient-management-dev-database-url");
+
+        // S3 フロントバケット
+        tryImport("aws_s3_bucket.front", "aws.patient-management-kubo-works-projects.com");
+
+        // ECR リポジトリ
         try {
-            console.log("\n🔍 Importing existing AWS resources into Terraform state...");
-            tryImport("aws_iam_role.app_runner", "pm-dev-app-runner-role");
-            tryImport("aws_iam_role.app_runner_instance", "pm-dev-app-runner-instance-role");
-            tryImport("aws_apprunner_connection.github", "pm-dev-github-connection");
-            tryImport("aws_db_parameter_group.postgres", "patient-management-dev-parameter-group");
-            tryImport("aws_secretsmanager_secret.database_url", "patient-management-dev-database-url");
-
-            // Route53 ゾーンが既に存在する場合は import（同名ゾーンが重複して作られるのを防ぐ）
-            const route53Domains = [
-                { resource: "aws_route53_zone.front", name: "aws.patient-management-kubo-works-projects.com." },
-                { resource: "aws_route53_zone.api",   name: "api-aws.patient-management-kubo-works-projects.com." },
-            ];
-            for (const { resource, name } of route53Domains) {
-                try {
-                    const zoneId = execSync(
-                        `aws route53 list-hosted-zones --query "HostedZones[?Name=='${name}'].Id" --output text --profile ${process.env.AWS_PROFILE}`,
-                        { cwd: INFRA_DIR, stdio: "pipe", env }
-                    ).toString().trim().split("\n")[0].replace("/hostedzone/", "");
-                    if (zoneId) tryImport(resource, zoneId);
-                } catch {
-                    // ゾーンが存在しない場合は無視
-                }
+            const repoName = execSync(
+                `aws ecr describe-repositories --repository-names patient-management-dev-backend --query "repositories[0].repositoryName" --output text --profile ${PROFILE} 2>/dev/null`,
+                { cwd: INFRA_DIR, stdio: "pipe", env }
+            ).toString().trim();
+            if (repoName && repoName !== "None") {
+                tryImport("aws_ecr_repository.backend", repoName);
             }
-
-            // S3 フロントバケットが既に存在する場合は import
-            tryImport("aws_s3_bucket.front", "aws.patient-management-kubo-works-projects.com");
-
-            // RDS が自動生成した CloudWatch Log Group を import
-            try {
-                const rdsId = execSync(
-                    `aws rds describe-db-instances --query "DBInstances[0].DBInstanceIdentifier" --output text --profile ${process.env.AWS_PROFILE}`,
-                    { cwd: INFRA_DIR, stdio: "pipe", env }
-                ).toString().trim();
-
-                if (rdsId && rdsId !== "None" && rdsId !== "") {
-                    console.log(`🔍 Found RDS instance: ${rdsId}`);
-                    tryImport("aws_cloudwatch_log_group.rds_postgresql", `/aws/rds/instance/${rdsId}/postgresql`);
-                    tryImport("aws_cloudwatch_log_group.rds_upgrade", `/aws/rds/instance/${rdsId}/upgrade`);
-                }
-            } catch {
-                // RDS が存在しない場合は無視
-            }
-
-            // App Runner サービスが既に存在する場合は import（CREATE_FAILED 含む）
-            try {
-                const serviceArn = execSync(
-                    `aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='patient-management-dev-app-runner'].ServiceArn" --output text --profile ${process.env.AWS_PROFILE}`,
-                    { cwd: INFRA_DIR, stdio: "pipe", env }
-                ).toString().trim();
-
-                if (serviceArn) {
-                    console.log(`🔍 Found existing App Runner service: ${serviceArn}`);
-                    tryImport("aws_apprunner_service.app", serviceArn);
-                }
-            } catch {
-                // サービスが存在しない場合は無視
-            }
-        } finally {
-            console.log("\n📦 Restoring app_runner_domain_validation.tf...");
-            execSync("mv app_runner_domain_validation.tf.bak app_runner_domain_validation.tf", { cwd: INFRA_DIR, env });
-            console.log("✅ app_runner_domain_validation.tf restored");
+        } catch {
+            // 未作成
         }
 
-        // Step1: ACM証明書を先に作成（for_each の依存を解決）
-        console.log("\n🚀 Step1: Applying ACM certificates...");
+        // ECS Cluster / Service
+        try {
+            const clusterArn = execSync(
+                `aws ecs describe-clusters --clusters patient-management-dev-cluster --query "clusters[0].clusterArn" --output text --profile ${PROFILE}`,
+                { cwd: INFRA_DIR, stdio: "pipe", env }
+            ).toString().trim();
+            if (clusterArn && clusterArn !== "None" && clusterArn !== "") {
+                tryImport("aws_ecs_cluster.main", "patient-management-dev-cluster");
+                tryImport("aws_ecs_service.backend", "patient-management-dev-cluster/patient-management-dev-backend");
+            }
+        } catch {
+            // 未作成
+        }
+
+        // CloudWatch Logs (ECS)
+        tryImport("aws_cloudwatch_log_group.ecs_backend", "/ecs/patient-management-dev-backend");
+
+        // Step 1/5: ACM 証明書（for_each の依存を解決するため先に作成）
+        console.log("\n🚀 [1/5] ACM 証明書を作成中...");
         execSync(
-            "terraform apply -target=aws_acm_certificate.front -target=aws_acm_certificate.api -auto-approve",
+            "terraform apply -target=aws_acm_certificate.front -target=aws_acm_certificate.api -auto-approve -input=false",
             { cwd: INFRA_DIR, stdio: "inherit", env }
         );
 
-        // Step1.5: インスタンスロールに Secrets / CloudWatch 権限を付与（Step3 より前に必須）
-        // Step3 が CREATE_FAILED だと Step4 に進めず、ここを通らないと GetSecretValue が永遠に付かない
-        console.log("\n🚀 Step1.5: Applying App Runner instance IAM policies (secrets + CloudWatch logs)...");
+        // ACM が state に入ったことで acm.tf の for_each が解決できるようになるため、
+        // ここで Route53 ゾーンを import する（初期 import ブロックで実行すると for_each エラーになる）
+        console.log("\n🔍 Route53 ゾーンを import 中（重複チェック付き）...");
+        importRoute53ZoneSafe("aws_route53_zone.front", "aws.patient-management-kubo-works-projects.com.");
+        importRoute53ZoneSafe("aws_route53_zone.api", "api-aws.patient-management-kubo-works-projects.com.");
+
+        // Step 2/5: Secrets Manager（ECS 起動時に AWSCURRENT が必要）
+        console.log("\n🚀 [2/5] Secrets Manager を作成中...");
         execSync(
-            "terraform apply -target=aws_iam_role_policy.app_runner_instance_secrets -target=aws_iam_role_policy.app_runner_instance_cloudwatch -auto-approve",
+            "terraform apply -target=aws_secretsmanager_secret.database_url -target=aws_secretsmanager_secret_version.database_url -auto-approve -input=false",
             { cwd: INFRA_DIR, stdio: "inherit", env }
         );
 
-        // Step2: シークレットの値（バージョン）を先に作成（App Runner起動前に AWSCURRENT が必要）
-        console.log("\n🚀 Step2: Applying Secrets Manager secret version...");
+        // Step 3/5: ECR（タスク定義が repository_url を参照するため先に作成）
+        console.log("\n🚀 [3/5] ECR リポジトリを作成中...");
         execSync(
-            "terraform apply -target=aws_secretsmanager_secret.database_url -target=aws_secretsmanager_secret_version.database_url -auto-approve",
+            "terraform apply -target=aws_ecr_repository.backend -auto-approve -input=false",
             { cwd: INFRA_DIR, stdio: "inherit", env }
         );
 
-        // Step3: App Runnerサービスとカスタムドメインを作成
-        console.log("\n🚀 Step3: Applying App Runner service and custom domain...");
+        // Step 4/5: RDS を先に作成（ECS タスク定義が DB エンドポイントを参照するため先に作成）
+        console.log("\n🚀 [4/5] RDS を作成中...");
         execSync(
-            "terraform apply -target=aws_apprunner_service.app -target=aws_apprunner_custom_domain_association.api -auto-approve",
+            "terraform apply -target=aws_db_instance.postgres -target=aws_db_parameter_group.postgres -target=aws_db_subnet_group.postgres -auto-approve -input=false",
             { cwd: INFRA_DIR, stdio: "inherit", env }
         );
 
-        // Step4: 残りの全リソースを作成
-        console.log("\n🚀 Step4: Applying all remaining resources...");
-        execSync("terraform apply -auto-approve", {
+        // Step 5/5: 残りの全リソースを作成
+        console.log("\n🚀 [5/5] 残りのリソースを作成中...");
+        execSync("terraform apply -auto-approve -input=false", {
             cwd: INFRA_DIR,
             stdio: "inherit",
             env,
         });
 
-        const appRunnerUrl = execSync(
-            "terraform output -raw app_runner_url",
+        const albDns = execSync(
+            "terraform output -raw alb_dns_name",
+            { cwd: INFRA_DIR, env }
+        ).toString().trim();
+        const apiUrl = execSync(
+            "terraform output -raw api_url",
+            { cwd: INFRA_DIR, env }
+        ).toString().trim();
+        const ecrUrl = execSync(
+            "terraform output -raw ecr_repository_url",
             { cwd: INFRA_DIR, env }
         ).toString().trim();
 
         console.log("\n🎉 Infrastructure is ready!");
-        console.log(`\n🚀 App Runner URL (backend): ${appRunnerUrl}`);
+        console.log(`\n🌐 ALB DNS: ${albDns}`);
+        console.log(`🌐 API URL: ${apiUrl}`);
+        console.log(`📦 ECR:     ${ecrUrl}`);
         console.log("\n📝 Next steps:");
-        console.log("   1. AWSコンソール → App Runner → GitHub connectionsで認証を完了");
-        console.log("   2. GitHub Actions に以下の Secrets を設定:");
-        console.log("      AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY");
-        console.log("      S3_BUCKET_NAME / CLOUDFRONT_DISTRIBUTION_ID");
-        console.log("   3. mainブランチにpushするとApp Runnerがバックエンドを自動デプロイ");
-        console.log("      フロントエンドは GitHub Actions が S3 へ自動デプロイ");
+        console.log("   1. npm run aws-build-push でバックエンドの Docker イメージをビルド & デプロイ");
+        console.log("   2. GitHub Actions に AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / S3_BUCKET_NAME / CLOUDFRONT_DISTRIBUTION_ID を設定");
+        console.log("   3. main ブランチへの push でフロントエンドが S3 へ自動デプロイ");
     }
-
 } catch (err) {
     console.error("❌ Error:", err.message);
     process.exit(1);

@@ -2,11 +2,13 @@
 # Variables
 # ------------------------------------------------------------
 variable "project" {
-  type = string
+  type    = string
+  default = "patient-management"
 }
 
 variable "environment" {
-  type = string
+  type    = string
+  default = "dev"
 }
 
 variable "db_name" {
@@ -24,6 +26,11 @@ variable "db_password" {
 variable "client_url" {
   type    = string
   default = ""
+}
+
+variable "image_tag" {
+  type    = string
+  default = "latest"
 }
 
 variable "domain" {
