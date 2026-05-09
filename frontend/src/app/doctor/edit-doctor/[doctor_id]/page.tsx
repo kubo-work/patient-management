@@ -3,9 +3,9 @@ import { Title } from "@mantine/core";
 import { Metadata } from "next";
 
 // 静的エクスポート用（実データはクライアントサイドで SWR が取得）
-export const dynamicParams = false;
+// Next.js 16 の output: export は空配列不可のためプレースホルダーを返す
 export function generateStaticParams() {
-  return [];
+  return [{ doctor_id: "0" }];
 }
 
 type PageParams = {
