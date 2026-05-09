@@ -1,60 +1,37 @@
-import { notFound } from "next/navigation";
-import { API_URL } from "../../../../constants/url";
-import { Metadata } from "next";
-import { PatientType } from "../../../../../common/types/PatientType";
+"use client";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Title } from "@mantine/core";
 import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
-import { cookies } from "next/headers";
-import { doctorCookieName } from "../../../../../common/util/CookieName";
-// AWS 静的エクスポートでは searchParams は undefined になるため force-static で抑制
-export const dynamic = "force-static";
+import { PatientType } from "../../../../../common/types/PatientType";
+import { API_URL } from "../../../../constants/url";
 
-const getPatients = async (
-  patients_id: number
-): Promise<PatientType | undefined> => {
-  const cookieStore = cookies();
-  const token = (await cookieStore).get(doctorCookieName)?.value || "";
-  return await fetch(`${API_URL}/doctor/patients/${patients_id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: `${doctorCookieName}=${token}`,
-    },
+function MedicalRecordsInner() {
+  const searchParams = useSearchParams();
+  const patients_id = Number(searchParams.get("patients_id"));
+  const [patientData, setPatientData] = useState<PatientType | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    credentials: "same-origin",
-  }).then((res) => res.json());
-};
-type QueryParamType = {
-  searchParams: Promise<{ [patients_id: string]: number | undefined }>;
-};
+  useEffect(() => {
+    if (!patients_id) {
+      setLoading(false);
+      return;
+    }
+    fetch(`${API_URL}/doctor/patients/${patients_id}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setPatientData(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [patients_id]);
 
-export async function generateMetadata({
-  searchParams,
-}: QueryParamType): Promise<Metadata> {
-  // メタデータ（タイトル）設定
-  const errorTitle = "Not Found";
-  const patients_id = (await searchParams).patients_id;
-  if (!patients_id) {
-    return { title: errorTitle };
-  }
-  const patientsData: PatientType | undefined = await getPatients(patients_id);
-  if (!patientsData) {
-    return { title: errorTitle };
-  }
-  return {
-    title: `${patientsData.name} 様 編集画面`,
-  };
-}
+  if (!patients_id) return <div>患者が選択されていません</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!patientData) return <div>データが見つかりません</div>;
 
-const Page = async ({ searchParams }: QueryParamType) => {
-  const patients_id = (await searchParams).patients_id;
-  if (!patients_id) {
-    notFound();
-  }
-  const patientData: PatientType | undefined = await getPatients(patients_id);
-  if (!patientData) {
-    notFound();
-  }
   return (
     <>
       <header>
@@ -62,12 +39,15 @@ const Page = async ({ searchParams }: QueryParamType) => {
           {patientData.name} 様
         </Title>
       </header>
-      <MedicalRecordsContents
-        patientData={patientData}
-        patients_id={patients_id}
-      />
+      <MedicalRecordsContents patientData={patientData} patients_id={patients_id} />
     </>
   );
-};
+}
 
-export default Page;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MedicalRecordsInner />
+    </Suspense>
+  );
+}

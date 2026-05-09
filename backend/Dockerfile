@@ -54,10 +54,12 @@ COPY --from=builder /app/backend/build ./build
 COPY --from=builder /app/backend/prisma ./prisma
 COPY --from=builder /app/backend/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/backend/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY backend/migrate-supabase-to-rds.js ./
 
 RUN chown -R app:app /app
 USER app
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node build/backend/src/index.js"]
+# 起動順: マイグレーション → Supabase データ移行（空DBかつSUPABASE_URL設定時のみ） → サーバー起動
+CMD ["sh", "-c", "npx prisma migrate deploy && node migrate-supabase-to-rds.js && node build/backend/src/index.js"]
