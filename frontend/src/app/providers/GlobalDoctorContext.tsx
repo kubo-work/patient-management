@@ -27,47 +27,20 @@ export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-const loginDoctorFetcher = async (
-  url: string
-): Promise<DoctorType | undefined> =>
-  await fetch(url, {
+const jsonFetcher = async <T,>(url: string): Promise<T | undefined> => {
+  const res = await fetch(url, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
-  }).then((res) => res.json());
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+};
 
-const categoriesFetcher = async (
-  url: string
-): Promise<CategoriesType[] | undefined> =>
-  await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  }).then((res) => res.json());
-
-const doctorsFetcher = async (url: string): Promise<DoctorType[] | undefined> =>
-  await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  }).then((res) => res.json());
-
-const patientsFetcher = async (
-  url: string
-): Promise<PatientType[] | undefined> =>
-  await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  }).then((res) => res.json());
+const loginDoctorFetcher = (url: string) => jsonFetcher<DoctorType>(url);
+const categoriesFetcher = (url: string) => jsonFetcher<CategoriesType[]>(url);
+const doctorsFetcher = (url: string) => jsonFetcher<DoctorType[]>(url);
+const patientsFetcher = (url: string) => jsonFetcher<PatientType[]>(url);
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
