@@ -27,6 +27,13 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: デバッグ（動的ルートファイル確認）
+        run: |
+          echo "=== edit-doctor ==="
+          cat frontend/src/app/doctor/edit-doctor/\[doctor_id\]/page.tsx
+          echo "=== edit-patient ==="
+          cat frontend/src/app/doctor/edit-patient/\[patient_id\]/page.tsx
+
       - name: ビルド（静的エクスポート）
         working-directory: . # ルートから実行
         run: cd frontend && npm run build
