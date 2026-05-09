@@ -6,6 +6,9 @@ import { Title } from "@mantine/core";
 import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
 import { cookies } from "next/headers";
 import { doctorCookieName } from "../../../../../common/util/CookieName";
+// AWS 静的エクスポートでは searchParams は undefined になるため force-static で抑制
+export const dynamic = "force-static";
+
 const getPatients = async (
   patients_id: number
 ): Promise<PatientType | undefined> => {
