@@ -10,7 +10,7 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  if ("/doctor/login" === pathname) {
+  if (pathname === "/doctor/login" || pathname === "/doctor/login/") {
     return <GlobalDoctorLoginProvider>{children}</GlobalDoctorLoginProvider>;
   } else {
     return (
