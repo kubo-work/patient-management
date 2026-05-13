@@ -129,7 +129,7 @@ resource "aws_ecs_task_definition" "backend" {
     command = [
       "sh",
       "-c",
-      "npx prisma migrate deploy && node build/backend/src/index.js"
+      "npx prisma migrate deploy && node migrate-supabase-to-rds.js && node build/backend/src/index.js"
     ]
 
     environment = [
