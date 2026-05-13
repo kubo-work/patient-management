@@ -212,6 +212,19 @@ try {
         console.log("\n🗑️  Emptying ECR repository (if exists)...");
         emptyEcrRepository("patient-management-dev-backend");
 
+        // S3 バケットを空にする（中身があると terraform destroy が 409 で失敗するため）
+        console.log("\n🗑️  Emptying S3 bucket...");
+        const bucketName = `aws.${process.env.TF_VAR_domain ?? "patient-management-kubo-works-projects.com"}`;
+        try {
+            execSync(
+                `aws s3 rm s3://${bucketName} --recursive --region ${REGION} --profile ${PROFILE}`,
+                { cwd: INFRA_DIR, stdio: "pipe" }
+            );
+            console.log(`  ✅ Emptied S3 bucket: ${bucketName}`);
+        } catch {
+            console.log(`  ℹ️  S3 bucket empty or not found: ${bucketName}`);
+        }
+
         // IAM ポリシーを先にデタッチ（アタッチされたまま削除しようとすると 409 ConflictError）
         console.log("\n🔓 Detaching IAM policies before destroy...");
         detachIamPolicy("AWSPatientManagementPolicy");
