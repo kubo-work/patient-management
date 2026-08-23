@@ -1,12 +1,9 @@
 name: Render Deploy
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "backend/**"
-    types: [closed]
+  # monorepo 化に伴い Render 側の設定（Root Directory / Build Command）が追従して
+  # いないため、自動デプロイを停止して手動実行のみとする。
+  # Render は #287（API の Vercel 統合）で不要になり、#293 で撤収する。
   workflow_dispatch:
 
 jobs:
@@ -16,16 +13,19 @@ jobs:
       - name: リポジトリチェック
         uses: actions/checkout@v4
 
+      - name: bun セットアップ
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
       - name: ファイル状況確認
         run: ls -la
 
       - name: インストール
-        working-directory: backend
-        run: npm install --production=false
+        run: bun install --frozen-lockfile
 
       - name: ビルド
-        working-directory: backend
-        run: npm run build
+        run: bun run build:api
 
       - name: Render.com にデプロイ
         uses: johnbeynon/render-deploy-action@v0.0.8

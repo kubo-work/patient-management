@@ -3,9 +3,11 @@ name: Type Check
 on:
   push:
     paths:
-      - "backend/**"
-      - "frontend/**"
-      - "common/**"
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "bun.lock"
+      - "tsconfig.base.json"
   workflow_dispatch:
 
 jobs:
@@ -15,20 +17,16 @@ jobs:
       - name: リポジトリチェック
         uses: actions/checkout@v4
 
-      - name: Node.js セットアップ
-        uses: actions/setup-node@v4
+      - name: bun セットアップ
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: "22.x"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
+          bun-version: "1.4.0"
 
       - name: ファイル状況確認
         run: ls -la
 
       - name: インストール
-        working-directory: backend
-        run: npm install --production=false
+        run: bun install --frozen-lockfile
 
-      - name: tsc で型チェック
-        working-directory: backend
-        run: npx tsc --noEmit
+      - name: 型チェック（monorepo 全体）
+        run: bun run typecheck
