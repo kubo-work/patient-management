@@ -1,0 +1,11 @@
+import { BasicCategoriesType } from "./BasicCategoriesType.js";
+
+export type MedicalRecordsType = {
+    id: number;
+    patient_id: number;
+    doctor_id: number;
+    medical_memo: string;
+    doctor_memo: string;
+    examination_at: Date;
+    categories: BasicCategoriesType[]
+}

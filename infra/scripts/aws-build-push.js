@@ -11,9 +11,9 @@ const REPO_ROOT = resolve(INFRA_DIR, "..");
 
 config({ path: resolve(INFRA_DIR, ".env") });
 
-// backend/.env の DATABASE_URL を SUPABASE_URL として自動取得
+// packages/api/.env の DATABASE_URL を SUPABASE_URL として自動取得
 if (!process.env.TF_VAR_supabase_url) {
-    const backendEnv = config({ path: resolve(REPO_ROOT, "backend", ".env"), override: false });
+    const backendEnv = config({ path: resolve(REPO_ROOT, "packages", "api", ".env"), override: false });
     if (backendEnv.parsed?.DATABASE_URL) {
         process.env.TF_VAR_supabase_url = backendEnv.parsed.DATABASE_URL;
     }
@@ -63,7 +63,7 @@ try {
     // 4. docker build (linux/amd64 を明示。Apple Silicon でも Fargate x86_64 用に統一)
     console.log("\n🔨 Building image...");
     run(
-        `docker build --platform linux/amd64 -t ${ecrUrl}:${tag} -t ${ecrUrl}:latest -f backend/Dockerfile .`,
+        `docker build --platform linux/amd64 -t ${ecrUrl}:${tag} -t ${ecrUrl}:latest -f packages/api/Dockerfile .`,
         { cwd: REPO_ROOT }
     );
 

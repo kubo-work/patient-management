@@ -9,10 +9,10 @@ const REPO_ROOT = resolve(INFRA_DIR, "..");
 
 config({ path: resolve(INFRA_DIR, ".env") });
 
-// backend/.env の DATABASE_URL を SUPABASE_URL として自動取得
+// packages/api/.env の DATABASE_URL を SUPABASE_URL として自動取得
 // （infra/.env に TF_VAR_supabase_url が未設定の場合のみ）
 if (!process.env.TF_VAR_supabase_url) {
-    const backendEnv = config({ path: resolve(REPO_ROOT, "backend", ".env"), override: false });
+    const backendEnv = config({ path: resolve(REPO_ROOT, "packages", "api", ".env"), override: false });
     if (backendEnv.parsed?.DATABASE_URL) {
         process.env.TF_VAR_supabase_url = backendEnv.parsed.DATABASE_URL;
     }
@@ -30,7 +30,7 @@ const REQUIRED_VARS = [
     "TF_VAR_db_password",
     "TF_VAR_client_url",
     "TF_VAR_jwt_secret_key",
-    // TF_VAR_supabase_url は backend/.env の DATABASE_URL から自動取得するため任意
+    // TF_VAR_supabase_url は packages/api/.env の DATABASE_URL から自動取得するため任意
 ];
 const missing = REQUIRED_VARS.filter((k) => !process.env[k]);
 if (missing.length > 0) {

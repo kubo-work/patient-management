@@ -1,0 +1,8 @@
+{
+  // bun.lock を自動検出できずに別のパッケージマネージャが選ばれるため明示する
+  "npm.packageManager": "bun",
+  "npm.autoDetect": "on",
+  // TypeScript はルートの devDependencies に集約しているため、そこを参照させる
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}

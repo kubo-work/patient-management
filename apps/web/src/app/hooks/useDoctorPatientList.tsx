@@ -1,0 +1,57 @@
+import { MRT_ColumnDef } from "mantine-react-table";
+import React, { useMemo } from "react";
+import { PatientType, sexList } from "@repo/schema";
+import Link from "next/link";
+import { Button, Flex } from "@mantine/core";
+
+const useDoctorPatientList = () => {
+  const columns = useMemo<MRT_ColumnDef<PatientType>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: "ID",
+        maxSize: 40,
+      },
+      {
+        accessorKey: "name",
+        header: "名前",
+        maxSize: 100,
+      },
+      {
+        accessorKey: "sex",
+        header: "性別",
+        Cell: ({ row }) => sexList[row.original.sex].label,
+        maxSize: 40,
+      },
+      {
+        accessorKey: "address",
+        header: "住所",
+      },
+
+      {
+        header: "操作",
+        Cell: ({ row }) => (
+          <Flex gap={4}>
+            <Button
+              component={Link}
+              href={`/doctor/medical-records?patients_id=${row.original.id}`}
+            >
+              診察履歴
+            </Button>
+            <Button
+              component={Link}
+              href={`/doctor/edit-patient/${row.original.id}`}
+            >
+              患者情報
+            </Button>
+          </Flex>
+        ),
+        maxSize: 80,
+      },
+    ],
+    []
+  );
+  return { columns };
+};
+
+export default useDoctorPatientList;
