@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev: 全体起動 (schema watch + API + web)",
+      "type": "shell",
+      "command": "bun run dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "dev: API のみ",
+      "type": "shell",
+      "command": "bun run dev:api",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "dev: web のみ",
+      "type": "shell",
+      "command": "bun run dev:web",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "build: 全体",
+      "type": "shell",
+      "command": "bun run build",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": ["$tsc"],
+      "presentation": { "reveal": "always" }
+    },
+    {
+      "label": "typecheck: 全体",
+      "type": "shell",
+      "command": "bun run typecheck",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": ["$tsc"],
+      "presentation": { "reveal": "always" }
+    }
+  ]
+}

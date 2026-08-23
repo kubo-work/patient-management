@@ -1,1 +1,40 @@
+# dependencies
+node_modules/
+
+# build output
+build/
+dist/
+out/
+.next/
+*.tsbuildinfo
+
+# next.js が生成する型定義
+next-env.d.ts
+
+# 環境変数
+.env
+.env.*
+!.env.example
+
+# test
+coverage/
+
+# logs
+*-debug.log*
+*.log
+
+# editor / os
 .DS_Store
+.idea/
+
+# エディタ設定は共有する（bun 検出と TypeScript SDK の指定を含むため）
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+# deploy
+.vercel
+
+# misc
+*.pem

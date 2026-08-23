@@ -91,8 +91,8 @@ export DATABASE_URL=$(aws ssm get-parameter \
   --output text)
 
 # マイグレーション実行
-cd backend
-npx prisma migrate deploy
+cd packages/db
+bun run migrate:deploy
 ```
 
 ## トラブルシューティング

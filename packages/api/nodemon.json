@@ -1,0 +1,6 @@
+{
+    "watch": ["src", "../schema/dist"],
+    "ext": "ts,js",
+    "exec": "tsx --env-file=.env ./src/index.ts"
+}
+  

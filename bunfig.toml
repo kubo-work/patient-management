@@ -1,0 +1,4 @@
+[install]
+# Prisma の生成物（node_modules/.prisma）をワークスペース間で共有するため、
+# isolated ではなく hoisted linker を明示する
+linker = "hoisted"

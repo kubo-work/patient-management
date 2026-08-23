@@ -4,19 +4,16 @@ defaults:
   base_dir: "../worktrees"
 hooks:
   post_create:
-    # backendの.envファイルをコピー
+    # API の .env ファイルをコピー
     - type: copy
-      from: "backend/.env"
-      to: "backend/.env"
+      from: "packages/api/.env"
+      to: "packages/api/.env"
 
-    # frontendの.envファイルをコピー
+    # web の .env ファイルをコピー
     - type: copy
-      from: "frontend/.env"
-      to: "frontend/.env"
+      from: "apps/web/.env"
+      to: "apps/web/.env"
 
-    # 新しいワークツリー内でコマンドを自動実行（必要に応じて）
+    # monorepo 全体の依存を一括で解決する
     - type: command
-      command: "cd backend && npm install"
-
-    - type: command
-      command: "cd frontend && npm install"
+      command: "bun install"
