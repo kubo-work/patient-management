@@ -1,0 +1,32 @@
+# ビルドコンテキストはリポジトリルートのため、.dockerignore もルートに置く
+node_modules
+**/node_modules
+
+# ビルド成果物
+**/build
+**/dist
+**/.next
+**/out
+*.tsbuildinfo
+
+# 環境変数
+**/.env
+**/.env.*
+
+# テスト・開発用
+**/test
+**/coverage
+**/jest.config.ts
+**/nodemon.json
+
+# リポジトリ管理ファイル
+.git
+.gitignore
+.github
+.DS_Store
+**/*.log
+
+# API イメージに不要なもの
+infra
+e2e
+SystemDesign

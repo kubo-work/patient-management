@@ -165,11 +165,12 @@ infra/scripts/
 1. `terraform output -raw ecr_repository_url` で ECR URI を取得
 2. `aws ecr get-login-password` → `docker login`
 3. タグ生成（`git rev-parse --short HEAD` があれば使用、なければ `build-<timestamp>`）
-4. `docker build --platform linux/amd64 -t <ecr>:<tag> -t <ecr>:latest -f backend/Dockerfile .`
+4. `docker build --platform linux/amd64 -t <ecr>:<tag> -t <ecr>:latest -f packages/api/Dockerfile .`
    - **Apple Silicon / arm64 環境でも Fargate は x86_64 なので必ず `--platform linux/amd64` を指定**
+   - ビルドコンテキストは monorepo のルート（bun workspaces 全体を解決するため）
 5. `docker push <ecr>:<tag>` と `:latest`
 6. `aws ecs update-service --force-new-deployment` で ECS が新イメージを pull → タスク再起動
-7. **タスク起動時に `npx prisma migrate deploy` が走り**、未適用マイグレーションがあれば自動適用
+7. **タスク起動時に `prisma migrate deploy` が走り**、未適用マイグレーションがあれば自動適用
 
 > マイグレーション失敗時はタスクが起動失敗 → 旧タスクが残るため API は無停止（ALB が unhealthy なターゲットに流さない）。
 
@@ -279,7 +280,7 @@ npm run aws-teardown        # tfstate バケットも削除
 **ECS タスク起動時に自動実行**（[infra/ecs.tf](ecs.tf) の `command`）：
 
 ```hcl
-command = ["sh", "-c", "npx prisma migrate deploy && node build/backend/src/index.js"]
+command = ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node migrate-supabase-to-rds.js && node build/index.js"]
 ```
 
 | 操作 | DB への影響 |
