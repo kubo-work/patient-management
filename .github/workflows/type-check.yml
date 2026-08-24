@@ -15,15 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: リポジトリチェック
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: bun セットアップ
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.0"
-
-      - name: ファイル状況確認
-        run: ls -la
 
       - name: インストール
         run: bun install --frozen-lockfile

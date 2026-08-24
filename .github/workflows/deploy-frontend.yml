@@ -1,11 +1,10 @@
 name: Deploy Frontend to S3
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "frontend/**"
+  # monorepo 化に伴い参照パスを apps/web へ移したうえで、自動デプロイは停止して
+  # 手動実行のみとする。AWS 構成（infra/）の扱いは #293 で判断するため、
+  # 移行期間中に S3 へ配信し続ける必要がない。
+  # AWS リソースを aws-down で停止している間もワークフローが失敗しない利点もある。
   workflow_dispatch:
 
 jobs:
@@ -14,29 +13,18 @@ jobs:
 
     steps:
       - name: リポジトリチェック
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Node.js セットアップ
-        uses: actions/setup-node@v4
+      - name: bun セットアップ
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: "1.4.0"
 
       - name: 依存関係インストール
-        working-directory: frontend
-        run: npm ci
-
-      - name: デバッグ（動的ルートファイル確認）
-        run: |
-          echo "=== edit-doctor ==="
-          cat frontend/src/app/doctor/edit-doctor/\[doctor_id\]/page.tsx
-          echo "=== edit-patient ==="
-          cat frontend/src/app/doctor/edit-patient/\[patient_id\]/page.tsx
+        run: bun install --frozen-lockfile
 
       - name: ビルド（静的エクスポート）
-        working-directory: . # ルートから実行
-        run: cd frontend && npm run build
+        run: bun run build:web
         env:
           DEPLOY_TARGET: aws
           NEXT_PUBLIC_API_URL: "https://api-aws.patient-management-kubo-works-projects.com"
@@ -44,11 +32,11 @@ jobs:
 
       - name: ビルド出力確認
         run: |
-          if [ ! -d frontend/out ]; then
-            echo "::error::frontend/out が存在しません。next build が output: export モードで実行されたか確認してください。"
+          if [ ! -d apps/web/out ]; then
+            echo "::error::apps/web/out が存在しません。next build が output: export モードで実行されたか確認してください。"
             exit 1
           fi
-          ls -la frontend/out
+          ls -la apps/web/out
 
       - name: AWS 認証設定
         uses: aws-actions/configure-aws-credentials@v4
@@ -59,11 +47,11 @@ jobs:
 
       - name: S3 へデプロイ
         run: |
-          aws s3 sync frontend/out s3://aws.patient-management-kubo-works-projects.com \
+          aws s3 sync apps/web/out s3://aws.patient-management-kubo-works-projects.com \
             --delete \
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "*.html"
-          aws s3 sync frontend/out s3://aws.patient-management-kubo-works-projects.com \
+          aws s3 sync apps/web/out s3://aws.patient-management-kubo-works-projects.com \
             --delete \
             --cache-control "no-cache" \
             --exclude "*" \
