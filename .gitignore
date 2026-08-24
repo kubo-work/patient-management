@@ -33,6 +33,10 @@ coverage/
 !.vscode/extensions.json
 !.vscode/tasks.json
 
+# Claude Code
+# プラグイン構成（settings.json）は共有し、個人の権限設定は除外する
+.claude/settings.local.json
+
 # deploy
 .vercel
 
