@@ -1,10 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "NodeNext",
     "target": "ES2021",
-    "moduleResolution": "Node",
-    "strictNullChecks": true,
+    "moduleResolution": "NodeNext",
+    "strict": true,
     "declaration": true,
     "rootDir": "src",
     "outDir": "build",

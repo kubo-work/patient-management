@@ -1,5 +1,6 @@
 import { verifyAuthToken } from "../verifyAuthToken.js";
 import { Request, Response, Router } from "express";
+import { Prisma } from "@prisma/client";
 import { DoctorType } from "@repo/schema";
 import { prisma } from "../prisma.js";
 import { z, ZodError } from "zod";
@@ -100,8 +101,8 @@ router.put("/:doctor_id", async (request: Request, response: Response) => {
             data: parsedData.data
         });
         return response.json(result)
-    } catch (e) {
-        if (e.code === "P2025") {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
             return response.status(404).json({ error: "指定された医師が見つかりません。" });
         } else {
             return response.status(400).json({ error: "データの更新に失敗しました。" });

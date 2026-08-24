@@ -1,7 +1,7 @@
 import request from "supertest";
-import { app } from "../../src/index";
-import { prismaMock } from "../prismaMock";
-import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData";
+import { app } from "../../src/index.js";
+import { prismaMock } from "../prismaMock.js";
+import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData.js";
 import { doctorCookieName } from "@repo/schema";
 const { id, name, email, password } = mockSetDoctorData[0];
 const mockSendDoctorData = { id, name, email, password }
