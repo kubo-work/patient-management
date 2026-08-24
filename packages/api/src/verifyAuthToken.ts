@@ -18,9 +18,10 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 export const verifyAuthToken = (request: Request, response: Response, next: NextFunction) => {
-    const token = request.cookies[doctorCookieName];
+    const token: unknown = request.cookies[doctorCookieName];
 
-    if (!token) {
+    // Cookie の値は any で入ってくるため、verify に渡す前に文字列であることを確定させる
+    if (typeof token !== "string" || token === "") {
         return response.status(401).json({ error: 'ログインしてください。' });
     }
 
@@ -29,8 +30,8 @@ export const verifyAuthToken = (request: Request, response: Response, next: Next
         return response.status(401).json({ error: "トークンの設定が無効です。" });
     }
     // トークンを検証
-    verify(token, secretKey, (err, decoded) => {
-        if (err) {
+    verify(token, secretKey, (verifyError, decoded) => {
+        if (verifyError || typeof decoded !== "object") {
             return response.status(403).json({ error: 'ログインの有効期限が切れている可能性があります。' });
         }
         const decodedToken = decoded as CustomJwtPayload;

@@ -1,7 +1,7 @@
 import { DoctorType } from "@repo/schema";
 import { faker } from '@faker-js/faker';
 import jwt from 'jsonwebtoken';
-import { secretKey } from "../../../src/jwt_secret_key";
+import { secretKey } from "../../../src/jwt_secret_key.js";
 const { sign } = jwt;
 
 export type mockDoctorsData = DoctorType & {

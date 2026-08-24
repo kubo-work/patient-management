@@ -2,7 +2,10 @@
   // bun.lock を自動検出できずに別のパッケージマネージャが選ばれるため明示する
   "npm.packageManager": "bun",
   "npm.autoDetect": "on",
-  // TypeScript はルートの devDependencies に集約しているため、そこを参照させる
+  // TypeScript はルートの devDependencies に集約しているため、そこを参照させる。
+  // 7 系の lib/ に tsserver.js は無いが、VS Code の TypeScript 拡張が
+  // resolveTsdkPathToExe でこのパスからネイティブ実行ファイルを解決するため、
+  // 指定先は 5 系と同じで正しい（typescript/lib/getExePath.js のコメント参照）
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true
 }

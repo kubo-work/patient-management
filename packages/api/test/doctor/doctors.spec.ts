@@ -1,8 +1,8 @@
 import request from "supertest";
-import { app } from "../../src/index";
-import { prismaMock } from "../prismaMock";
-import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData";
-import { faker } from "@faker-js/faker/.";
+import { app } from "../../src/index.js";
+import { prismaMock } from "../prismaMock.js";
+import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData.js";
+import { faker } from "@faker-js/faker";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Prisma } from "@prisma/client";
 import { doctorCookieName } from "@repo/schema";
