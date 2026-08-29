@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "generate": "prisma generate",
-    "migrate:dev": "node --env-file=../api/.env scripts/guarded-migrate.mjs dev",
+    "migrate:dev": "node --env-file=.env scripts/guarded-migrate.mjs dev",
     "migrate:deploy": "prisma migrate deploy",
-    "studio": "node --env-file=../api/.env ../../node_modules/.bin/prisma studio"
+    "studio": "node --env-file=.env ../../node_modules/.bin/prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1"

@@ -129,7 +129,7 @@ resource "aws_ecs_task_definition" "backend" {
     command = [
       "sh",
       "-c",
-      "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node migrate-supabase-to-rds.js && node build/index.js"
+      "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node scripts/seed-from-source.js && node build/index.js"
     ]
 
     environment = [
@@ -137,11 +137,17 @@ resource "aws_ecs_task_definition" "backend" {
       { name = "PORT",            value = "8080" },
       { name = "CLIENT_URL",      value = var.client_url },
       { name = "JWT_SECRET_KEY",  value = var.jwt_secret_key },
-      { name = "SUPABASE_URL",    value = var.supabase_url },
+      # 空の RDS を作り直したときに、ここで指定した DB から初期データを取り込む。
+      # 未設定ならスクリプトは何もしない。
+      { name = "SOURCE_DATABASE_URL", value = var.source_database_url },
     ]
 
+    # RDS には PgBouncer が無く pooled と直結の区別が無いため、両方に同じ値を割り当てる。
+    # schema.prisma が directUrl を宣言している以上、DIRECT_URL が未設定だと
+    # prisma migrate deploy が P1012 で起動時に失敗する。
     secrets = [
       { name = "DATABASE_URL", valueFrom = aws_secretsmanager_secret.database_url.arn },
+      { name = "DIRECT_URL",   valueFrom = aws_secretsmanager_secret.database_url.arn },
     ]
 
     logConfiguration = {

@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    # 本番の Neon と同じメジャーバージョンに揃える。
+    # メジャーバージョンを変える場合はデータディレクトリの互換性が無いため、
+    # docker compose down -v で postgres_data volume を作り直す必要がある。
+    image: postgres:18-alpine
     container_name: patient-management-postgres
     restart: unless-stopped
     environment:
@@ -11,7 +14,11 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # PostgreSQL 18 以降の公式イメージは PGDATA が /var/lib/postgresql/<major>/docker に
+      # 変わり、マウント先は /var/lib/postgresql が推奨になった。
+      # 17 までの /var/lib/postgresql/data を指定すると「使われないマウント」と判定されて
+      # 起動に失敗する。
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dev -d patient_management"]
       interval: 5s
