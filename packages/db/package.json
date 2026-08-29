@@ -10,9 +10,10 @@
     "studio": "node --env-file=.env ../../node_modules/.bin/prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1"
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0"
   },
   "devDependencies": {
-    "prisma": "^5.19.1"
+    "prisma": "7.10.0"
   }
 }
