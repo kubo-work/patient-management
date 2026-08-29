@@ -90,6 +90,10 @@ export DATABASE_URL=$(aws ssm get-parameter \
   --query Parameter.Value \
   --output text)
 
+# schema.prisma が directUrl を宣言しているため DIRECT_URL も必須。
+# RDS には PgBouncer が無く pooled と直結の区別が無いので同じ値でよい。
+export DIRECT_URL="$DATABASE_URL"
+
 # マイグレーション実行
 cd packages/db
 bun run migrate:deploy

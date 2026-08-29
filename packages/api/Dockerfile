@@ -70,7 +70,7 @@ COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
 
 COPY --from=builder /app/packages/api/package.json ./packages/api/package.json
 COPY --from=builder /app/packages/api/build ./packages/api/build
-COPY --from=builder /app/packages/api/migrate-supabase-to-rds.js ./packages/api/migrate-supabase-to-rds.js
+COPY --from=builder /app/packages/api/scripts ./packages/api/scripts
 
 RUN chown -R app:app /app
 USER app
@@ -79,5 +79,5 @@ WORKDIR /app/packages/api
 
 EXPOSE 8080
 
-# 起動順: マイグレーション → Supabase データ移行（空DBかつSUPABASE_URL設定時のみ） → サーバー起動
-CMD ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node migrate-supabase-to-rds.js && node build/index.js"]
+# 起動順: マイグレーション → 初期データ取り込み（空DBかつSOURCE_DATABASE_URL設定時のみ） → サーバー起動
+CMD ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node scripts/seed-from-source.js && node build/index.js"]

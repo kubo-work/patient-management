@@ -1,11 +1,14 @@
 // prisma migrate dev は既存のスキーマとデータを変更するため、
 // 接続先がローカル DB であることを確認してから実行する。
 //
-// DATABASE_URL の供給元は現在 packages/api/.env（呼び出し側が --env-file で読み込む）。
-// 環境変数の配置は #282（Neon 移行）で整理する予定。
+// DATABASE_URL / DIRECT_URL の供給元は packages/db/.env（呼び出し側が --env-file で読み込む）。
+// schema.prisma が directUrl を持つため、migrate が実際に接続するのは DIRECT_URL の方になる。
+// DATABASE_URL だけを見ると「pooled はローカル・直結は本番」という組み合わせを見逃すので、
+// 両方を検査する。
 import { spawnSync } from "node:child_process";
 
 const LOCAL_HOSTNAMES = ["localhost", "127.0.0.1", "::1"];
+const REQUIRED_CONNECTION_VARIABLES = ["DATABASE_URL", "DIRECT_URL"];
 
 const subcommand = process.argv[2];
 if (!subcommand) {
@@ -13,30 +16,39 @@ if (!subcommand) {
     process.exit(1);
 }
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-    console.error(
-        "DATABASE_URL が設定されていません。packages/api/.env に定義されているか確認してください。"
-    );
-    process.exit(1);
+const remoteConnections = [];
+
+for (const variableName of REQUIRED_CONNECTION_VARIABLES) {
+    const connectionUrl = process.env[variableName];
+
+    if (!connectionUrl) {
+        console.error(
+            `${variableName} が設定されていません。packages/db/.env に定義されているか確認してください。`
+        );
+        process.exit(1);
+    }
+
+    let hostname;
+    try {
+        hostname = new URL(connectionUrl).hostname;
+    } catch {
+        console.error(`${variableName} を URL として解釈できませんでした。`);
+        process.exit(1);
+    }
+
+    if (!LOCAL_HOSTNAMES.includes(hostname)) {
+        remoteConnections.push({ variableName, hostname });
+    }
 }
 
-let hostname;
-try {
-    hostname = new URL(databaseUrl).hostname;
-} catch {
-    console.error("DATABASE_URL を URL として解釈できませんでした。");
-    process.exit(1);
-}
-
-const isLocalDatabase = LOCAL_HOSTNAMES.includes(hostname);
 const isExplicitlyAllowed = process.env.ALLOW_REMOTE_MIGRATE === "1";
 
-if (!isLocalDatabase && !isExplicitlyAllowed) {
+if (remoteConnections.length > 0 && !isExplicitlyAllowed) {
     console.error(
         [
             "",
-            `接続先がローカル DB ではありません: ${hostname}`,
+            "接続先がローカル DB ではありません:",
+            ...remoteConnections.map(({ variableName, hostname }) => `  ${variableName} -> ${hostname}`),
             `prisma migrate ${subcommand} はスキーマを変更するため、実行を中止しました。`,
             "",
             "ローカルの DB を向けるか、リモートへの実行が意図どおりであれば",
@@ -48,8 +60,9 @@ if (!isLocalDatabase && !isExplicitlyAllowed) {
     process.exit(1);
 }
 
-if (isExplicitlyAllowed && !isLocalDatabase) {
-    console.warn(`[警告] リモート DB (${hostname}) に対して migrate ${subcommand} を実行します。`);
+if (isExplicitlyAllowed && remoteConnections.length > 0) {
+    const hostnameList = remoteConnections.map(({ hostname }) => hostname).join(", ");
+    console.warn(`[警告] リモート DB (${hostnameList}) に対して migrate ${subcommand} を実行します。`);
 }
 
 const result = spawnSync("prisma", ["migrate", subcommand], {

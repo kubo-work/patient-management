@@ -66,6 +66,9 @@ AWS 環境（ECS Fargate + ALB + RDS + CloudFront/S3）を Terraform で管理�
   TF_VAR_db_username=...
   TF_VAR_db_password=...
   TF_VAR_client_url=https://aws.<your-domain>
+  # 任意。RDS を新規作成した直後に、ここで指定した DB から初期データを取り込む。
+  # 通常は Neon の接続文字列を入れる。未設定なら取り込みは行われず RDS は空のまま。
+  TF_VAR_source_database_url=postgres://...
   ```
 
 ---
@@ -280,7 +283,7 @@ npm run aws-teardown        # tfstate バケットも削除
 **ECS タスク起動時に自動実行**（[infra/ecs.tf](ecs.tf) の `command`）：
 
 ```hcl
-command = ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node migrate-supabase-to-rds.js && node build/index.js"]
+command = ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node scripts/seed-from-source.js && node build/index.js"]
 ```
 
 | 操作 | DB への影響 |

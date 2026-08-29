@@ -23,6 +23,7 @@
 ## デプロイ先
 - フロントエンド : vercel
 - バックエンド : render
+- データベース : Neon（PostgreSQL 18 / AWS us-east-2）
 
 ## ログインURL
 https://www.patient-management-kubo-works-projects.com/doctor/login

@@ -2,9 +2,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// url        : 通常のクエリ用。Neon では pooled 接続（ホスト名に -pooler を含む）を指定する。
+// directUrl  : migrate / db push / introspect 専用。PgBouncer はアドバイザリロックと
+//              prepared statement を扱えないため、スキーマ操作は直結でなければならない。
+// ローカル開発では両方とも compose.yaml の Postgres を指すため挙動は変わらない。
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model patients {

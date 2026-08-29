@@ -33,7 +33,9 @@ variable "jwt_secret_key" {
   default = ""
 }
 
-variable "supabase_url" {
+# AWS 復帰時に RDS へ初期データを取り込む際の移行元 DB（通常は Neon）。
+# 空のままなら取り込みは行われない。
+variable "source_database_url" {
   type    = string
   default = ""
 }
