@@ -1,14 +1,16 @@
-import { PrismaClient } from "@prisma/client";
+// PrismaClient は型としてしか使わない。@repo/db 自体をモックするため、
+// 値として import すると実行時に undefined になる。必ず import type にする。
+import type { PrismaClient } from "@repo/db";
+import { prisma } from "@repo/db";
 import { mockDeep, mockReset, DeepMockProxy } from "jest-mock-extended"
-
-import { prisma } from "../src/prisma.js"
 
 
 beforeEach(() => {
     mockReset(prismaMock)
 })
 
-jest.mock('../src/prisma.js', () => ({
+// クライアントの生成が packages/db に移ったため、モック対象も @repo/db になる。
+jest.mock('@repo/db', () => ({
     __esModule: true,
     prisma: mockDeep<PrismaClient>(),
 }))
