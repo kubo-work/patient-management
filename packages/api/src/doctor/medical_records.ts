@@ -2,8 +2,8 @@ import { Request, Response, Router } from "express";
 import { MedicalRecordsType, BasicCategoriesType, MedicalRecordsCategoryType } from "@repo/schema";
 import { verifyAuthToken } from "../verifyAuthToken.js";
 import dayjs from "dayjs";
-import { delFlag } from "@prisma/client";
-import { prisma } from "../prisma.js";
+import { delFlag } from "@repo/db";
+import { prisma } from "@repo/db";
 import { z } from "zod";
 
 const getMedicalRecordSchema = z.object({

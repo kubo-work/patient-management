@@ -1,5 +1,5 @@
 import { Response, Router } from "express";
-import { prisma } from "../prisma.js";
+import { prisma } from "@repo/db";
 import { verifyAuthToken } from "../verifyAuthToken.js";
 import { z } from "zod";
 

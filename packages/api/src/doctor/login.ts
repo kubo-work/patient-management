@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { DoctorType, doctorCookieName } from "@repo/schema";
-import { prisma } from "../prisma.js";
+import { prisma } from "@repo/db";
 import jwt from 'jsonwebtoken';
 import { secretKey } from "../jwt_secret_key.js";
 import { z } from "zod";

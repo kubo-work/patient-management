@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { prisma } from "../prisma.js";
+import { prisma } from "@repo/db";
 import { verifyAuthToken } from "../verifyAuthToken.js";
 import { DoctorType } from "@repo/schema";
 import { z } from "zod";
