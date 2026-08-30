@@ -25,7 +25,8 @@ export const requireDoctor = createMiddleware<{ Variables: DoctorAuthVariables }
         }
 
         if (!secretKey) {
-            deleteCookie(context, doctorCookieName);
+            // 発行時と同じ path でなければ削除されない。login.ts の setCookie と揃える。
+            deleteCookie(context, doctorCookieName, { path: "/" });
             return context.json({ error: "トークンの設定が無効です。" }, 401);
         }
 

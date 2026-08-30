@@ -5,8 +5,7 @@
     "declaration": false,
     "rootDir": ".",
     "types": [
-      "node",
-      "supertest"
+      "node"
     ]
   },
   "include": [
