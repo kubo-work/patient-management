@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import { DoctorType, doctorCookieName } from "@repo/schema";
+import { DOCTOR_COOKIE_MAX_AGE_SECONDS, doctorCookieAttributes } from "../doctor_cookie.js";
 import { prisma } from "@repo/db";
 import jwt from 'jsonwebtoken';
 import { secretKey } from "../jwt_secret_key.js";
@@ -46,16 +47,8 @@ router.post("/", async (context) => {
         }
         const token = sign({ userId, email }, secretKey, { expiresIn: "1d" });
         setCookie(context, doctorCookieName, token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
-            // Express の res.cookie はミリ秒だが Hono の setCookie は秒。
-            // 従来と同じ 1 時間にするため 60 * 60 を渡す。
-            maxAge: 60 * 60,
-            // Express は path を自動で "/" にするが Hono は付けない。
-            // 省略すると Path が /doctor になり、他のパスへ Cookie が送られなくなる。
-            path: "/",
-            ...(process.env.NODE_ENV === "production" && { domain: process.env.SERVER_DOMAIN })
+            ...doctorCookieAttributes,
+            maxAge: DOCTOR_COOKIE_MAX_AGE_SECONDS,
         });
         return context.json({
             message: "ログインに成功しました。",

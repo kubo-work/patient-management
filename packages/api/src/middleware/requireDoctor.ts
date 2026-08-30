@@ -3,6 +3,7 @@ import { deleteCookie, getCookie } from "hono/cookie";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { secretKey } from "../jwt_secret_key.js";
 import { doctorCookieName } from "@repo/schema";
+import { doctorCookieAttributes } from "../doctor_cookie.js";
 
 const { verify } = jwt;
 
@@ -25,18 +26,18 @@ export const requireDoctor = createMiddleware<{ Variables: DoctorAuthVariables }
         }
 
         if (!secretKey) {
-            // 発行時と同じ path でなければ削除されない。login.ts の setCookie と揃える。
-            deleteCookie(context, doctorCookieName, { path: "/" });
+            // 発行時と同じ属性を渡さなければ削除されない。path だけでは本番で
+            // domain が一致せず Cookie が残る。
+            deleteCookie(context, doctorCookieName, doctorCookieAttributes);
             return context.json({ error: "トークンの設定が無効です。" }, 401);
         }
 
-        let decodedToken: CustomJwtPayload;
         try {
             const decoded = verify(token, secretKey);
             if (typeof decoded !== "object") {
                 throw new TypeError("JWT のペイロードがオブジェクトではありません。");
             }
-            decodedToken = decoded as CustomJwtPayload;
+            context.set("doctorId", Number((decoded as CustomJwtPayload).userId));
         } catch {
             return context.json(
                 { error: "ログインの有効期限が切れている可能性があります。" },
@@ -44,7 +45,8 @@ export const requireDoctor = createMiddleware<{ Variables: DoctorAuthVariables }
             );
         }
 
-        context.set("doctorId", Number(decodedToken.userId));
+        // next() は try の外で呼ぶ。中に入れると下流のハンドラが投げた例外まで
+        // 認可失敗として 403 にしてしまう。
         await next();
     }
 );
