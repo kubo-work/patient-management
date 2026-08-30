@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { csrf } from "hono/csrf";
 import doctorLogin from "./doctor/login.js";
 import doctorLogout from "./doctor/logout.js";
 import doctorPatients from "./doctor/patients.js";
@@ -38,6 +39,12 @@ export const app = new Hono()
             ],
         })
     )
+    // Hono の context.req.json() は Content-Type を検査せず本文を JSON として解釈する。
+    // Express の express.json() は application/json 以外を弾いていたため、
+    // プリフライトが発生しない text/plain のクロスサイト POST は本文が空のまま
+    // 検証で落ちていた。その障壁が移行で消えるので、Origin を検査する正式な防御を置く。
+    // 本番の Cookie は sameSite=None のためクロスサイトでも送信される。
+    .use("*", csrf({ origin: accessClientUrl }))
     .route("/doctor/login", doctorLogin)
     .route("/doctor/logout", doctorLogout)
     .route("/doctor/patients", doctorPatients)

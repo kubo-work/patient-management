@@ -70,7 +70,7 @@ PGlite による実 DB テストと、テスト設計そのものの立て直し
 
 ### 7. `PUT /doctor/doctors/:doctor_id` に認可を追加する
 
-**本 ADR で唯一、振る舞いを変える箇所である。**
+**本 ADR で意図的に振る舞いを変える箇所の 1 つである。**
 
 `src/doctor/doctors.ts` の PUT だけ `verifyAuthToken` が付いていなかった。同ファイルの GET / POST には付いている。このエンドポイントは `password` を更新できるため、トークン無しで任意の医師のパスワードを既知の値へ書き換えられる。ログインは `findFirst({ where: { AND: [{ email }, { password }] } })` の平文一致であるため、書き換えた値でそのままログインできる。情報の改竄ではなくアカウントの乗っ取りが成立する。
 
@@ -81,6 +81,14 @@ PGlite による実 DB テストと、テスト設計そのものの立て直し
 なお、本番が固定されているコミット（`c912a01`）にも同じ穴がある。Render は `render-legacy` に固定されており `main` の変更は本番へ届かないため、**本 Issue の変更だけでは本番の穴は塞がらない**。本番側の対応は #287（Vercel 統合）または個別の hotfix で扱う。
 
 平文パスワードの保存と比較そのものは本 ADR の範囲外とする。
+
+### 8. Content-Type 非依存の JSON パースに対して CSRF 防御を置く
+
+Express の `express.json()` は `Content-Type: application/json` のときだけ本文をパースし、一致しなければ `req.body = {}` のまま次へ渡していた。この検査が、プリフライトの発生しない `text/plain` のクロスサイト POST を事実上防ぐ壁になっていた。Hono の `context.req.json()` は `Content-Type` を一切検査せず本文を JSON として解釈するため、Express から Hono へ置き換えるだけでこの壁が消える。
+
+本番の Cookie は `sameSite: "None"`（`src/doctor/login.ts`）であるため、クロスサイトのリクエストでも Cookie は送信される。CORS はレスポンスの読み取りを止めるだけでリクエストの実行そのものは止めないため、`Content-Type` による障壁が消えたことは実質的な CSRF の退行になる。
+
+そのため `app.ts` に `hono/csrf({ origin: accessClientUrl })` を追加し、Origin を検査する正式な防御へ置き換えた。影響を受けるのは `state-changing` な安全でないメソッド（`POST` / `PUT` / `DELETE` 等）のうち、`Content-Type` が `application/x-www-form-urlencoded` / `multipart/form-data` / `text/plain` のいずれかで、かつ `Origin` または `Sec-Fetch-Site` が許可されない場合のみである。`apps/web` の全リクエストは `Content-Type: application/json` を送っているため対象外であり、正当なリクエストへの影響はない。なお `PUT` / `DELETE` はブラウザの単純リクエストの条件を満たさずプリフライトが強制されるため、この退行の実害は元々 `POST` に限られる。
 
 ## 検討して採用しなかった案
 
@@ -116,4 +124,7 @@ PGlite による実 DB テストと、テスト設計そのものの立て直し
 - `POST /doctor/logout` の `Content-Type` が `text/html; charset=utf-8` から `text/plain; charset=UTF-8` に変わる。Express の `res.send(文字列)` と Hono の `context.text()` の既定の違いによる。本文とステータスは同一で、唯一の消費者（`apps/web/src/app/hooks/useDoctorLogout.ts`）は本文を読まない
 - リクエストボディが空、または JSON として不正な場合のエラーメッセージが 3 箇所で変わる。`express.json()` は `req.body` に必ず `{}` を立てたためハンドラ自身の検証分岐へ到達したが、`context.req.json()` は例外を投げて `catch` に落ちる。`POST /doctor/login` は「メールアドレスが入力されていません。」が「ログインに失敗しました。」に、`POST /doctor/doctors` は「入力データが不正です。」が「データの保存に失敗しました。」に、`PUT /doctor/doctors/:doctor_id` は「データの更新に失敗しました。」になる。**ステータスコードは全ケース 400 のまま**で、フロントエンドは常に妥当な JSON を送るため到達しない経路である。`context.req.json().catch(() => ({}))` でメッセージを揃えることもできるが、不正な JSON を黙って握り潰すことになるため採用しない
 - 末尾スラッシュ付きのパス（`/doctor/logout/` など）が 404 になる。Express の `app.use(prefix, router)` は両方に一致したが、Hono の `route()` は完全一致のみ。`apps/web` の API 呼び出しに末尾スラッシュを付けている箇所が無いことを確認済み
-- `app.set('trust proxy', 1)` / `cookieParser()` / `express.json()` / `optionsSuccessStatus: 200` が消える。いずれも Express 固有の配管で消費者が残っていない。Cookie の `secure` 属性は `req.secure` ではなく `NODE_ENV` から直接決めているため、`trust proxy` の消失は本番の Cookie 発行に影響しない
+- `app.set('trust proxy', 1)` / `cookieParser()` / `express.json()` が消える。いずれも Express 固有の配管で消費者が残っていない。Cookie の `secure` 属性は `req.secure` ではなく `NODE_ENV` から直接決めているため、`trust proxy` の消失は本番の Cookie 発行に影響しない
+- `optionsSuccessStatus: 200` の指定が無くなり、プリフライトの応答ステータスが 200 から `hono/cors` の既定値である 204 に変わる（Task 4 の疎通確認で実測済み）。204 はレガシーブラウザ（IE11 など）向けの回避策だったため、対象ブラウザを想定していない本プロジェクトでは問題にならない
+- `express.json()` が既定で持っていた 100kb の本文サイズ上限（超過時 413）が消える。Hono と `@hono/node-server` は既定の上限を持たず、`hono/body-limit` は opt-in である。消費者は `apps/web` のみで、いずれのフォームも 100kb を超える本文を送らないため、上限は設けない
+- `hono/csrf` を全ルートに追加した（決定 8）。決定 7 と並び、本 ADR で意図的に振る舞いを変える箇所である
