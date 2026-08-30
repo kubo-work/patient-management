@@ -1,5 +1,4 @@
 import useSWR from "swr";
-import { API_URL } from "../../../constants/url";
 import { MedicalRecordsType } from "@repo/schema";
 import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
@@ -7,21 +6,17 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { Button, List, ListItem } from "@mantine/core";
 import { MRT_ColumnDef } from "mantine-react-table";
+import { trpcClient } from "../../lib/trpc";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const getMedicalRecordsFetcher = async (
-  url: string
-): Promise<MedicalRecordsType[] | undefined> =>
-  fetch(url, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  }).then((res) => res.json());
+  patientsId: number
+): Promise<MedicalRecordsType[]> =>
+  trpcClient.doctor.medicalRecords.byPatient.query({ patientId: patientsId });
 
 const useMedicalRecords = (patients_id: number) => {
-  const fetchUrl = `${API_URL}/doctor/medical_records/${patients_id}`;
   const [medicalRecord, setMedicalRecord] = useState<
     MedicalRecordsType[] | null
   >([]);
@@ -35,7 +30,9 @@ const useMedicalRecords = (patients_id: number) => {
     isLoading,
     error,
     mutate: patientMutate,
-  } = useSWR(fetchUrl, getMedicalRecordsFetcher);
+  } = useSWR(["medical-records", patients_id], () =>
+    getMedicalRecordsFetcher(patients_id)
+  );
   useEffect(() => {
     data && setMedicalRecord(data);
   }, [data, setMedicalRecord]);

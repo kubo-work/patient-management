@@ -3,9 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useGlobalDoctor } from "./useGlobalDoctor";
 import { useForm } from "@mantine/form";
 import { MedicalRecordsType } from "@repo/schema";
-import { API_URL } from "../../../constants/url";
 import dayjs from "dayjs";
 import setShowNotification from "../../../constants/setShowNotification";
+import { trpcClient } from "../../lib/trpc";
 
 type FormValues = {
     id: string;
@@ -59,12 +59,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         label: doctor.name,
     }))), [doctors]);
 
-    const showErrorMessage = useCallback(async (response: Response) => {
-        const errorData = await response.json();
-        setSubmitError(errorData.error);
-        return setShowNotification(submitError, "red");
-    }, [submitError])
-
     useEffect(() => {
         if (data) {
             const getCategories = data
@@ -98,64 +92,62 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         const { id, name, doctor_id, examination_at, medical_memo, doctor_memo, categories } = values;
         const patientData = patients?.find((patient) => patient.name === name);
         const patient_id = patientData ? Number(patientData.id) : 0;
-        const method = id ? "PUT" : "POST";
-        const response = await fetch(`${API_URL}/doctor/medical_records`, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-                id: id ? Number(id) : 0,
-                doctor_id: Number(doctor_id),
-                patient_id,
-                medical_memo,
-                doctor_memo,
-                examination_at,
-                categories
-            }),
-        });
+        const isUpdate = Boolean(id);
 
-        if (!response.ok) {
-            showErrorMessage(response)
-            return;
-        } else {
-            setSubmitError("")
-            doMutate()
-            modalClosed();
-            let message = "";
-            if ("PUT" === method) {
-                message = "診察を更新しました。";
-            } else if ("POST" === method) {
-                message = "診察を保存しました。";
+        try {
+            if (isUpdate) {
+                await trpcClient.doctor.medicalRecords.update.mutate({
+                    id: Number(id),
+                    patient_id,
+                    doctor_id: Number(doctor_id),
+                    medical_memo,
+                    doctor_memo,
+                    examination_at,
+                    categories,
+                });
+            } else {
+                await trpcClient.doctor.medicalRecords.create.mutate({
+                    patient_id,
+                    doctor_id: Number(doctor_id),
+                    medical_memo,
+                    doctor_memo,
+                    examination_at,
+                    categories,
+                });
             }
-            message && setShowNotification(message, "orange");
+        } catch (error) {
+            // tRPC はエラーを throw する。message には移植前と同じ日本語が入る。
+            const message = error instanceof Error ? error.message : "データの更新に失敗しました。";
+            setSubmitError(message);
+            setShowNotification(message, "red");
             return;
         }
-    }, [patients, showErrorMessage])
+
+        setSubmitError("")
+        doMutate()
+        modalClosed();
+        setShowNotification(isUpdate ? "診察を更新しました。" : "診察を保存しました。", "orange");
+    }, [patients])
 
     const handleDelete = useCallback(async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
         const result = window.confirm("削除しますか？");
-        if (result) {
-            const response = await fetch(`${API_URL}/doctor/medical_records`, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id,
-                }),
-                credentials: 'include'
-            });
-            if (!response.ok) {
-                showErrorMessage(response);
-                return;
-            } else {
-                setSubmitError("")
-                setShowNotification("診察を削除しました。", "orange")
-                doMutate()
-                modalClosed();
-                return;
-            }
+        if (!result) return;
+
+        try {
+            await trpcClient.doctor.medicalRecords.remove.mutate({ id });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "データの削除に失敗しました。";
+            setSubmitError(message);
+            setShowNotification(message, "red");
+            return;
         }
-    }, [showErrorMessage])
+
+        setSubmitError("")
+        setShowNotification("診察を削除しました。", "orange")
+        doMutate()
+        modalClosed();
+    }, [])
 
     return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError }
 }

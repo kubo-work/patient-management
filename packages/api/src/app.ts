@@ -7,7 +7,6 @@ import { createTrpcContext } from "./trpc/context.js";
 import doctorLogin from "./doctor/login.js";
 import doctorLogout from "./doctor/logout.js";
 import doctorTokenCheck from "./doctor/token_check.js";
-import doctorMedicalRecords from "./doctor/medical_records.js";
 
 // CORS の許可オリジン。未設定のまま起動すると Access-Control-Allow-Origin が
 // ワイルドカードになり、credentials: true と組み合わさってブラウザ側で必ず拒否される。
@@ -55,5 +54,4 @@ export const app = new Hono()
     )
     .route("/doctor/login", doctorLogin)
     .route("/doctor/logout", doctorLogout)
-    .route("/doctor/token_check", doctorTokenCheck)
-    .route("/doctor/medical_records", doctorMedicalRecords);
+    .route("/doctor/token_check", doctorTokenCheck);
