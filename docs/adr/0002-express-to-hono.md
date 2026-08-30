@@ -90,6 +90,8 @@ Express の `express.json()` は `Content-Type: application/json` のときだ�
 
 そのため `app.ts` に `hono/csrf({ origin: accessClientUrl })` を追加し、Origin を検査する正式な防御へ置き換えた。影響を受けるのは `state-changing` な安全でないメソッド（`POST` / `PUT` / `DELETE` 等）のうち、`Content-Type` が `application/x-www-form-urlencoded` / `multipart/form-data` / `text/plain` のいずれかで、かつ `Origin` または `Sec-Fetch-Site` が許可されない場合のみである。`apps/web` の全リクエストは `Content-Type: application/json` を送っているため対象外であり、正当なリクエストへの影響はない。なお `PUT` / `DELETE` はブラウザの単純リクエストの条件を満たさずプリフライトが強制されるため、この退行の実害は元々 `POST` に限られる。
 
+`hono/csrf` は `Content-Type` ヘッダ自体が送られていない場合も `text/plain` とみなして検査対象に含める（`c.req.header("content-type") || "text/plain"`）。ヘッダを省いた攻撃リクエストにも同じ防御が働く。
+
 ## 検討して採用しなかった案
 
 ### `bun:test` を Vitest と併用する
