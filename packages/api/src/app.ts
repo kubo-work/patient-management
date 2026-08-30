@@ -6,7 +6,6 @@ import { appRouter } from "./trpc/appRouter.js";
 import { createTrpcContext } from "./trpc/context.js";
 import doctorLogin from "./doctor/login.js";
 import doctorLogout from "./doctor/logout.js";
-import doctorPatients from "./doctor/patients.js";
 import doctorTokenCheck from "./doctor/token_check.js";
 import doctorMedicalRecords from "./doctor/medical_records.js";
 
@@ -56,6 +55,5 @@ export const app = new Hono()
     )
     .route("/doctor/login", doctorLogin)
     .route("/doctor/logout", doctorLogout)
-    .route("/doctor/patients", doctorPatients)
     .route("/doctor/token_check", doctorTokenCheck)
     .route("/doctor/medical_records", doctorMedicalRecords);

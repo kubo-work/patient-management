@@ -1,5 +1,4 @@
 import { createContext, ReactNode, useMemo } from "react";
-import { API_URL } from "../../../constants/url";
 import useSWR from "swr";
 
 import { CategoriesType, DoctorType, PatientType, SexTypes, SexListData } from "@repo/schema";
@@ -24,21 +23,8 @@ export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-const jsonFetcher = async <T,>(url: string): Promise<T | undefined> => {
-  const res = await fetch(url, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json();
-};
-
-const patientsFetcher = (url: string) => jsonFetcher<PatientType[]>(url);
-
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
-  const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
 
   // ログインしている医者 データの管理
   // SWR のキーは URL である必要がない。tRPC へ移した機能は文字列キーにする。
@@ -61,8 +47,8 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
 
   // 患者一覧データの管理
   const { data: patientsData, mutate: patientsMutate } = useSWR(
-    patientsFetchUrl,
-    patientsFetcher
+    "doctor.patients.list",
+    () => trpcClient.doctor.patients.list.query()
   );
 
   // 患者の名前をサジェストするためのリストを準備
