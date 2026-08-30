@@ -5,9 +5,7 @@
     "declaration": false,
     "rootDir": ".",
     "types": [
-      "node",
-      "jest",
-      "supertest"
+      "node"
     ]
   },
   "include": [

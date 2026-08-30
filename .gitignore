@@ -43,3 +43,6 @@ coverage/
 
 # misc
 *.pem
+
+# Subagent-Driven Development の作業ディレクトリ（ledger / レビュー資材）
+.superpowers/sdd/

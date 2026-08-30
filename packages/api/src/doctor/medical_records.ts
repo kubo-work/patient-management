@@ -1,6 +1,6 @@
-import { Request, Response, Router } from "express";
+import { Hono } from "hono";
 import { MedicalRecordsType, BasicCategoriesType, MedicalRecordsCategoryType } from "@repo/schema";
-import { verifyAuthToken } from "../verifyAuthToken.js";
+import { requireDoctor, type DoctorAuthVariables } from "../middleware/requireDoctor.js";
 import dayjs from "dayjs";
 import { delFlag, prisma } from "@repo/db";
 import { z } from "zod";
@@ -52,7 +52,7 @@ const createMedicalCategoriesSchema = z.array(createMedicalCategorySchema);
 
 type CreateMedicalCategory = z.infer<typeof createMedicalCategorySchema>;
 
-const router = Router();
+const router = new Hono<{ Variables: DoctorAuthVariables }>();
 
 type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & {
     medical_categories: {
@@ -61,10 +61,12 @@ type ResultMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & {
 }
 
 // 選択した患者の診察履歴一覧を取得する
-router.get("/:patient_id", verifyAuthToken, async (request: Request, response: Response) => {
+router.get("/:patient_id", requireDoctor, async (context) => {
     try {
-        const patient_id = Number(request.params.patient_id);
-        const { all, startDate, endDate } = request.query; // クエリパラメータから日付を取得
+        const patient_id = Number(context.req.param("patient_id"));
+        // クエリパラメータから日付を取得
+        const startDate = context.req.query("startDate");
+        const endDate = context.req.query("endDate");
 
         // 現在の日付
         const now = dayjs();
@@ -121,17 +123,17 @@ router.get("/:patient_id", verifyAuthToken, async (request: Request, response: R
                 categories: medical_categories.flatMap((category) => category.categories)
             }
         })
-        return response.json(allMedicalRecords);
+        return context.json(allMedicalRecords);
     } catch (e) {
-        return response.status(400).json({ error: "データの取得に失敗しました。" });
+        return context.json({ error: "データの取得に失敗しました。" }, 400);
     }
 })
 
 type PutMedicalRecordsType = Omit<MedicalRecordsType, "categories"> & { categories: string[] }
 
-router.put("/", verifyAuthToken, async (request: Request, response: Response) => {
+router.put("/", requireDoctor, async (context) => {
     try {
-        const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = request.body;
+        const { id, patient_id, examination_at, doctor_id, medical_memo, doctor_memo, categories }: PutMedicalRecordsType = await context.req.json();
         const updated_at: Date = new Date();
         const medicalRecordId: number = Number(id);
         const categoryNumbers: number[] = categories.map((category) => Number(category))
@@ -191,17 +193,17 @@ router.put("/", verifyAuthToken, async (request: Request, response: Response) =>
                 });
             }
         })
-        return response.json({ data: result })
+        return context.json({ data: result })
     } catch (e) {
-        return response.status(400).json({ error: "データの更新に失敗しました。" });
+        return context.json({ error: "データの更新に失敗しました。" }, 400);
     }
 })
 
 type PostMedicalRecordsType = PutMedicalRecordsType & { doctor_id: string };
 
-router.post("/", verifyAuthToken, async (request: Request, response: Response) => {
+router.post("/", requireDoctor, async (context) => {
     try {
-        const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = request.body;
+        const { patient_id, doctor_id, examination_at, medical_memo, doctor_memo, categories }: PostMedicalRecordsType = await context.req.json();
         const result = await prisma.$transaction(async (prisma) => {
             const validatedMedicalRecord: CreateMedicalRecordSchema = createMedicalRecordSchema.parse({
                 patient_id,
@@ -228,15 +230,15 @@ router.post("/", verifyAuthToken, async (request: Request, response: Response) =
                 });
             }
         })
-        return response.json({ data: result })
+        return context.json({ data: result })
     } catch (e) {
-        return response.status(400).json({ error: "データの保存に失敗しました。" });
+        return context.json({ error: "データの保存に失敗しました。" }, 400);
     }
 })
 
-router.delete("/", verifyAuthToken, async (request: Request, response: Response) => {
+router.delete("/", requireDoctor, async (context) => {
     try {
-        const { id } = request.body;
+        const { id } = await context.req.json();
         const result = await prisma.$transaction(async (prisma) => {
             const targetId = Number(id);
             await prisma.medical_records.update({
@@ -257,9 +259,9 @@ router.delete("/", verifyAuthToken, async (request: Request, response: Response)
                 }
             });
         })
-        return response.json({ data: result })
+        return context.json({ data: result })
     } catch (e) {
-        return response.status(400).json({ error: "データの削除に失敗しました。" });
+        return context.json({ error: "データの削除に失敗しました。" }, 400);
     }
 });
 
