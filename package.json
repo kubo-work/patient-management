@@ -22,7 +22,7 @@
     "dev:web": "bun run --filter web dev",
     "typecheck": "bun run build:schema && bun run build:db && bun run --filter '*' typecheck",
     "lint": "bun run --filter web lint",
-    "test": "bun run --filter @repo/api test"
+    "test": "bun run build:schema && bun run build:db && bun run --filter @repo/api test"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

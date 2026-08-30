@@ -5,7 +5,7 @@ node_modules/
 build/
 dist/
 out/
-generated/
+/packages/db/generated/
 .next/
 *.tsbuildinfo
 

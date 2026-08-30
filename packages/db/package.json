@@ -20,7 +20,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "generate": "prisma generate --config prisma.config.ts",
     "migrate:dev": "node --env-file=.env scripts/guarded-migrate.mjs dev",
-    "migrate:deploy": "prisma migrate deploy",
+    "migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
     "studio": "node --env-file=.env ../../node_modules/.bin/prisma studio"
   },
   "dependencies": {

@@ -2,7 +2,8 @@
 // 接続先がローカル DB であることを確認してから実行する。
 //
 // DATABASE_URL / DIRECT_URL の供給元は packages/db/.env（呼び出し側が --env-file で読み込む）。
-// schema.prisma が directUrl を持つため、migrate が実際に接続するのは DIRECT_URL の方になる。
+// prisma.config.ts の datasource が DIRECT_URL を読むため、
+// migrate が実際に接続するのは DIRECT_URL の方になる。
 // DATABASE_URL だけを見ると「pooled はローカル・直結は本番」という組み合わせを見逃すので、
 // 両方を検査する。
 import { spawnSync } from "node:child_process";
@@ -65,7 +66,8 @@ if (isExplicitlyAllowed && remoteConnections.length > 0) {
     console.warn(`[警告] リモート DB (${hostnameList}) に対して migrate ${subcommand} を実行します。`);
 }
 
-const result = spawnSync("prisma", ["migrate", subcommand], {
+// このスクリプトは packages/db を作業ディレクトリとして実行される。
+const result = spawnSync("prisma", ["migrate", subcommand, "--config", "prisma.config.ts"], {
     stdio: "inherit",
     shell: true,
 });

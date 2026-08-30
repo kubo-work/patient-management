@@ -253,7 +253,7 @@ cd infra/scripts && npm run aws-build-push
 cd infra/scripts && npm run aws-apply
 ```
 
-> Prisma スキーマを変更した場合は、ローカルで `npx prisma migrate dev --name <change>` を実行して migration ファイルをコミット → `aws-build-push` で本番に反映。
+> Prisma スキーマを変更した場合は、ローカルで `cd packages/db && bun run migrate:dev --name <change>` を実行して migration ファイルをコミット → `aws-build-push` で本番に反映。接続先がローカル DB かどうかを確認するガードが入っている。
 
 ### 🛑 一時停止（コスト削減のため AWS だけ落としたい）
 
