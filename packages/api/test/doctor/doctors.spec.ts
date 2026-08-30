@@ -1,3 +1,4 @@
+import { describe, test, expect, afterEach, vi, type Mock } from "vitest";
 import request from "supertest";
 import { app } from "../../src/index.js";
 import { prismaMock } from "../prismaMock.js";
@@ -13,7 +14,7 @@ const mockSendDoctorData = mockSetDoctorData.map((data) => {
 
 describe("全医者データ取得", () => {
     afterEach(async () => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     })
 
     test("医者データの取得", async () => {
@@ -41,7 +42,7 @@ describe("全医者データ取得", () => {
 describe("指定の医者データ取得", () => {
 
     afterEach(async () => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     })
 
     test("指定の医者データの取得 : 成功", async () => {
@@ -68,7 +69,7 @@ describe("指定の医者データ取得", () => {
 
 describe("医者データ更新", () => {
     afterEach(async () => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     })
 
     test("医者データ更新 : 成功", async () => {
@@ -96,7 +97,7 @@ describe("医者データ更新", () => {
     })
 
     test("医者データ更新 : 失敗（指定された医者がみつかrない）", async () => {
-        (prismaMock.doctors.update as jest.Mock).mockRejectedValue(
+        (prismaMock.doctors.update as unknown as Mock).mockRejectedValue(
             new Prisma.PrismaClientKnownRequestError("Record not found", {
                 code: "P2025",
                 clientVersion: Prisma.prismaVersion.client
@@ -118,7 +119,7 @@ describe("医者データ更新", () => {
 
 describe("医者データ新規作成", () => {
     afterEach(async () => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     })
 
     test("医者データ新規作成 : 成功", async () => {

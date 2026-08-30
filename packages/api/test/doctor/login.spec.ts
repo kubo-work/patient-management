@@ -1,3 +1,4 @@
+import { describe, test, expect, afterEach, vi } from "vitest";
 import request from "supertest";
 import { prismaMock } from "../prismaMock.js";
 import { app } from "../../src/index.js";
@@ -16,7 +17,7 @@ const mockLoginPostData: mockLoginPostData = {
 describe("ログインのテスト", () => {
 
     afterEach(async () => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     })
 
     test("ログインの成功", async () => {

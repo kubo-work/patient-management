@@ -6,7 +6,6 @@
     "rootDir": ".",
     "types": [
       "node",
-      "jest",
       "supertest"
     ]
   },
