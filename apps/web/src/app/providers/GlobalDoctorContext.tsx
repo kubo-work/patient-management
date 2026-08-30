@@ -34,24 +34,20 @@ const jsonFetcher = async <T,>(url: string): Promise<T | undefined> => {
   return res.json();
 };
 
-const loginDoctorFetcher = (url: string) => jsonFetcher<DoctorType>(url);
-const doctorsFetcher = (url: string) => jsonFetcher<DoctorType[]>(url);
 const patientsFetcher = (url: string) => jsonFetcher<PatientType[]>(url);
 
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
-  const loginDoctorFetchUrl = `${API_URL}/doctor/login_doctor`;
-  const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
   const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
 
   // ログインしている医者 データの管理
+  // SWR のキーは URL である必要がない。tRPC へ移した機能は文字列キーにする。
   const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
-    loginDoctorFetchUrl,
-    loginDoctorFetcher
+    "doctor.loginDoctor",
+    () => trpcClient.doctor.loginDoctor.query()
   );
 
   // カテゴリ一覧データの管理
-  // SWR のキーは URL である必要がない。tRPC へ移した機能は文字列キーにする。
   const { data: categoriesData, mutate: categoriesDoMutate } = useSWR(
     "doctor.categories.list",
     () => trpcClient.doctor.categories.list.query()
@@ -59,8 +55,8 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
 
   // 医者一覧データの管理
   const { data: doctorsData, mutate: doctorsDoMutate } = useSWR(
-    doctorsFetchUrl,
-    doctorsFetcher
+    "doctor.doctors.list",
+    () => trpcClient.doctor.doctors.list.query()
   );
 
   // 患者一覧データの管理

@@ -8,8 +8,6 @@ import doctorLogin from "./doctor/login.js";
 import doctorLogout from "./doctor/logout.js";
 import doctorPatients from "./doctor/patients.js";
 import doctorTokenCheck from "./doctor/token_check.js";
-import loggedInDoctor from "./doctor/login_doctor.js";
-import doctorsData from "./doctor/doctors.js";
 import doctorMedicalRecords from "./doctor/medical_records.js";
 
 // CORS の許可オリジン。未設定のまま起動すると Access-Control-Allow-Origin が
@@ -60,6 +58,4 @@ export const app = new Hono()
     .route("/doctor/logout", doctorLogout)
     .route("/doctor/patients", doctorPatients)
     .route("/doctor/token_check", doctorTokenCheck)
-    .route("/doctor/login_doctor", loggedInDoctor)
-    .route("/doctor/doctors", doctorsData)
     .route("/doctor/medical_records", doctorMedicalRecords);
