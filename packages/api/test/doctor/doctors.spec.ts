@@ -1,6 +1,5 @@
 import { describe, test, expect, afterEach, vi, type Mock } from "vitest";
-import request from "supertest";
-import { app } from "../../src/index.js";
+import { app } from "../../src/app.js";
 import { prismaMock } from "../prismaMock.js";
 import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData.js";
 import { faker } from "@faker-js/faker";
@@ -19,23 +18,25 @@ describe("全医者データ取得", () => {
 
     test("医者データの取得", async () => {
         prismaMock.doctors.findMany.mockResolvedValue(mockSetDoctorData);
-        const response = await request(app).get("/doctor/doctors")
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
+        const response = await app.request("/doctor/doctors", {
+            headers: { cookie: `${doctorCookieName}=${testToken}` },
+        });
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(mockSendDoctorData)
+        expect(await response.json()).toEqual(mockSendDoctorData)
     })
 
     test("医者データの取得の失敗 : ログインしていない時", async () => {
-        const response = await request(app).get("/doctor/doctors")
+        const response = await app.request("/doctor/doctors");
         expect(response.status).toBe(401);
-        expect(response.body.error).toBe("ログインしてください。");
+        expect((await response.json()).error).toBe("ログインしてください。");
     })
 
     test("医者データの取得の失敗 : データがない時", async () => {
-        const response = await request(app).get("/doctor/doctors")
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
+        const response = await app.request("/doctor/doctors", {
+            headers: { cookie: `${doctorCookieName}=${testToken}` },
+        });
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe("データの取得に失敗しました。");
+        expect((await response.json()).error).toBe("データの取得に失敗しました。");
     })
 });
 
@@ -47,23 +48,25 @@ describe("指定の医者データ取得", () => {
 
     test("指定の医者データの取得 : 成功", async () => {
         prismaMock.doctors.findFirst.mockResolvedValueOnce(mockSetDoctorData[0])
-        const response = await request(app).get(`/doctor/doctors/${mockSetDoctorData[0].id}`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
+        const response = await app.request(`/doctor/doctors/${mockSetDoctorData[0].id}`, {
+            headers: { cookie: `${doctorCookieName}=${testToken}` },
+        });
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(mockSendDoctorData[0])
+        expect(await response.json()).toEqual(mockSendDoctorData[0])
     })
 
     test("医者データの取得の失敗 : ログインしていない時", async () => {
-        const response = await request(app).get("/doctor/doctors")
+        const response = await app.request("/doctor/doctors");
         expect(response.status).toBe(401);
-        expect(response.body.error).toBe("ログインしてください。");
+        expect((await response.json()).error).toBe("ログインしてください。");
     })
 
     test("医者データの取得の失敗 : データがない時", async () => {
-        const response = await request(app).get(`/doctor/doctors/${mockSetDoctorData[0].id}`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
+        const response = await app.request(`/doctor/doctors/${mockSetDoctorData[0].id}`, {
+            headers: { cookie: `${doctorCookieName}=${testToken}` },
+        });
         expect(response.status).toBe(404);
-        expect(response.body.error).toBe("指定された医師が見つかりません。");
+        expect((await response.json()).error).toBe("指定された医師が見つかりません。");
     })
 });
 
@@ -78,9 +81,14 @@ describe("医者データ更新", () => {
             email: faker.internet.email(),
             password: faker.internet.password()
         }
-        const response = await request(app).put(`/doctor/doctors/${mockSetDoctorData[0].id}`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
-            .send(mockPutDoctorData);
+        const response = await app.request(`/doctor/doctors/${mockSetDoctorData[0].id}`, {
+            method: "PUT",
+            headers: {
+                cookie: `${doctorCookieName}=${testToken}`,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify(mockPutDoctorData),
+        });
         expect(response.status).toBe(200);
     })
 
@@ -89,11 +97,16 @@ describe("医者データ更新", () => {
             email: faker.internet.email(),
             password: faker.internet.password()
         }
-        const response = await request(app).put(`/doctor/doctors/${mockSetDoctorData[0].id}`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
-            .send(mockPutDoctorData);
+        const response = await app.request(`/doctor/doctors/${mockSetDoctorData[0].id}`, {
+            method: "PUT",
+            headers: {
+                cookie: `${doctorCookieName}=${testToken}`,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify(mockPutDoctorData),
+        });
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe("入力データが不正です。");
+        expect((await response.json()).error).toBe("入力データが不正です。");
     })
 
     test("医者データ更新 : 失敗（指定された医者がみつかrない）", async () => {
@@ -109,11 +122,31 @@ describe("医者データ更新", () => {
             password: faker.internet.password()
         }
         const id = faker.number.int({ min: 1000, max: 9999 })
-        const response = await request(app).put(`/doctor/doctors/${id}`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
-            .send(mockPutDoctorData);
+        const response = await app.request(`/doctor/doctors/${id}`, {
+            method: "PUT",
+            headers: {
+                cookie: `${doctorCookieName}=${testToken}`,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify(mockPutDoctorData),
+        });
         expect(response.status).toBe(404);
-        expect(response.body.error).toBe("指定された医師が見つかりません。");
+        expect((await response.json()).error).toBe("指定された医師が見つかりません。");
+    })
+
+    test("医者データ更新 : 失敗（ログインしていない）", async () => {
+        const mockPutDoctorData = {
+            name: faker.person.fullName(),
+            email: faker.internet.email(),
+            password: faker.internet.password()
+        }
+        const response = await app.request(`/doctor/doctors/${mockSetDoctorData[0].id}`, {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(mockPutDoctorData),
+        });
+        expect(response.status).toBe(401);
+        expect((await response.json()).error).toBe("ログインしてください。");
     })
 })
 
@@ -128,9 +161,14 @@ describe("医者データ新規作成", () => {
             email: faker.internet.email(),
             password: faker.internet.password()
         }
-        const response = await request(app).post(`/doctor/doctors`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
-            .send(mockPutDoctorData);
+        const response = await app.request(`/doctor/doctors`, {
+            method: "POST",
+            headers: {
+                cookie: `${doctorCookieName}=${testToken}`,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify(mockPutDoctorData),
+        });
         expect(response.status).toBe(200);
     })
 
@@ -139,10 +177,15 @@ describe("医者データ新規作成", () => {
             email: faker.internet.email(),
             password: faker.internet.password()
         }
-        const response = await request(app).put(`/doctor/doctors/${mockSetDoctorData[0].id}`)
-            .set("Cookie", `${doctorCookieName}=${testToken}`)
-            .send(mockPutDoctorData);
+        const response = await app.request(`/doctor/doctors/${mockSetDoctorData[0].id}`, {
+            method: "PUT",
+            headers: {
+                cookie: `${doctorCookieName}=${testToken}`,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify(mockPutDoctorData),
+        });
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe("入力データが不正です。");
+        expect((await response.json()).error).toBe("入力データが不正です。");
     })
 })

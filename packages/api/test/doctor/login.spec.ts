@@ -1,7 +1,6 @@
 import { describe, test, expect, afterEach, vi } from "vitest";
-import request from "supertest";
 import { prismaMock } from "../prismaMock.js";
-import { app } from "../../src/index.js";
+import { app } from "../../src/app.js";
 import { mockSetDoctorData } from "./mockData/mockLoginDoctorData.js";
 
 type mockLoginPostData = {
@@ -22,31 +21,47 @@ describe("ログインのテスト", () => {
 
     test("ログインの成功", async () => {
         prismaMock.doctors.findFirst.mockResolvedValue(mockSetDoctorData[0]);
-        const response = await request(app).post("/doctor/login").send(mockLoginPostData);
+        const response = await app.request("/doctor/login", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(mockLoginPostData),
+        });
 
         expect(response.status).toBe(200);
-        expect(response.body.message).toBe("ログインに成功しました。");
+        expect((await response.json()).message).toBe("ログインに成功しました。");
     });
 
     test("ログインの失敗 メールアドレスがない場合", async () => {
         const dummyTestLoginData: mockLoginPostData = { email: "", password: "" }
-        const response = await request(app).post("/doctor/login").send(dummyTestLoginData);
+        const response = await app.request("/doctor/login", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(dummyTestLoginData),
+        });
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe("メールアドレスが入力されていません。");
+        expect((await response.json()).error).toBe("メールアドレスが入力されていません。");
     })
 
     test("ログインの失敗 パスワードがない場合", async () => {
         const dummyTestLoginData: mockLoginPostData = { email: "dummy@example.com", password: "" }
-        const response = await request(app).post("/doctor/login").send(dummyTestLoginData);
+        const response = await app.request("/doctor/login", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(dummyTestLoginData),
+        });
         expect(response.status).toBe(400);
-        expect(response.body.error).toBe("パスワードが入力されていません。");
+        expect((await response.json()).error).toBe("パスワードが入力されていません。");
     })
 
     test("Loginの失敗 メールアドレスとパスワードが正しくない場合", async () => {
         prismaMock.doctors.findFirst.mockResolvedValue(null);
         const dummyTestLoginData: mockLoginPostData = { email: "dummy@example.com", password: "aaa" }
-        const response = await request(app).post("/doctor/login").send(dummyTestLoginData);
+        const response = await app.request("/doctor/login", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(dummyTestLoginData),
+        });
         expect(response.status).toBe(401);
-        expect(response.body.error).toBe("無効なメールアドレスまたはパスワードです。");
+        expect((await response.json()).error).toBe("無効なメールアドレスまたはパスワードです。");
     })
 })
