@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Title } from "@mantine/core";
 import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
 import { PatientType } from "@repo/schema";
-import { API_URL } from "../../../../constants/url";
+import { trpcClient } from "../../../lib/trpc";
 
 function MedicalRecordsInner() {
   const searchParams = useSearchParams();
@@ -17,10 +17,8 @@ function MedicalRecordsInner() {
       setLoading(false);
       return;
     }
-    fetch(`${API_URL}/doctor/patients/${patients_id}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
+    trpcClient.doctor.patients.byId
+      .query({ patientId: patients_id })
       .then((data) => {
         setPatientData(data);
         setLoading(false);
