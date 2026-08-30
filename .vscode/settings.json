@@ -6,6 +6,6 @@
   // 7 系の lib/ に tsserver.js は無いが、VS Code の TypeScript 拡張が
   // resolveTsdkPathToExe でこのパスからネイティブ実行ファイルを解決するため、
   // 指定先は 5 系と同じで正しい（typescript/lib/getExePath.js のコメント参照）
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }
