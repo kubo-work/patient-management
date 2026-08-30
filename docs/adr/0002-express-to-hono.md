@@ -92,6 +92,8 @@ Express の `express.json()` は `Content-Type: application/json` のときだ�
 
 `hono/csrf` は `Content-Type` ヘッダ自体が送られていない場合も `text/plain` とみなして検査対象に含める（`c.req.header("content-type") || "text/plain"`）。ヘッダを省いた攻撃リクエストにも同じ防御が働く。
 
+この既定挙動のため、`Content-Type` と `Origin` のどちらも付けない POST は 403 になる。ブラウザはクロスオリジンの POST に必ず `Origin` を送るため、これに該当するのは curl のような非ブラウザクライアントに限られる。`apps/web` は全リクエストで `Content-Type: application/json` を送っており影響しない。**API を curl で疎通確認する際は `-H 'content-type: application/json'` が必要**で、これを付けずに 403 が返るのは正常な動作である。
+
 ## 検討して採用しなかった案
 
 ### `bun:test` を Vitest と併用する
