@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { PatientType, sexList } from "@repo/schema";
-import { prisma } from "../prisma.js";
+import { prisma } from "@repo/db";
 import { verifyAuthToken } from "../verifyAuthToken.js";
 import dayjs from "dayjs";
 import { z } from "zod";

@@ -30,15 +30,18 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/api/package.json ./packages/api/
 COPY packages/db/package.json ./packages/db/
 COPY packages/schema/package.json ./packages/schema/
-# ルートの postinstall が prisma generate を実行するため schema を先に配置する
+# ルートの postinstall が prisma generate を実行するため、スキーマと設定ファイルを先に配置する
 COPY packages/db/prisma ./packages/db/prisma
+COPY packages/db/prisma.config.ts ./packages/db/prisma.config.ts
 
 RUN bun install --frozen-lockfile
 
 COPY packages/schema ./packages/schema
 COPY packages/api ./packages/api
+COPY packages/db/src ./packages/db/src
+COPY packages/db/tsconfig.json ./packages/db/tsconfig.json
 
-RUN bun run build:schema && bun run build:api
+RUN bun run build:schema && bun run build:db && bun run build:api
 
 # ------------------------------------------------------------
 # Runtime
@@ -67,6 +70,8 @@ COPY --from=builder /app/packages/schema/dist ./packages/schema/dist
 
 COPY --from=builder /app/packages/db/package.json ./packages/db/package.json
 COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
+COPY --from=builder /app/packages/db/prisma.config.ts ./packages/db/prisma.config.ts
+COPY --from=builder /app/packages/db/dist ./packages/db/dist
 
 COPY --from=builder /app/packages/api/package.json ./packages/api/package.json
 COPY --from=builder /app/packages/api/build ./packages/api/build
@@ -80,4 +85,4 @@ WORKDIR /app/packages/api
 EXPOSE 8080
 
 # 起動順: マイグレーション → 初期データ取り込み（空DBかつSOURCE_DATABASE_URL設定時のみ） → サーバー起動
-CMD ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node scripts/seed-from-source.js && node build/index.js"]
+CMD ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy --config ../db/prisma.config.ts && node scripts/seed-from-source.js && node build/index.js"]

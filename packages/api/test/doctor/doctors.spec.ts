@@ -3,8 +3,7 @@ import { app } from "../../src/index.js";
 import { prismaMock } from "../prismaMock.js";
 import { mockSetDoctorData, testToken } from "./mockData/mockLoginDoctorData.js";
 import { faker } from "@faker-js/faker";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@repo/db";
 import { doctorCookieName } from "@repo/schema";
 
 const mockSendDoctorData = mockSetDoctorData.map((data) => {
@@ -98,7 +97,7 @@ describe("医者データ更新", () => {
 
     test("医者データ更新 : 失敗（指定された医者がみつかrない）", async () => {
         (prismaMock.doctors.update as jest.Mock).mockRejectedValue(
-            new PrismaClientKnownRequestError("Record not found", {
+            new Prisma.PrismaClientKnownRequestError("Record not found", {
                 code: "P2025",
                 clientVersion: Prisma.prismaVersion.client
             })

@@ -3,16 +3,31 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "generate": "prisma generate",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate": "prisma generate --config prisma.config.ts",
     "migrate:dev": "node --env-file=.env scripts/guarded-migrate.mjs dev",
-    "migrate:deploy": "prisma migrate deploy",
+    "migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
     "studio": "node --env-file=.env ../../node_modules/.bin/prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1"
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0"
   },
   "devDependencies": {
-    "prisma": "^5.19.1"
+    "prisma": "7.10.0"
   }
 }

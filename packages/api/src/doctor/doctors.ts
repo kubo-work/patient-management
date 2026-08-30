@@ -1,8 +1,7 @@
 import { verifyAuthToken } from "../verifyAuthToken.js";
 import { Request, Response, Router } from "express";
-import { Prisma } from "@prisma/client";
+import { Prisma, prisma } from "@repo/db";
 import { DoctorType } from "@repo/schema";
-import { prisma } from "../prisma.js";
 import { z, ZodError } from "zod";
 
 const baseDoctorSchema = {

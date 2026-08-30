@@ -129,7 +129,7 @@ resource "aws_ecs_task_definition" "backend" {
     command = [
       "sh",
       "-c",
-      "../../node_modules/.bin/prisma migrate deploy --schema ../db/prisma/schema.prisma && node scripts/seed-from-source.js && node build/index.js"
+      "../../node_modules/.bin/prisma migrate deploy --config ../db/prisma.config.ts && node scripts/seed-from-source.js && node build/index.js"
     ]
 
     environment = [
@@ -143,8 +143,8 @@ resource "aws_ecs_task_definition" "backend" {
     ]
 
     # RDS には PgBouncer が無く pooled と直結の区別が無いため、両方に同じ値を割り当てる。
-    # schema.prisma が directUrl を宣言している以上、DIRECT_URL が未設定だと
-    # prisma migrate deploy が P1012 で起動時に失敗する。
+    # Prisma 7 では接続先の解決が prisma.config.ts に移り、その datasource は
+    # DIRECT_URL を読む。未設定だと prisma migrate deploy が接続先を決められず起動時に失敗する。
     secrets = [
       { name = "DATABASE_URL", valueFrom = aws_secretsmanager_secret.database_url.arn },
       { name = "DIRECT_URL",   valueFrom = aws_secretsmanager_secret.database_url.arn },
