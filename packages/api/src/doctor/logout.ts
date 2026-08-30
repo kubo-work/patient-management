@@ -1,31 +1,23 @@
-import { Request, Response, Router } from "express";
-import { sessionName } from "../index.js";
+import { Hono } from "hono";
+import { deleteCookie } from "hono/cookie";
 import { doctorCookieName } from "@repo/schema";
 
-const router = Router();
-router.post("/", async (request: Request, response: Response) => {
-    response.clearCookie(doctorCookieName, {
+const router = new Hono();
+
+router.post("/", async (context) => {
+    deleteCookie(context, doctorCookieName, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
+        // 発行時と同じ path でなければ削除されない。login.ts の setCookie と揃える。
+        path: "/",
         ...(process.env.NODE_ENV === "production" && { domain: process.env.SERVER_DOMAIN })
     });
 
-    // express-sessionのセッションを破棄
-    if (request.session) {
-        request.session.destroy(err => {
-            if (err) {
-                console.error('Failed to destroy session:', err);
-                response.status(500).send('ログアウトに失敗しました。');
-            } else {
-                response.clearCookie(sessionName);
-                response.send('ログアウトしました。');
-            }
-        });
-    } else {
-        // セッションがなくてもJWTクッキーは削除済み
-        response.send('ログアウトしました。');
-    }
+    // express-session のセッション破棄はここにあったが、sessionId / userId に
+    // 値を書き込むコードがリポジトリ内に存在せず、常に空のセッションを
+    // 破棄していただけだった。レスポンスは従来と同じ。
+    return context.text('ログアウトしました。');
 });
 
 export default router;

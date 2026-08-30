@@ -1,6 +1,6 @@
-import { Request, Response, Router } from "express";
+import { Hono } from "hono";
 import { prisma } from "@repo/db";
-import { verifyAuthToken } from "../verifyAuthToken.js";
+import { requireDoctor, type DoctorAuthVariables } from "../middleware/requireDoctor.js";
 import { DoctorType } from "@repo/schema";
 import { z } from "zod";
 
@@ -13,13 +13,13 @@ const getDoctorSchema = z.object({
 
 type GetDoctorSchema = z.infer<typeof getDoctorSchema>;
 
-const router = Router();
+const router = new Hono<{ Variables: DoctorAuthVariables }>();
 
-router.get("/", verifyAuthToken, async (request: Request, response: Response) => {
+router.get("/", requireDoctor, async (context) => {
     try {
-        if (!request.user) {
-            return response.status(401).json({ error: "医者データのリクエストに失敗しました。" });
-        }
+        // requireDoctor を通過しているため doctorId は必ず number。
+        // Express 時代にあった request.user の null チェックは型で不要になった。
+        const doctorId = context.get("doctorId");
         const doctor: DoctorType | null = await prisma.doctors.findFirst({
             select: {
                 id: true,
@@ -29,18 +29,18 @@ router.get("/", verifyAuthToken, async (request: Request, response: Response) =>
             },
             where: {
                 AND: [
-                    { id: Number(request.user.userId) }
+                    { id: doctorId }
                 ]
             }
         })
         // doctor が null の場合
         if (!doctor) {
-            return response.status(404).json({ error: "指定された医師が見つかりません。" });
+            return context.json({ error: "指定された医師が見つかりません。" }, 404);
         }
         const parseDoctor: GetDoctorSchema = getDoctorSchema.parse(doctor);
-        return response.json(parseDoctor)
+        return context.json(parseDoctor)
     } catch (e) {
-        return response.status(400).json({ error: "データの取得に失敗しました。" });
+        return context.json({ error: "データの取得に失敗しました。" }, 400);
     }
 });
 

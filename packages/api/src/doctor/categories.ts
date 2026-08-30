@@ -1,6 +1,6 @@
-import { Response, Router } from "express";
+import { Hono } from "hono";
 import { prisma } from "@repo/db";
-import { verifyAuthToken } from "../verifyAuthToken.js";
+import { requireDoctor, type DoctorAuthVariables } from "../middleware/requireDoctor.js";
 import { z } from "zod";
 
 const categorySchema = {
@@ -18,10 +18,10 @@ const getCategoriesSchema = z.array(getCategorySchema);
 
 type GetCategorySchema = z.infer<typeof getCategorySchema>;
 
-const router = Router();
+const router = new Hono<{ Variables: DoctorAuthVariables }>();
 
 // カテゴリを取得する
-router.get("/", verifyAuthToken, async (_, response: Response) => {
+router.get("/", requireDoctor, async (context) => {
     try {
         const allCategories = await prisma.categories.findMany({
             select: {
@@ -39,9 +39,9 @@ router.get("/", verifyAuthToken, async (_, response: Response) => {
             }
         });
         const parseCategories: GetCategorySchema[] = getCategoriesSchema.parse(allCategories);
-        return response.json(parseCategories);
+        return context.json(parseCategories);
     } catch (e) {
-        return response.status(400).json({ error: "データの取得に失敗しました。" });
+        return context.json({ error: "データの取得に失敗しました。" }, 400);
     }
 });
 
