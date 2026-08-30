@@ -7,7 +7,10 @@ import { app } from "../../src/app.js";
 const protectedQueryPaths = [
     "/trpc/doctor.categories.list",
     "/trpc/doctor.doctors.list",
+    "/trpc/doctor.doctors.byId",
     "/trpc/doctor.loginDoctor",
+    "/trpc/doctor.patients.list",
+    "/trpc/doctor.patients.byId",
 ];
 
 describe("認可が必要な query は Cookie 無しで 401 を返す", () => {
@@ -36,6 +39,41 @@ describe("認可が必要な mutation は Cookie 無しで 401 を返す", () =>
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ name: "x", email: "x@example.com", password: "x" }),
+        });
+        expect(response.status).toBe(401);
+        expect(JSON.stringify(await response.json())).toContain("ログインしてください。");
+    });
+
+    test("doctor.patients.update", async () => {
+        const response = await app.request("/trpc/doctor.patients.update", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                id: 1,
+                name: "x",
+                email: "x@example.com",
+                tel: "000-0000-0000",
+                sex: "no_answer",
+                address: "x",
+                birth: "1990-04-05T00:00:00.000Z",
+            }),
+        });
+        expect(response.status).toBe(401);
+        expect(JSON.stringify(await response.json())).toContain("ログインしてください。");
+    });
+
+    test("doctor.patients.create", async () => {
+        const response = await app.request("/trpc/doctor.patients.create", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                name: "x",
+                email: "x@example.com",
+                tel: "000-0000-0000",
+                sex: "no_answer",
+                address: "x",
+                birth: "1990-04-05T00:00:00.000Z",
+            }),
         });
         expect(response.status).toBe(401);
         expect(JSON.stringify(await response.json())).toContain("ログインしてください。");
