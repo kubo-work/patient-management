@@ -20,6 +20,7 @@
     "@mantine/notifications": "^7.17.2",
     "@repo/schema": "workspace:*",
     "@tabler/icons-react": "^3.16.0",
+    "@trpc/client": "11.18.0",
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.1",
     "dayjs": "^1.11.19",
@@ -28,6 +29,7 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "sass": "^1.94.2",
+    "superjson": "2.2.6",
     "swr": "^2.3.7"
   },
   "devDependencies": {

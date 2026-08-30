@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "main": "./build/index.js",
+  "types": "./build/trpc/appRouter.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/trpc/appRouter.d.ts",
+      "default": "./build/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "license": "ISC",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -16,12 +24,15 @@
   },
   "dependencies": {
     "@hono/node-server": "2.1.1",
+    "@hono/trpc-server": "0.4.2",
     "@repo/db": "workspace:*",
     "@repo/schema": "workspace:*",
+    "@trpc/server": "11.18.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "hono": "4.13.5",
     "jsonwebtoken": "^9.0.2",
+    "superjson": "2.2.6",
     "zod": "^3.24.1"
   },
   "devDependencies": {
