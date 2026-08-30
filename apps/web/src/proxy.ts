@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { doctorCookieName } from "@repo/schema";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
     const url = req.nextUrl;
 
     if (url.pathname.startsWith("/doctor")) {
