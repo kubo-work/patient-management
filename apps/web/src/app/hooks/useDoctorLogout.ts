@@ -9,7 +9,10 @@ const useDoctorLogout = () => {
         try {
             await trpcClient.doctor.logout.mutate();
         } catch {
-            // 移植前も戻り値を読まず常にログイン画面へ戻していた。その挙動を保つ。
+            // 移植前は fetch に catch が無く、ネットワーク障害時は
+            // handleClickLogout 全体が reject して setIsLogin(false) /
+            // router.push に到達しなかった。この try/catch はその挙動を
+            // 保ったのではなく、常にログイン画面へ戻す挙動を新たに作った。
         }
         setIsLogin(false);
         router.push('/doctor/login');

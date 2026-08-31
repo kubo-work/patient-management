@@ -36,15 +36,15 @@ tRPC の context は Hono の Context を保持する。これにより `login` 
 ```ts
 type TrpcContext = {
     honoContext: Context;
-    doctorId: number | null; // Cookie の JWT から解決。未ログインなら null
+    doctorAuth: DoctorTokenResult | null; // Cookie が無ければ null。あれば検証結果
 };
 ```
 
-`protectedProcedure` は `doctorId` が `null` なら `UNAUTHORIZED` を投げ、通過後は `number` に絞り込む。#284 の `requireDoctor` と同じく、認可の通過が型で保証される設計を踏襲する。
+`doctorId: number | null` ではなく検証結果全体を持たせるのは、Cookie 無し（401）・秘密鍵未設定（401、Cookie 削除つき）・検証失敗（403）という認可の 3 分岐を型で保つためである。`protectedProcedure` は `doctorAuth` が `null`、または検証に失敗していればそれぞれに応じた `TRPCError` を投げ、通過後は `doctorId` が `number` に絞り込まれる。#284 の `requireDoctor` と同じく、認可の通過が型で保証される設計を踏襲する。
 
 ### 2. `domain/` はロジックが実在する 3 箇所にだけ作る
 
-13 エンドポイントの中身を調べたところ、I/O を伴わない純粋なロジックは次の 3 つしかない。
+16 エンドポイントの中身を調べたところ、I/O を伴わない純粋なロジックは次の 3 つしかない。
 
 | 箇所 | ロジック |
 |---|---|
@@ -52,7 +52,7 @@ type TrpcContext = {
 | `medical_records` PUT | 既存カテゴリと指定カテゴリから削除分・追加分を求める |
 | `medical_records` GET | `medical_categories[].categories` を `categories` へ平坦化する |
 
-残る 10 箇所は Prisma の呼び出しと zod 検証しかない。ここに `domain/` を置いても、引数をそのまま `repository/` へ渡すだけのファイルが 10 個できる。Issue の完了条件は「`domain/` に Prisma / Hono / Next.js への import が 1 つも無い」であり、「全機能に domain がある」ではない。純粋な CRUD は `router/` から `repository/` を直接呼ぶ。
+残る 13 箇所は Prisma の呼び出しと zod 検証しかない。ここに `domain/` を置いても、引数をそのまま `repository/` へ渡すだけのファイルが 13 個できる。Issue の完了条件は「`domain/` に Prisma / Hono / Next.js への import が 1 つも無い」であり、「全機能に domain がある」ではない。純粋な CRUD は `router/` から `repository/` を直接呼ぶ。
 
 とりわけカテゴリの差分計算は、現在 `$transaction` の中に埋まっていて単体では検証できない。ここを切り出すことが本 Issue で最も価値のある変更である。
 
@@ -119,7 +119,7 @@ git 履歴によれば、Issue #214（API のファイル分割）で作られ�
 
 削除の判断はこの分析によって変わらない。呼び出し元が存在しない以上、tRPC へ移植する対象ではない。ただし**上記の欠落は本 ADR の範囲外の課題として残る**。Cookie と JWT の有効期限の整合は #286 のスコープであり、失効時のリダイレクトの扱いはそこで検討する。
 
-移行対象は 14 ではなく 13 エンドポイントになる。
+移行対象は 17 ではなく 16 エンドポイントになる。
 
 ### 8. エラーは `TRPCError` へ対応付け、日本語メッセージは変えない
 
@@ -136,7 +136,7 @@ git 履歴によれば、Issue #214（API のファイル分割）で作られ�
 
 `domain/` の 3 ファイルに mock を使わない単体テストを書く。`repository/` と `router/` の統合テストは、実 DB を扱える PGlite が入る #288 に委ねる。
 
-REST ルートの削除と同時に `doctors.spec.ts` / `login.spec.ts` / `login_doctor.spec.ts` を削除し、`vitest-mock-extended` と `test/prismaMock.ts` を依存から外す。これらは Issue が批判している「実装の写経」そのものであり、代替を書かずに消すのが正しい。`csrf.spec.ts` と `requireDoctor.spec.ts` は HTTP レイヤの検証なので残す。
+REST ルートの削除と同時に `doctors.spec.ts` / `login.spec.ts` / `login_doctor.spec.ts` を削除し、`vitest-mock-extended` と `test/prismaMock.ts` を依存から外す。これらは Issue が批判している「実装の写経」そのものであり、代替を書かずに消すのが正しい。`csrf.spec.ts` は HTTP レイヤの検証なので残す。`requireDoctor.ts` 自体は移行完了時に削除するため `requireDoctor.spec.ts` も削除し、代わりに JWT 検証の単体テストとして `test/auth/token.spec.ts` を、tRPC の認可分岐（3 分岐）の検証として `test/trpc/authorization.spec.ts` を追加する。
 
 ## 検討して採用しなかった案
 
@@ -150,7 +150,7 @@ Issue #285 の完了条件「フロントから `trpc.*` 経由で全機能が�
 
 ### 一括で切り替える
 
-tRPC 側を全部作ってからフロントを一斉に切り替える案。中間状態の重複が無く差分はきれいだが、移行の途中で何も画面から検証できない期間が長く続く。13 エンドポイントは段階的に移せる規模である。
+tRPC 側を全部作ってからフロントを一斉に切り替える案。中間状態の重複が無く差分はきれいだが、移行の途中で何も画面から検証できない期間が長く続く。16 エンドポイントは段階的に移せる規模である。
 
 ### 全機能に 3 層を適用する
 
@@ -171,3 +171,4 @@ tRPC 側を全部作ってからフロントを一斉に切り替える案。中
 - **型が合わない入力のエラーメッセージが変わる。** 移植前は zod の検証がハンドラの `try` の中にあり、検証失敗も DB エラーも同じ日本語メッセージ（例「データの更新に失敗しました。」）に畳まれていた。tRPC では型の検証が `.input()` へ移るため、型違いの入力は tRPC 自身が zod のメッセージで `BAD_REQUEST` を投げる。**ステータスは 400 のまま**で、フロントエンドは tRPC によって型付けされており型違いを送るとコンパイルエラーになるため、到達できるのは手書きのクライアントのみである。業務ルール（`patients` の `sex` が `sexList` の enum であること等）の検証は移植前と同じく `try` の中に残しており、そちらのメッセージは変わらない
 - `doctor.medicalRecords.byPatient` から `startDate` / `endDate` の受け取りを削除した。移植前は受け口だけが存在し、フロントエンドは一度も送っておらず、絞り込みの実装は 1 年半コメントアウトされていた。tRPC の入力スキーマに載せると「渡せるが無視される」パラメータをクライアントへ公開することになるため移植しない。期間での絞り込みは #305 として起票した
 - 移行中は同じ機能の REST 実装と tRPC 実装が一時的に併存する。段階の終わりで必ず旧実装を削除し、併存を次の段階へ持ち越さない
+- `doctor.logout` のレスポンス本文が、移植前の `text/plain` の生文字列 `"ログアウトしました。"` から、tRPC が常に返す JSON 文字列 `"\"ログアウトしました。\""` へ変わる。ADR 0002 が記録した `text/html` → `text/plain` の変化と同種の波及である。唯一の消費者（`apps/web/src/app/hooks/useDoctorLogout.ts`）は本文を読まないため実害は無い

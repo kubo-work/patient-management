@@ -45,18 +45,10 @@ const medicalRecordFieldsSchema = {
 };
 
 export const medicalRecordsRouter = router({
-    // 移植前の GET /:patient_id は startDate / endDate をクエリパラメータとして
-    // 受け取っていたが、実際の絞り込みはコメントアウトされており使われていなかった。
-    // task-4-brief.md の入力スキーマ指定に従い受け取り自体は残すが、
-    // 値は使わない（validStartDate / validEndDate の計算は移植しない）。
+    // 期間での絞り込みは #305 で UI とセットで設計し直す。移植前の受け口は
+    // フロントから一度も呼ばれておらず、絞り込みの実装も無効化されていた。
     byPatient: protectedProcedure
-        .input(
-            z.object({
-                patientId: z.number(),
-                startDate: z.string().optional(),
-                endDate: z.string().optional(),
-            })
-        )
+        .input(z.object({ patientId: z.number() }))
         .query(async ({ input }) => {
             try {
                 const rows = medicalRecordRowsSchema.parse(

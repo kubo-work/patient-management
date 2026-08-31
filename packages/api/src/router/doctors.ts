@@ -152,8 +152,8 @@ export const doctorsRouter = router({
         }),
 });
 
-// requireDoctor を通過しているため doctorId は必ず number
-// （移植前の doctor/login_doctor.ts のコメントを踏襲）。
+// protectedProcedure の middleware（trpc/init.ts）を通過しているため
+// ctx.doctorId は必ず number に絞り込まれている。
 export const loginDoctorProcedure = protectedProcedure.query(async ({ ctx }) => {
     try {
         const doctor = await findDoctorById(ctx.doctorId);

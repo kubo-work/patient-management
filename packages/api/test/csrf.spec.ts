@@ -5,9 +5,8 @@ import { app } from "../src/app.js";
 // なっていた。Hono ではその障壁が無いため、退行していないことをテストで固定する。
 //
 // 検証対象は /trpc/doctor.patients.create。app.ts のミドルウェア順序は
-// cors → csrf → trpcServer であり、csrf は tRPC のリクエストにも先に効くため、
-// REST の撤去（medical_records は本タスクで、他は Task 5 で消える）に影響されない
-// tRPC のパスへ向け直した（コントローラの裁定）。
+// cors → csrf → trpcServer であり、csrf は tRPC のリクエストにも先に効く。
+// REST ルートは全て撤去済みで、検証対象は tRPC のパスのみである。
 describe("CSRF 防御", () => {
     test("Origin の無い text/plain の POST は 403 で拒否される", async () => {
         const response = await app.request("/trpc/doctor.patients.create", {
