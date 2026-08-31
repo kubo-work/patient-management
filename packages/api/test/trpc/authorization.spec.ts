@@ -1,5 +1,10 @@
 import { describe, test, expect } from "vitest";
+import jwt from "jsonwebtoken";
+import { doctorCookieName } from "@repo/schema";
+import { secretKey } from "../../src/jwt_secret_key.js";
 import { app } from "../../src/app.js";
+
+const { sign } = jwt;
 
 // 認可が必要な procedure を Cookie 無しで叩き、弾かれることを確認する。
 // 旧 REST の spec を削除したことで失われた回帰検知を、DB 非依存の形で埋め直すもの。
@@ -123,5 +128,30 @@ describe("認可が必要な mutation は Cookie 無しで 401 を返す", () =>
         });
         expect(response.status).toBe(401);
         expect(JSON.stringify(await response.json())).toContain("ログインしてください。");
+    });
+});
+
+// requireDoctor.spec.ts が検証していた 403 の 2 分岐（署名不正・期限切れ）を
+// tRPC 側へ引き継ぐ。REST の削除に伴いこちらへ移した。
+describe("認可ミドルウェアの失敗分岐", () => {
+    test("署名が不正なトークンは 403 を返す", async () => {
+        const tamperedToken = sign({ userId: 1234 }, "wrong-secret-key", { expiresIn: "1d" });
+        const response = await app.request("/trpc/doctor.categories.list", {
+            headers: { cookie: `${doctorCookieName}=${tamperedToken}` },
+        });
+        expect(response.status).toBe(403);
+        expect(JSON.stringify(await response.json())).toContain(
+            "ログインの有効期限が切れている可能性があります。"
+        );
+    });
+
+    test("期限切れのトークンは 403 を返す", async () => {
+        const expiredToken = secretKey
+            ? sign({ userId: 1234 }, secretKey, { expiresIn: "-1s" })
+            : "";
+        const response = await app.request("/trpc/doctor.categories.list", {
+            headers: { cookie: `${doctorCookieName}=${expiredToken}` },
+        });
+        expect(response.status).toBe(403);
     });
 });

@@ -4,9 +4,6 @@ import { csrf } from "hono/csrf";
 import { trpcServer } from "@hono/trpc-server";
 import { appRouter } from "./trpc/appRouter.js";
 import { createTrpcContext } from "./trpc/context.js";
-import doctorLogin from "./doctor/login.js";
-import doctorLogout from "./doctor/logout.js";
-import doctorTokenCheck from "./doctor/token_check.js";
 
 // CORS の許可オリジン。未設定のまま起動すると Access-Control-Allow-Origin が
 // ワイルドカードになり、credentials: true と組み合わさってブラウザ側で必ず拒否される。
@@ -43,15 +40,13 @@ export const app = new Hono()
     // 検証で落ちていた。その障壁が移行で消えるので、Origin を検査する正式な防御を置く。
     // 本番の Cookie は sameSite=None のためクロスサイトでも送信される。
     .use("*", csrf({ origin: accessClientUrl }))
-    // 移行中は REST と tRPC を並存させる。機能ごとに tRPC へ移し、
-    // 移し終えた REST ルートはその段階で削除する（ADR 0003 決定 4）。
+    // REST から tRPC への移行が完了し（ADR 0003 決定 4）、残るアプリケーションの
+    // RPC はすべて tRPC が担う。token_check は参照が無いため移植せず削除した
+    // （ADR 0003 決定 7）。
     .use(
         "/trpc/*",
         trpcServer({
             router: appRouter,
             createContext: (_opts, honoContext) => createTrpcContext(honoContext),
         })
-    )
-    .route("/doctor/login", doctorLogin)
-    .route("/doctor/logout", doctorLogout)
-    .route("/doctor/token_check", doctorTokenCheck);
+    );

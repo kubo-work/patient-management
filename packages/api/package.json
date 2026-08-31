@@ -40,7 +40,6 @@
     "@types/jsonwebtoken": "^9.0.7",
     "nodemon": "^3.1.6",
     "tsx": "^4.19.1",
-    "vitest": "4.1.11",
-    "vitest-mock-extended": "5.1.1"
+    "vitest": "4.1.11"
   }
 }
