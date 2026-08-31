@@ -1,18 +1,19 @@
 import { useRouter } from "next/navigation";
 import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
-import { API_URL } from "../../../constants/url";
+import { trpcClient } from "../../lib/trpc";
 
 const useDoctorLogout = () => {
     const router = useRouter();
     const { setIsLogin } = useGlobalDoctorLogin();
     const handleClickLogout = async () => {
-        await fetch(`${API_URL}/doctor/logout`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: 'include'
-        });
+        try {
+            await trpcClient.doctor.logout.mutate();
+        } catch {
+            // 移植前は fetch に catch が無く、ネットワーク障害時は
+            // handleClickLogout 全体が reject して setIsLogin(false) /
+            // router.push に到達しなかった。この try/catch はその挙動を
+            // 保ったのではなく、常にログイン画面へ戻す挙動を新たに作った。
+        }
         setIsLogin(false);
         router.push('/doctor/login');
     }

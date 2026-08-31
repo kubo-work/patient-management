@@ -1,8 +1,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
-import { API_URL } from "../../../constants/url";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { trpcClient } from "../../lib/trpc";
 
 import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
 
@@ -44,27 +44,19 @@ const useDoctorLogin = () => {
         open();
         setLoginError("")
         const { email, password } = values;
-        const response = await fetch(`${API_URL}/doctor/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                email,
-                password
-            }),
-            credentials: 'include'
-        });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            setLoginError(errorData.error);
+        try {
+            await trpcClient.doctor.login.mutate({ email, password });
+        } catch (error) {
+            // tRPC はエラーを throw する。message には移植前と同じ日本語が入る。
+            const message = error instanceof Error ? error.message : "ログインに失敗しました。";
+            setLoginError(message);
             close();
             return;
-        } else {
-            setIsLogin(true);
-            router.push('/doctor/patients-list');
         }
+
+        setIsLogin(true);
+        router.push('/doctor/patients-list');
     }, [router, open, close, setIsLogin]);
 
     return { form, handleLogin, loginError, visible }

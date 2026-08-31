@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useMemo } from "react";
-import { API_URL } from "../../../constants/url";
 import useSWR from "swr";
 
 import { CategoriesType, DoctorType, PatientType, SexTypes, SexListData } from "@repo/schema";
 import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
+import { trpcClient } from "../../lib/trpc";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | undefined;
@@ -23,50 +23,32 @@ export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
   {} as GlobalDoctorContextType
 );
 
-const jsonFetcher = async <T,>(url: string): Promise<T | undefined> => {
-  const res = await fetch(url, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json();
-};
-
-const loginDoctorFetcher = (url: string) => jsonFetcher<DoctorType>(url);
-const categoriesFetcher = (url: string) => jsonFetcher<CategoriesType[]>(url);
-const doctorsFetcher = (url: string) => jsonFetcher<DoctorType[]>(url);
-const patientsFetcher = (url: string) => jsonFetcher<PatientType[]>(url);
-
 const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   const { children } = props;
-  const loginDoctorFetchUrl = `${API_URL}/doctor/login_doctor`;
-  const categoriesFetchUrl = `${API_URL}/doctor/categories`;
-  const doctorsFetchUrl = `${API_URL}/doctor/doctors`;
-  const patientsFetchUrl: string = `${API_URL}/doctor/patients`;
 
   // ログインしている医者 データの管理
+  // SWR のキーは URL である必要がない。tRPC へ移した機能は文字列キーにする。
   const { data: loginDoctorData, mutate: loginDoMutate } = useSWR(
-    loginDoctorFetchUrl,
-    loginDoctorFetcher
+    "doctor.loginDoctor",
+    () => trpcClient.doctor.loginDoctor.query()
   );
 
   // カテゴリ一覧データの管理
   const { data: categoriesData, mutate: categoriesDoMutate } = useSWR(
-    categoriesFetchUrl,
-    categoriesFetcher
+    "doctor.categories.list",
+    () => trpcClient.doctor.categories.list.query()
   );
 
   // 医者一覧データの管理
   const { data: doctorsData, mutate: doctorsDoMutate } = useSWR(
-    doctorsFetchUrl,
-    doctorsFetcher
+    "doctor.doctors.list",
+    () => trpcClient.doctor.doctors.list.query()
   );
 
   // 患者一覧データの管理
   const { data: patientsData, mutate: patientsMutate } = useSWR(
-    patientsFetchUrl,
-    patientsFetcher
+    "doctor.patients.list",
+    () => trpcClient.doctor.patients.list.query()
   );
 
   // 患者の名前をサジェストするためのリストを準備

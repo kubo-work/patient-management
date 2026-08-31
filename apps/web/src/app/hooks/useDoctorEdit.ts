@@ -1,9 +1,9 @@
 import { useForm } from '@mantine/form';
 import { DoctorType } from "@repo/schema";
 import { useEffect, useState } from 'react';
-import { API_URL } from '../../../constants/url';
 import { useRouter } from 'next/navigation';
 import setShowNotification from '../../../constants/setShowNotification';
+import { trpcClient } from '../../lib/trpc';
 
 type FormValues = {
     name: string;
@@ -11,14 +11,8 @@ type FormValues = {
     password: string;
 }
 
-const getDoctorFetcher = async (id: number): Promise<DoctorType | undefined> => (
-    await fetch(`${API_URL}/doctor/doctors/${id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-
-    }).then((res) => res.json())
-)
+const getDoctorFetcher = async (id: number): Promise<DoctorType | undefined> =>
+    trpcClient.doctor.doctors.byId.query({ doctorId: id });
 
 const useDoctorEdit = (id: number | null) => {
     const router = useRouter();
@@ -61,29 +55,23 @@ const useDoctorEdit = (id: number | null) => {
     const handleSubmit = async (values: FormValues, doMutate: () => void) => {
         setSubmitError("");
         const { name, email, password } = values;
-        const method = id ? "PUT" : "POST";
-        const fetchUrl = id ? `${API_URL}/doctor/doctors/${id}` : `${API_URL}/doctor/doctors`
-        const response = await fetch(fetchUrl, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-                name,
-                email,
-                password,
-            }),
-        });
 
-        if (!response.ok) {
-            const errorData = await response.json();  // サーバーからのエラーメッセージを取得
-            setSubmitError(errorData.error);
-            setShowNotification(submitError, "red")
+        try {
+            if (id) {
+                await trpcClient.doctor.doctors.update.mutate({ doctorId: id, name, email, password });
+            } else {
+                await trpcClient.doctor.doctors.create.mutate({ name, email, password });
+            }
+        } catch (error) {
+            // tRPC はエラーを throw する。message には移植前と同じ日本語が入る。
+            const message = error instanceof Error ? error.message : "データの更新に失敗しました。";
+            setSubmitError(message);
+            setShowNotification(message, "red");
             return;
-        } else {
-            setSubmitError("");
-            doMutate();
-            router.push(`/doctor/doctors-list?success=${method === "PUT" ? "update" : "new"}`)
         }
+        setSubmitError("");
+        doMutate();
+        router.push(`/doctor/doctors-list?success=${id ? "update" : "new"}`);
     }
     return { form, handleSubmit, submitError }
 }
