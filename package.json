@@ -20,7 +20,7 @@
     "dev": "bun run build:schema && bun run build:db && bun run --filter '*' --parallel dev",
     "dev:api": "bun run --filter @repo/api dev",
     "dev:web": "bun run --filter web dev",
-    "typecheck": "bun run build:schema && bun run build:db && bun run --filter '*' typecheck",
+    "typecheck": "bun run build:schema && bun run build:db && bun run build:api && bun run --filter '*' typecheck",
     "lint": "bun run --filter web lint",
     "test": "bun run build:schema && bun run build:db && bun run --filter @repo/api test"
   },
