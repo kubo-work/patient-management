@@ -1,18 +1,16 @@
 import { useRouter } from "next/navigation";
 import { useGlobalDoctorLogin } from "./useGlobalDoctorLogin";
-import { API_URL } from "../../../constants/url";
+import { trpcClient } from "../../lib/trpc";
 
 const useDoctorLogout = () => {
     const router = useRouter();
     const { setIsLogin } = useGlobalDoctorLogin();
     const handleClickLogout = async () => {
-        await fetch(`${API_URL}/doctor/logout`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: 'include'
-        });
+        try {
+            await trpcClient.doctor.logout.mutate();
+        } catch {
+            // 移植前も戻り値を読まず常にログイン画面へ戻していた。その挙動を保つ。
+        }
         setIsLogin(false);
         router.push('/doctor/login');
     }
