@@ -5,9 +5,13 @@ import { router, protectedProcedure } from "../trpc/init.js";
 import { derivePatientInitialPassword } from "../domain/patientPassword.js";
 import { createPatient, findAllPatients, findPatientById, updatePatient } from "../repository/patients.js";
 
-// 移植前の doctor/patients.ts にあった zodEnumFromObjKeys をそのまま移した。
-export const zodEnumFromObjKeys = <K extends string>(
-    obj: Record<K, any>,
+// sexList のキーから zod の enum を組み立てる。値は参照せずキーだけを使うため
+// unknown で受ける。@repo/schema に置かないのは、schema パッケージを zod に
+// 依存させないため。domain/ に置かないのは、業務ルールではなく zod の
+// 組み立てヘルパーであり ADR 0003 決定 2 の「domain は純粋な業務ロジック」に
+// あたらないため。利用は下の basePatientSchemaObject 1 箇所のみなので同居させる。
+const zodEnumFromObjKeys = <K extends string>(
+    obj: Record<K, unknown>,
 ): z.ZodEnum<[K, ...K[]]> => {
     const [firstKey, ...otherKeys] = Object.keys(obj) as K[];
     if (typeof firstKey !== "string") throw new Error("key is not string");
