@@ -25,19 +25,19 @@
   "dependencies": {
     "@hono/node-server": "2.1.1",
     "@hono/trpc-server": "0.4.2",
+    "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/schema": "workspace:*",
     "@trpc/server": "11.18.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "hono": "4.13.5",
-    "jsonwebtoken": "^9.0.2",
     "superjson": "2.2.6",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
-    "@types/jsonwebtoken": "^9.0.7",
+    "jose": "6.2.10",
     "nodemon": "^3.1.6",
     "tsx": "^4.19.1",
     "vitest": "4.1.11"

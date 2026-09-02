@@ -15,6 +15,9 @@ export default defineConfig({
             // 初回クエリで初めて接続する。残るテストは認可や CSRF で先に止まり
             // クエリまで到達しないため、この値で実際に接続することはない。
             DATABASE_URL: "postgresql://unused:unused@localhost:5432/unused",
+            // @repo/auth も未設定だと読み込み時点で throw する（ADR 0004 決定 3）。
+            // 署名と検証の双方がこの同じ値を使うだけなので、実際の秘密鍵である必要はない。
+            JWT_SECRET_KEY: "test-only-secret-key-not-used-in-any-environment",
         },
     },
 });
