@@ -70,14 +70,6 @@ model medical_categories {
   medical_records   medical_records @relation(fields: [medical_record_id], references: [id], onDelete: Cascade)
 }
 
-model session {
-  sid    String   @id @db.VarChar
-  sess   Json     @db.Json
-  expire DateTime @db.Timestamp(6)
-
-  @@index([expire], map: "IDX_session_expire")
-}
-
 enum Sex {
   no_answer
   man
