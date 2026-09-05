@@ -132,7 +132,7 @@ export const patientsRouter = router({
                     birth,
                     updated_at,
                 });
-                return await updatePatient(id, validatedData);
+                return getPatientSchema.parse(await updatePatient(id, validatedData));
             } catch {
                 throw new TRPCError({
                     code: "BAD_REQUEST",
@@ -176,7 +176,9 @@ export const patientsRouter = router({
                     birth,
                     password,
                 });
-                return await createPatient(validatedData);
+                // 未 parse で返すと password と created_at / updated_at まで
+                // クライアントへ渡る（ADR 0005 決定 6）。
+                return getPatientSchema.parse(await createPatient(validatedData));
             } catch {
                 throw new TRPCError({
                     code: "BAD_REQUEST",

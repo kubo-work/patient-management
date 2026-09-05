@@ -5,11 +5,13 @@ import { prisma, Prisma } from "@repo/db";
 // （PrismaPromise を含む推論結果を .d.ts に書き出せない）で
 // ビルドが失敗するため。Prisma 7 の生成クライアント構造に起因する制約で、
 // クエリの内容自体は移植前の doctor/doctors.ts と変えていない。
+// password はここに含めない。ログイン照合に必要なハッシュは
+// repository/authDoctors.ts の findDoctorByEmail だけが select する
+// （ADR 0005 決定 6）。
 const doctorSelect = {
     id: true,
     name: true,
     email: true,
-    password: true,
 } satisfies Prisma.doctorsSelect;
 
 // 医師一覧を取得する。移植前の doctor/doctors.ts の GET / のクエリをそのまま移した。
@@ -32,23 +34,27 @@ export const findDoctorById = (
         where: { id: doctorId },
     });
 
-// 医師データを更新する。移植前の doctor/doctors.ts の PUT /:doctor_id の
-// クエリをそのまま移した。select を指定していないため戻り値は
-// Prisma.doctorsGetPayload<{}>（全カラム）になる。
+// 医師データを更新する。移植前は select 未指定で全カラム（password と
+// created_at / updated_at を含む）を返していたが、select を指定して返す範囲を
+// doctorSelect に揃えた（ADR 0005 決定 6）。
+//
+// password が undefined の場合、Prisma はそのカラムを更新しない。これが
+// 「パスワードを変更しない更新」の実現手段である（ADR 0005 決定 4）。
 export const updateDoctor = (
     doctorId: number,
-    data: { name: string; email: string; password: string; updated_at: Date }
-): Prisma.PrismaPromise<Prisma.doctorsGetPayload<{}>> =>
+    data: { name: string; email: string; password?: string; updated_at: Date }
+): Prisma.PrismaPromise<Prisma.doctorsGetPayload<{ select: typeof doctorSelect }>> =>
     prisma.doctors.update({
         where: { id: doctorId },
         data,
+        select: doctorSelect,
     });
 
-// 医師データを新規作成する。移植前の doctor/doctors.ts の POST / の
-// クエリをそのまま移した。select を指定していないため戻り値は
-// Prisma.doctorsGetPayload<{}>（全カラム）になる。
+// 医師データを新規作成する。update と同じ理由で select を指定し、
+// 返す範囲を doctorSelect に揃えている（ADR 0005 決定 6）。
 export const createDoctor = (data: {
     name: string;
     email: string;
     password: string;
-}): Prisma.PrismaPromise<Prisma.doctorsGetPayload<{}>> => prisma.doctors.create({ data });
+}): Prisma.PrismaPromise<Prisma.doctorsGetPayload<{ select: typeof doctorSelect }>> =>
+    prisma.doctors.create({ data, select: doctorSelect });

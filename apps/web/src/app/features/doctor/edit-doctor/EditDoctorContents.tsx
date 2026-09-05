@@ -70,13 +70,15 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
               align={{ base: "stretch", sm: "center" }}
               direction={{ base: "column", sm: "row" }}
             >
-              <label htmlFor="name" className={styles.label}>
-                パスワード<span style={{ color: "red" }}>*</span>
+              <label htmlFor="password" className={styles.label}>
+                パスワード{!id && <span style={{ color: "red" }}>*</span>}
               </label>
               <PasswordInput
                 id="password"
-                placeholder="パスワードを入力してください。"
-                required
+                placeholder={
+                  id ? "変更する場合のみ入力してください。" : "パスワードを入力してください。"
+                }
+                required={!id}
                 className={styles.input}
                 value={form.values.password}
                 {...form.getInputProps("password")}
