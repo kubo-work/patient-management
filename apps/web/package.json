@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "bun run --filter @repo/schema build && bun run --filter @repo/db build && bun run --filter @repo/api build && next build",
+    "build": "bun run --filter @repo/schema build && bun run --filter @repo/auth build && bun run --filter @repo/db build && bun run --filter @repo/api build && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
@@ -19,6 +19,7 @@
     "@mantine/hooks": "^7.17.2",
     "@mantine/notifications": "^7.17.2",
     "@repo/api": "workspace:*",
+    "@repo/auth": "workspace:*",
     "@repo/schema": "workspace:*",
     "@tabler/icons-react": "^3.16.0",
     "@trpc/client": "11.18.0",

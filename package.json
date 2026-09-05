@@ -12,17 +12,18 @@
   ],
   "scripts": {
     "postinstall": "prisma generate --config packages/db/prisma.config.ts",
-    "build": "bun run build:schema && bun run build:db && bun run build:api && bun run build:web",
+    "build": "bun run build:schema && bun run build:auth && bun run build:db && bun run build:api && bun run build:web",
     "build:schema": "bun run --filter @repo/schema build",
+    "build:auth": "bun run --filter @repo/auth build",
     "build:db": "bun run --filter @repo/db build",
     "build:api": "bun run --filter @repo/api build",
     "build:web": "bun run --filter web build",
-    "dev": "bun run build:schema && bun run build:db && bun run --filter '*' --parallel dev",
+    "dev": "bun run build:schema && bun run build:auth && bun run build:db && bun run --filter '*' --parallel dev",
     "dev:api": "bun run --filter @repo/api dev",
     "dev:web": "bun run --filter web dev",
-    "typecheck": "bun run build:schema && bun run build:db && bun run build:api && bun run --filter '*' typecheck",
+    "typecheck": "bun run build:schema && bun run build:auth && bun run build:db && bun run build:api && bun run --filter '*' typecheck",
     "lint": "bun run --filter web lint",
-    "test": "bun run build:schema && bun run build:db && bun run --filter @repo/api test"
+    "test": "bun run build:schema && bun run build:auth && bun run build:db && bun run --filter @repo/auth test && bun run --filter @repo/api test"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

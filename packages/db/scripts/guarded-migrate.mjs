@@ -67,8 +67,16 @@ if (isExplicitlyAllowed && remoteConnections.length > 0) {
 }
 
 // このスクリプトは packages/db を作業ディレクトリとして実行される。
-const result = spawnSync("prisma", ["migrate", subcommand, "--config", "prisma.config.ts"], {
-    stdio: "inherit",
-    shell: true,
-});
+// サブコマンド以降の引数（--name 等）はそのまま prisma へ渡す。渡せないと
+// migrate dev がマイグレーション名を対話で尋ね、自動実行が止まる。
+const forwardedArguments = process.argv.slice(3);
+
+const result = spawnSync(
+    "prisma",
+    ["migrate", subcommand, "--config", "prisma.config.ts", ...forwardedArguments],
+    {
+        stdio: "inherit",
+        shell: true,
+    }
+);
 process.exit(result.status ?? 1);

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { setCookie, deleteCookie } from "hono/cookie";
 import { doctorCookieName } from "@repo/schema";
 import { publicProcedure } from "../trpc/init.js";
-import { signDoctorToken } from "../auth/token.js";
+import { signDoctorToken } from "@repo/auth";
 import { doctorCookieAttributes, DOCTOR_COOKIE_MAX_AGE_SECONDS } from "../doctor_cookie.js";
 import { findDoctorByCredentials } from "../repository/authDoctors.js";
 
@@ -42,13 +42,7 @@ export const loginProcedure = publicProcedure
                 });
             }
 
-            const token = signDoctorToken(doctor.id, email);
-            if (!token) {
-                throw new TRPCError({
-                    code: "UNAUTHORIZED",
-                    message: "トークンの設定が無効です。",
-                });
-            }
+            const token = await signDoctorToken(doctor.id, email);
 
             setCookie(ctx.honoContext, doctorCookieName, token, {
                 ...doctorCookieAttributes,

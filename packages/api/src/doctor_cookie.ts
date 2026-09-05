@@ -1,8 +1,7 @@
 // 医師のログイン Cookie の属性を 1 箇所に集約する。
-// 発行と削除の両方を行う router/auth.ts（login / logout）と、
-// 削除のみを行う trpc/init.ts（protectedProcedure の未認可時の削除）の
-// 2 箇所が参照する。発行時と削除時で属性が食い違うと、ブラウザは別の
-// Cookie とみなし削除が効かなくなるため、同じ定義を共有することで防ぐ。
+// 発行と削除の両方を行う router/auth.ts（login / logout）が参照する。
+// 発行時と削除時で属性が食い違うと、ブラウザは別の Cookie とみなし削除が
+// 効かなくなるため、同じ定義を共有することで防ぐ。
 
 const isProduction = process.env.NODE_ENV === "production";
 
