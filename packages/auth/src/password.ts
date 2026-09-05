@@ -23,7 +23,12 @@ export const verifyPassword = async (
     plainPassword: string
 ): Promise<boolean> => {
     try {
-        return await verify(storedPasswordHash, plainPassword, argon2Options);
+        // argon2Options は渡さない。検証時のコストパラメータは PHC 文字列
+        // （$argon2id$v=19$m=...,t=...,p=...$salt$hash）に埋まっており、
+        // 引数で渡しても無視される。渡すと「argon2Options を変えると既存ハッシュの
+        // 検証が壊れる」と読めてしまうが、実際は逆で、パラメータを引き上げても
+        // 既存ハッシュはそれ自身に書かれた値で検証を通る。それが PHC 形式の利点である。
+        return await verify(storedPasswordHash, plainPassword);
     } catch {
         return false;
     }

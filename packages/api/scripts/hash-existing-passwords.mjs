@@ -70,16 +70,29 @@ const hashPlaintextRows = async (label, findMany, updateById) => {
     console.log(`${label}: ハッシュ化 ${updatedCount} 件 / 変換済みのため据え置き ${skippedCount} 件`);
 };
 
-await hashPlaintextRows(
-    "doctors",
-    () => prisma.doctors.findMany({ select: { id: true, password: true } }),
-    (id, password) => prisma.doctors.update({ where: { id }, data: { password } })
-);
+// トランザクションは張らない。途中で失敗すると平文とハッシュが混在した状態で
+// 止まるが、冪等なので原因を取り除いてそのまま再実行すれば残りが処理される。
+// 全行を 1 トランザクションに入れると、行数が増えたときに長時間ロックを保持する。
+try {
+    await hashPlaintextRows(
+        "doctors",
+        () => prisma.doctors.findMany({ select: { id: true, password: true } }),
+        (id, password) => prisma.doctors.update({ where: { id }, data: { password } })
+    );
 
-await hashPlaintextRows(
-    "patients",
-    () => prisma.patients.findMany({ select: { id: true, password: true } }),
-    (id, password) => prisma.patients.update({ where: { id }, data: { password } })
-);
-
-await prisma.$disconnect();
+    await hashPlaintextRows(
+        "patients",
+        () => prisma.patients.findMany({ select: { id: true, password: true } }),
+        (id, password) => prisma.patients.update({ where: { id }, data: { password } })
+    );
+} catch (error) {
+    console.error("");
+    console.error("ハッシュ化の途中で失敗しました:", error instanceof Error ? error.message : error);
+    console.error("このスクリプトは冪等です。原因を取り除いたうえで、そのまま再実行してください。");
+    console.error("既にハッシュ化された行は再度ハッシュ化されません。");
+    console.error("");
+    // process.exit() だと finally に到達せず接続が残るため exitCode を設定する。
+    process.exitCode = 1;
+} finally {
+    await prisma.$disconnect();
+}

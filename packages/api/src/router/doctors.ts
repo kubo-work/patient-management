@@ -87,7 +87,13 @@ export const doctorsRouter = router({
                 // 渡されなければパスワードを変更しない（ADR 0005 決定 4）。
                 // パスワードを返さなくなったため、フォームが現在値を送り返す
                 // 従来の形は成立しない。
-                password: z.string().optional(),
+                //
+                // min(1) を付けて空文字を弾く。「変更しない」はクライアント側では
+                // 空文字、サーバ側では undefined で表されており、その変換を
+                // useDoctorEdit.ts が担っている。変換が壊れて空文字が届いた場合に
+                // ハッシュ化した空文字で上書きされると、そのアカウントは
+                // ログインできなくなる。型では防げないのでここで拒否する。
+                password: z.string().min(1).optional(),
             })
         )
         .mutation(async ({ input }) => {
@@ -139,7 +145,9 @@ export const doctorsRouter = router({
             z.object({
                 name: z.string(),
                 email: z.string(),
-                password: z.string(),
+                // update と揃えて空文字を弾く。片方だけ厳しいと、どちらが
+                // 正しい契約なのかが読み取れなくなる。
+                password: z.string().min(1),
             })
         )
         .mutation(async ({ input }) => {
