@@ -19,6 +19,7 @@
     "start:aws": "prisma migrate deploy --config ../db/prisma.config.ts && node build/index.js",
     "dev": "nodemon",
     "typecheck": "tsc -p tsconfig.test.json",
+    "hash-passwords": "node --env-file=.env scripts/hash-existing-passwords.mjs",
     "test": "node --env-file=./.env.test ../../node_modules/.bin/vitest run",
     "test-debug": "node --env-file=./.env.test ../../node_modules/.bin/vitest run --reporter=verbose"
   },
