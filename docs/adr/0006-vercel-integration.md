@@ -187,6 +187,19 @@ route handler は `apps/web` に置かれ、Hono の `app` を**値として** i
 - **`next.config.mjs` の `headers()` による CORS ヘッダを削除する。** `api` サブドメイン側で Hono が CORS を返すため、Next 側の設定は重複であり、片方だけ更新される事故の元になる
 - **`@repo/api` の `types` エントリが変わる。** `apps/web/src/lib/trpc.ts` の `import type { AppRouter } from "@repo/api"` は、`app.ts` からの型再 export により従来どおり解決する
 - **単独起動時のパスが増える。** 決定 4 の二重マウントにより、`node build/index.js` で起動したサーバは `/trpc/*` と `/api/trpc/*` の両方に応答する。実測後にどちらかへ絞る
+- **`apps/web` のビルドに、これまで API 側だけが必要としていた環境変数が要るようになる。** 実装時に判明した帰結であり、設計時には想定していなかった。
+
+  `next build` は route handler のモジュールをビルド時に評価する（page data の収集のため）。route handler は `@repo/api` → `@repo/db` を読み込むため、`@repo/db` の `DATABASE_URL`、`@repo/auth` の `JWT_SECRET_KEY`、`app.ts` の `CLIENT_URL` という 3 つの読み込み時 throw（ADR 0004 決定 3 の設計）がすべてビルド中に発火する。
+
+  ```
+  Failed to collect page data for /api/[[...route]]
+  [cause]: Error: DATABASE_URL が設定されていません。
+  ```
+
+  **DB へ接続可能である必要はない。** `@repo/db` は読み込み時に `PrismaPg` のプールを生成するだけで接続はせず、初回クエリで初めて接続する（`packages/api/vitest.config.ts` に同じ確認が記録されている）。URL として解釈できればビルドは通る。
+
+  検証を遅延させてビルド時の要求を消す案も検討したが、ADR 0004 決定 3 を覆すことになるため採らなかった。統合後の `apps/web` は API のホストそのものであり、`DATABASE_URL` を必要とすることは不自然ではない。
+
 - **`api` サブドメインの DNS 向き先を Render から Vercel へ変更する必要がある。** これはコードの変更では完結しない運用作業である
 - **本 ADR のコードだけでは #287 は閉じない。** 完了条件の 3 つ（プレビュー環境で全機能が動作する / Render を停止してもアプリが動作する / 初回アクセスが 1 秒未満）はいずれも実環境での確認を要求する
 - **本番切り替えは #313 の決着後に行う。** 切り替え時に本番データを一括ハッシュ化する（ADR 0005 決定 2・7）ため、パスワード復旧経路が未定のまま実行すると #313 が警告している状態を作る
