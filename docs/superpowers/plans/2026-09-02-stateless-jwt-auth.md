@@ -51,7 +51,6 @@ git commit -m "$(cat <<'EOF'
 docs: ADR 0004 としてステートレス認証の設計を記録する
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -368,7 +367,6 @@ git commit -m "$(cat <<'EOF'
 feat: jose ベースのトークン検証を @repo/auth として切り出す
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -597,7 +595,6 @@ git commit -m "$(cat <<'EOF'
 refactor: API のトークン検証を @repo/auth へ寄せ jsonwebtoken を外す
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -713,7 +710,6 @@ git commit -m "$(cat <<'EOF'
 fix: proxy で JWT を検証し期限切れ Cookie のデッドロックを解消する
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -808,7 +804,6 @@ feat: Prisma から session モデルを削除しマイグレーションを追�
 本番（Neon）への適用は Render 撤収後に #293 で行う。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -860,9 +855,7 @@ PR の本文には次を含める。
 - 末尾に次の 2 行
 
 ```
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 ```
 
 ---

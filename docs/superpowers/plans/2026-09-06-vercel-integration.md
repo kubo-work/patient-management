@@ -54,7 +54,6 @@ git commit -m "$(cat <<'EOF'
 docs: ADR 0006 として Vercel 統合の設計を記録する
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -237,7 +236,6 @@ build/app.js へ付け替えた。従来は app を export しておらず、Iss
 示していた import { app } from "@repo/api" は動かなかった。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -309,7 +307,6 @@ feat: Hono アプリを Next.js の route handler としてマウントする
 packages/api と Next.js の唯一の接点。業務ロジックは置かない。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -420,7 +417,6 @@ DEPLOY_TARGET=aws は route handler と proxy が output: "export" で
 Hono が返すため、Next 側の設定は重複であり片方だけ更新される事故の元になる。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -521,7 +517,6 @@ onrender.com にあった時代には必要だったが、api サブドメイン
 domain は www 側の proxy.ts が Cookie を読むため維持する。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -585,9 +580,7 @@ PR の本文には次を含める。
 - 末尾に次の 2 行
 
 ```
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 ```
 
 ---
