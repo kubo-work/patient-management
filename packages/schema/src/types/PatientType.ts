@@ -8,5 +8,4 @@ export type PatientType = {
   address: string;
   email: string;
   birth: Date;
-  password?: string
 }

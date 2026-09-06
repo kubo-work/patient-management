@@ -5,7 +5,8 @@ import { doctorCookieName } from "@repo/schema";
 import { publicProcedure } from "../trpc/init.js";
 import { signDoctorToken } from "@repo/auth";
 import { doctorCookieAttributes, DOCTOR_COOKIE_MAX_AGE_SECONDS } from "../doctor_cookie.js";
-import { findDoctorByCredentials } from "../repository/authDoctors.js";
+import { findDoctorByEmail } from "../repository/authDoctors.js";
+import { verifyDoctorPassword } from "../domain/doctorLogin.js";
 
 // Cookie を発行・削除するため publicProcedure（認可の対象外）。
 // protectedProcedure にすると「ログインするために先にログインが必要」になる。
@@ -34,8 +35,15 @@ export const loginProcedure = publicProcedure
                 });
             }
 
-            const doctor = await findDoctorByCredentials(email, password);
-            if (!doctor) {
+            // 医師が見つからない場合も verifyDoctorPassword に null を渡して
+            // 検証を走らせる。早期 return すると応答時間でアカウントの存在が
+            // 判別できるようになる（ADR 0005 決定 5）。
+            const doctor = await findDoctorByEmail(email);
+            const isPasswordValid = await verifyDoctorPassword(
+                doctor?.password ?? null,
+                password
+            );
+            if (!doctor || !isPasswordValid) {
                 throw new TRPCError({
                     code: "UNAUTHORIZED",
                     message: "無効なメールアドレスまたはパスワードです。",
@@ -54,7 +62,14 @@ export const loginProcedure = publicProcedure
             if (error instanceof TRPCError) {
                 throw error;
             }
-            throw new TRPCError({ code: "BAD_REQUEST", message: "ログインに失敗しました。" });
+            // 想定外の失敗（DB 障害など）は 500 にする。業務ルールのエラーは
+            // 上で個別の TRPCError として投げており、ここには到達しない。
+            // 移植前は両者が同じ 400 に畳まれ、原因を切り分けられなかった
+            // （ADR 0005 決定 8）。
+            throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "ログインに失敗しました。",
+            });
         }
     });
 

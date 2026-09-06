@@ -30,7 +30,13 @@ const useDoctorEdit = (id: number | null) => {
             name: (value) => value === "" && "お名前を入力してください。",
             email: (value) =>
                 /^\S+@\S+$/.test(value) ? null : "メールアドレスを入力してください。",
-            password: (value) => value === "" && "パスワードを入力してください。",
+            // 更新時のパスワードは任意。空欄なら変更しない（ADR 0005 決定 4）。
+            password: (value) => {
+                if (id) {
+                    return null;
+                }
+                return value === "" && "パスワードを入力してください。";
+            },
         },
     });
 
@@ -44,10 +50,11 @@ const useDoctorEdit = (id: number | null) => {
 
     useEffect(() => {
         if (doctorData) {
+            // password はサーバから返らなくなった（ADR 0005 決定 6）。
+            // 更新時は空欄のままにし、入力があったときだけ送る。
             form.setValues({
                 name: doctorData.name,
                 email: doctorData.email,
-                password: doctorData.password,
             })
         }
     }, [doctorData])
@@ -58,7 +65,14 @@ const useDoctorEdit = (id: number | null) => {
 
         try {
             if (id) {
-                await trpcClient.doctor.doctors.update.mutate({ doctorId: id, name, email, password });
+                await trpcClient.doctor.doctors.update.mutate({
+                    doctorId: id,
+                    name,
+                    email,
+                    // 空欄はパスワードを変更しないという意味なので送らない。
+                    // 空文字を送るとサーバがそれをハッシュ化して上書きしてしまう。
+                    ...(password !== "" && { password }),
+                });
             } else {
                 await trpcClient.doctor.doctors.create.mutate({ name, email, password });
             }

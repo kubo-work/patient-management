@@ -10,6 +10,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./password": {
+      "types": "./dist/password.d.ts",
+      "default": "./dist/password.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -22,6 +26,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.2.0",
     "jose": "6.2.10"
   },
   "devDependencies": {

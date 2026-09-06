@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { sexList } from "@repo/schema";
+import { hashPassword } from "@repo/auth/password";
 import { router, protectedProcedure } from "../trpc/init.js";
 import { derivePatientInitialPassword } from "../domain/patientPassword.js";
 import { createPatient, findAllPatients, findPatientById, updatePatient } from "../repository/patients.js";
@@ -131,7 +132,7 @@ export const patientsRouter = router({
                     birth,
                     updated_at,
                 });
-                return await updatePatient(id, validatedData);
+                return getPatientSchema.parse(await updatePatient(id, validatedData));
             } catch {
                 throw new TRPCError({
                     code: "BAD_REQUEST",
@@ -156,7 +157,14 @@ export const patientsRouter = router({
         )
         .mutation(async ({ input }) => {
             const { name, sex, tel, email, address, birth } = input;
-            const password = derivePatientInitialPassword(birth);
+            // 導出ロジック（生年月日から YYYYMMDD）は変えず、保存時にハッシュを通す
+            // （ADR 0005 決定 3）。患者のログイン経路は存在しないため照合は行われないが、
+            // DB に平文の資格情報を残さないという不変条件をここで満たす。
+            //
+            // なおハッシュ化しても、値そのものが生年月日由来で推測可能である限界は
+            // 残る。導出ロジックの見直しは患者向けの初期パスワード伝達フローを
+            // 必要とするため別 Issue とした。
+            const password = await hashPassword(derivePatientInitialPassword(birth));
 
             try {
                 const validatedData: CreatePatientSchema = createPatientSchema.parse({
@@ -168,7 +176,9 @@ export const patientsRouter = router({
                     birth,
                     password,
                 });
-                return await createPatient(validatedData);
+                // 未 parse で返すと password と created_at / updated_at まで
+                // クライアントへ渡る（ADR 0005 決定 6）。
+                return getPatientSchema.parse(await createPatient(validatedData));
             } catch {
                 throw new TRPCError({
                     code: "BAD_REQUEST",
