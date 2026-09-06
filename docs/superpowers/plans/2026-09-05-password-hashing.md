@@ -182,7 +182,6 @@ git commit -m "$(cat <<'EOF'
 feat: argon2id によるパスワードのハッシュ化を @repo/auth へ追加する
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -415,7 +414,6 @@ feat: ログイン照合を argon2 のハッシュ検証へ切り替える
 移行スクリプトの適用（Task 4）で復旧する。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -465,7 +463,6 @@ git commit -m "$(cat <<'EOF'
 feat: 患者の初期パスワードをハッシュ化して保存する
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -679,7 +676,6 @@ ALLOW_REMOTE_PASSWORD_HASHING=1 の明示を要求する。
 本番への適用は #287 の切り替えと同時に行う。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -1019,7 +1015,6 @@ DoctorType から password を外したことで、フロントの参照は型�
 検出される。更新時にパスワードを送らなければ変更しない。
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -1043,7 +1038,6 @@ git commit -m "$(cat <<'EOF'
 docs: ADR 0005 としてパスワードのハッシュ化の設計を記録する
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 EOF
 )"
 ```
@@ -1102,9 +1096,7 @@ PR の本文には次を含める。
 - 末尾に次の 2 行
 
 ```
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-https://claude.ai/code/session_01Pzpc442muwnNiLfmFKgDvZ
 ```
 
 ---
