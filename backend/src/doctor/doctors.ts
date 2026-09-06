@@ -77,7 +77,7 @@ router.get("/:doctor_id", verifyAuthToken, async (request: Request, response: Re
 type PutRequestDoctorType = Omit<DoctorType, "id">
 
 // 医者データ更新
-router.put("/:doctor_id", async (request: Request, response: Response) => {
+router.put("/:doctor_id", verifyAuthToken, async (request: Request, response: Response) => {
     try {
         const doctor_id = Number(request.params.doctor_id)
         const { name, email, password }: PutRequestDoctorType = request.body;
