@@ -66,9 +66,16 @@ export const loginProcedure = publicProcedure
             // 上で個別の TRPCError として投げており、ここには到達しない。
             // 移植前は両者が同じ 400 に畳まれ、原因を切り分けられなかった
             // （ADR 0005 決定 8）。
+            //
+            // 元の例外をログへ残し cause にも入れる。これが無いと、障害時に
+            // 「ログインに失敗しました。」という文字列しか手掛かりが無くなる。
+            // クライアントへ返すメッセージとステータスは変えていない（cause は
+            // 本番モードではレスポンスに含まれない）。
+            console.error("ログイン処理で想定外のエラーが発生しました:", error);
             throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
                 message: "ログインに失敗しました。",
+                cause: error,
             });
         }
     });
