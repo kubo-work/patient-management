@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "./build/index.js",
-  "types": "./build/trpc/appRouter.d.ts",
+  "main": "./build/app.js",
+  "types": "./build/app.d.ts",
   "exports": {
     ".": {
-      "types": "./build/trpc/appRouter.d.ts",
-      "default": "./build/index.js"
+      "types": "./build/app.d.ts",
+      "default": "./build/app.js"
     },
     "./package.json": "./package.json"
   },

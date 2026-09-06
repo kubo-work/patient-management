@@ -10,14 +10,23 @@ const isProduction = process.env.NODE_ENV === "production";
 // 単位を名前に含めて次に触る人が気づけるようにする。
 export const DOCTOR_COOKIE_MAX_AGE_SECONDS = 60 * 60;
 
+// SameSite はオリジンではなくサイト（eTLD+1）で判定される。フロントの www と
+// API の api は同じ eTLD+1 に属するため same-site であり、Lax でも Cookie は
+// 送信される（ADR 0006 決定 5）。
+//
+// 移行前は API が onrender.com にあり cross-site だったため None 以外に
+// 選択肢が無かった。None はクロスサイト送信を許す最も弱い設定で、CSRF 耐性を
+// ブラウザ側の既定防御に頼れなくなる。api サブドメインへ移った時点で不要になる。
+//
 // 三項演算子の結果は注釈が無いと string へ広がり、Hono の CookieOptions に
 // 代入できない。as を増やさずに literal を保つため変数の型で受ける。
-const doctorCookieSameSite: "None" | "Strict" = isProduction ? "None" : "Strict";
+const doctorCookieSameSite: "Lax" | "Strict" = isProduction ? "Lax" : "Strict";
 
 // path: Express は "/" を自動補完したが Hono は補完しない。省略すると Path が
 //       /doctor になり、他のパスへ Cookie が送られなくなる。
-// domain: 本番はフロントと API のドメインが異なるため必要。削除時にも同じ値を
-//       渡さなければ Cookie は消えない。
+// domain: www 側の proxy.ts が Cookie を読んで画面遷移を判定するため必要
+//       （ADR 0004 決定 4）。api ホスト限定の host-only Cookie では読めない。
+//       削除時にも同じ値を渡さなければ Cookie は消えない。
 export const doctorCookieAttributes = {
     httpOnly: true,
     secure: isProduction,
