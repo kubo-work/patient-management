@@ -20,6 +20,7 @@
     "dev": "nodemon",
     "typecheck": "tsc -p tsconfig.test.json",
     "hash-passwords": "node --env-file=.env scripts/hash-existing-passwords.mjs",
+    "reset-password": "node --env-file=.env scripts/reset-doctor-password.mjs",
     "test": "node --env-file=./.env.test ../../node_modules/.bin/vitest run",
     "test-debug": "node --env-file=./.env.test ../../node_modules/.bin/vitest run --reporter=verbose"
   },
