@@ -12,7 +12,7 @@ Epic #279 の主訴は Render 無料プランのアイドルスリープであ�
 
 | | ホスト | ドメイン |
 |---|---|---|
-| フロント | Vercel | `www.patient-management-kubo-works-projects.com` |
+| フロント | Vercel | `patient-management-kubo-works-projects.com` |
 | API | Render | `api.patient-management-kubo-works-projects.com`（Render のサービスへ割り当てたカスタムドメイン） |
 | DB | Neon | — |
 
@@ -56,6 +56,8 @@ serve({ fetch: app.fetch, port });
 ### 1. Vercel プロジェクトは 1 つ、ドメインを 2 つ割り当てる
 
 `www` と `api` の両方を同一の Next.js プロジェクトへ向け、`api` ホストからのリクエストを `next.config.mjs` の rewrite で `/api/*` へ流す。
+
+> **追記（2026-09-20）**: 本 ADR 中の `www` は、当時フロントを配信していたサブドメインを指す。その後 Vercel 側の登録が外れて証明書が失効したため、フロントは apex （`patient-management-kubo-works-projects.com`）のみで運用する構成へ改めた。以下の記述は決定当時のまま残してあるが、`www` を apex と読み替えれば内容は変わらない（決定 5 を参照）。
 
 ```
 api.patient-management-...com/trpc/*  →（rewrite）→  /api/trpc/*  →  route handler  →  Hono
@@ -131,9 +133,11 @@ export const app = new Hono().route("/", apiRoutes).route("/api", apiRoutes);
 
 ### 5. Cookie の `SameSite` を `None` から `Lax` へ変える
 
-`SameSite` はオリジンではなく**サイト（eTLD+1）**で判定される。`www.patient-management-...com` と `api.patient-management-...com` は eTLD+1 が同一のため **same-site** であり、`Lax` でも Cookie は送信される。
+`SameSite` はオリジンではなく**サイト（eTLD+1）**で判定される。フロントの `patient-management-...com` と API の `api.patient-management-...com` は eTLD+1 が同一のため **same-site** であり、`Lax` でも Cookie は送信される。
 
-`domain`（`SERVER_DOMAIN`）は維持する。`www` 側の `proxy.ts` が Cookie を読んで画面遷移を判定するため（ADR 0004 決定 4）、`api` ホスト限定の host-only Cookie では読めない。
+（当初はフロントを `www` サブドメインで運用していたが、Vercel 側の登録が外れて証明書が失効したため、apex のみを使う構成へ改めた。apex と `api.` も eTLD+1 が同一なので、本決定の前提は変わらない。）
+
+`domain`（`SERVER_DOMAIN`）は維持する。フロント側の `proxy.ts` が Cookie を読んで画面遷移を判定するため（ADR 0004 決定 4）、`api` ホスト限定の host-only Cookie では読めない。
 
 **これは本 ADR で最も実質的なセキュリティ上の改善である。** `None` はクロスサイト送信を許す最も弱い設定であり、CSRF 耐性をブラウザ側の既定防御に頼れなくなる。Render（`onrender.com`）が呼び出し先だった時代には cross-site だったため `None` 以外に選択肢がなかったが、`api` サブドメインへ移った時点で不要になっていた。
 

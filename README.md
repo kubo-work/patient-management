@@ -46,7 +46,7 @@ docs/adr/     設計判断の記録
 - データベース : Neon（PostgreSQL 18 / AWS us-east-2）
 
 ## ログインURL
-https://www.patient-management-kubo-works-projects.com/doctor/login
+https://patient-management-kubo-works-projects.com/doctor/login
 
 ## デモアカウント
 ログインID: test_doctor@example.com  
