@@ -24,7 +24,8 @@
     - Vitest
     - Faker
 - インフラ・CI/CD
-    - GitHub Actions（型チェック。デプロイは手動実行）
+    - GitHub Actions（型チェック）
+    - Vercel（main への push で自動デプロイ）
 
 ### 構成
 
@@ -42,20 +43,34 @@ docs/adr/     設計判断の記録
 
 ## デプロイ先
 - フロントエンド : Vercel
-- バックエンド : Render
+- バックエンド : Vercel（Next.js の Route Handler に Hono をマウント。`api` サブドメインで配信）
 - データベース : Neon（PostgreSQL 18 / AWS us-east-2）
 
+フロントとバックエンドは同一の Vercel プロジェクトで動作します。`packages/api` は
+Next.js を一切 import しない独立パッケージのままで、接点は Route Handler の数行だけです。
+
 ## ログインURL
-https://www.patient-management-kubo-works-projects.com/doctor/login
+https://patient-management-kubo-works-projects.com/doctor/login
 
 ## デモアカウント
 ログインID: test_doctor@example.com  
 パスワード: test
 
 ## 注意点
-- renderが無料プランの関係で**レスポンスが50秒以上遅れる可能性があります。**
-- 現在、バックエンドを Render から Vercel へ統合する移行作業を進めています。移行が完了すると上記のレスポンス遅延は解消されます。設計の経緯は `docs/adr/` に記録しています。
-- `infra/`（Terraform）は ECS Fargate + ALB + RDS + CloudFront/S3 での稼働まで到達済みですが、現在は停止しています。Vercel への統合に伴い静的エクスポート構成が使えなくなったため、この構成の扱いは移行完了後に判断します。
+- `infra/`（Terraform）は ECS Fargate + ALB + RDS + CloudFront/S3 での稼働まで到達済みですが、現在は停止しています。Vercel への統合に伴い静的エクスポート構成が使えなくなったため、この構成の扱いは改めて判断します。
+
+## 設計判断の記録
+
+主要な技術選定とその理由は `docs/adr/` に ADR として残しています。
+
+| | 内容 |
+|---|---|
+| ADR 0001 | Prisma 7 のドライバアダプタに `@prisma/adapter-pg` を採用する |
+| ADR 0002 | HTTP レイヤを Express から Hono へ置き換える |
+| ADR 0003 | API を tRPC 化し domain / repository / router に分割する |
+| ADR 0004 | express-session を廃止し JWT + httpOnly Cookie でステートレス化する |
+| ADR 0005 | パスワードを argon2id でハッシュ化し、レスポンスから除去する |
+| ADR 0006 | API を Vercel へ統合し、api サブドメインを維持したまま Render を撤収する |
 
 ## 作成した機能
 - ログイン機能
