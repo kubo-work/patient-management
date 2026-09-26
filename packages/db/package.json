@@ -10,9 +10,9 @@
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     },
-    "./migrations": {
-      "types": "./dist/src/migrations.d.ts",
-      "default": "./dist/src/migrations.js"
+    "./testing": {
+      "types": "./dist/src/testing.d.ts",
+      "default": "./dist/src/testing.js"
     },
     "./package.json": "./package.json"
   },

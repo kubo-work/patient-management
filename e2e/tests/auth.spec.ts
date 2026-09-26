@@ -1,21 +1,14 @@
-import type { Page } from "@playwright/test";
 import { test, expect } from "../support/fixtures.ts";
+import { DOCTOR_PAGES } from "../support/doctorPages.ts";
+import { logInAs, logInAsSeededDoctor } from "../support/login.ts";
 import { SEEDED_DOCTOR } from "../support/testDatabase.ts";
-
-const logInAs = async (page: Page, credentials: { email: string; password: string }) => {
-    await page.goto("/doctor/login");
-    await page.getByLabel("メールアドレス").fill(credentials.email);
-    await page.getByLabel("パスワード").fill(credentials.password);
-    await page.getByRole("button", { name: "ログイン" }).click();
-};
 
 test.describe("ログイン", () => {
     test("正しいメールアドレスとパスワードでログインすると、患者一覧へ進み医師名が表示される", async ({
         page,
     }) => {
-        await logInAs(page, SEEDED_DOCTOR);
+        await logInAsSeededDoctor(page);
 
-        await expect(page).toHaveURL("/doctor/patients-list");
         await expect(page.getByText(`${SEEDED_DOCTOR.name} さん`)).toBeVisible();
     });
 
@@ -26,36 +19,34 @@ test.describe("ログイン", () => {
         await expect(
             page.getByRole("alert").filter({ hasText: "無効なメールアドレスまたはパスワードです。" })
         ).toBeVisible();
-        await expect(page).toHaveURL("/doctor/login");
+        await expect(page).toHaveURL(DOCTOR_PAGES.LOGIN);
     });
 });
 
 test.describe("未認証時のリダイレクト", () => {
     test("ログインせずに医師用の画面を開くと、ログイン画面へ戻される", async ({ page }) => {
-        await page.goto("/doctor/patients-list");
+        await page.goto(DOCTOR_PAGES.PATIENTS_LIST);
 
-        await expect(page).toHaveURL("/doctor/login");
+        await expect(page).toHaveURL(DOCTOR_PAGES.LOGIN);
     });
 
     test("ログイン済みでログイン画面を開くと、患者一覧へ進む", async ({ page }) => {
-        await logInAs(page, SEEDED_DOCTOR);
-        await expect(page).toHaveURL("/doctor/patients-list");
+        await logInAsSeededDoctor(page);
 
-        await page.goto("/doctor/login");
+        await page.goto(DOCTOR_PAGES.LOGIN);
 
-        await expect(page).toHaveURL("/doctor/patients-list");
+        await expect(page).toHaveURL(DOCTOR_PAGES.PATIENTS_LIST);
     });
 });
 
 test.describe("ログアウト", () => {
     test("ログアウトするとログイン画面へ戻り、医師用の画面は再び開けなくなる", async ({ page }) => {
-        await logInAs(page, SEEDED_DOCTOR);
-        await expect(page).toHaveURL("/doctor/patients-list");
+        await logInAsSeededDoctor(page);
 
         await page.getByRole("button", { name: "ログアウト" }).click();
 
-        await expect(page).toHaveURL("/doctor/login");
-        await page.goto("/doctor/patients-list");
-        await expect(page).toHaveURL("/doctor/login");
+        await expect(page).toHaveURL(DOCTOR_PAGES.LOGIN);
+        await page.goto(DOCTOR_PAGES.PATIENTS_LIST);
+        await expect(page).toHaveURL(DOCTOR_PAGES.LOGIN);
     });
 });

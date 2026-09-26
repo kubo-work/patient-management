@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { applyMigrations } from "@repo/db/migrations";
+import { applyMigrations } from "@repo/db/testing";
 import type { TestProject } from "vitest/node";
 
 // 結合テスト（api-integration project）の globalSetup。実行全体で 1 回だけ、

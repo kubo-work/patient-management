@@ -2,10 +2,11 @@ import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { applyMigrations } from "@repo/db/migrations";
+import { applyMigrations } from "@repo/db/testing";
 import {
     APP_ORIGIN,
     APP_PORT,
+    DATABASE_HOST,
     DATABASE_PORT,
     DATABASE_URL,
     JWT_SECRET_KEY,
@@ -20,6 +21,10 @@ import {
 // 型注釈以外の TypeScript 固有の構文（enum など）は使わない。
 
 const repositoryRoot = join(import.meta.dirname, "../..");
+
+// Next.js の node-postgres のプール（既定の最大 10）と、テスト側の初期化用の接続を合わせて受け付ける。
+// pglite-socket は上限を超えた接続を待たせずに拒否するため、余裕を持たせる。
+const DATABASE_MAX_CONNECTIONS = 20;
 
 // apps/web/.env の値（手元の DB や API の URL）が紛れ込まないよう、
 // アプリが読む環境変数はすべてここで上書きする。Next.js はプロセスの環境変数を .env より優先する。
@@ -39,13 +44,11 @@ const appEnvironment = {
 const database = await PGlite.create();
 await applyMigrations((sql) => database.exec(sql));
 
-// Next.js の node-postgres のプール（既定の最大 10）と、テスト側の初期化用の接続を合わせて受け付ける。
-// pglite-socket は上限を超えた接続を待たせずに拒否する。
 const databaseServer = new PGLiteSocketServer({
     db: database,
-    host: "127.0.0.1",
+    host: DATABASE_HOST,
     port: DATABASE_PORT,
-    maxConnections: 20,
+    maxConnections: DATABASE_MAX_CONNECTIONS,
 });
 await databaseServer.start();
 
