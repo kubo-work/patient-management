@@ -44,8 +44,8 @@ model medical_records {
   updated_at         DateTime             @default(now())
   delFlag            delFlag              @default(ACTIVE)
   medical_categories medical_categories[]
-  doctor             doctors              @relation(fields: [doctor_id], references: [id], onDelete: SetDefault)
-  patient            patients             @relation(fields: [patient_id], references: [id], onDelete: SetDefault)
+  doctor             doctors              @relation(fields: [doctor_id], references: [id], onDelete: Restrict)
+  patient            patients             @relation(fields: [patient_id], references: [id], onDelete: Restrict)
 }
 
 model categories {

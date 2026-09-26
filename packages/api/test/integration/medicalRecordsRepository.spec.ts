@@ -82,18 +82,18 @@ describe("createMedicalRecord", () => {
     });
 });
 
-// schema.prisma は medical_records の doctor / patient を onDelete: SetDefault としているが、
-// doctor_id / patient_id は NOT NULL かつ既定値を持たない。そのため SET DEFAULT は NULL を
-// 入れようとして NOT NULL 制約に違反し、削除は失敗する（事実上の RESTRICT）。
-// 現在 API に医師・患者の削除は無いが、この挙動を前提にした設計変更に気付けるよう固定する。
-describe("medical_records の外部キー（onDelete: SetDefault）", () => {
-    test("診療記録を持つ医師は削除できない", async () => {
+// medical_records の doctor / patient は onDelete: Restrict。診療記録は医療の記録なので、
+// 医師や患者の削除に巻き込んで消したり参照先を失わせたりせず、削除そのものを拒否する（#335）。
+// 以前は SetDefault だったが、列が NOT NULL で既定値も無いため NOT NULL 違反（P2011）で
+// 失敗しており、拒否の理由が意図と食い違っていた。
+describe("medical_records の外部キー（onDelete: Restrict）", () => {
+    test("診療記録を持つ医師は、外部キー違反で削除できない", async () => {
         const { doctorId, patientId } = await createDoctorAndPatient();
         await createRecordWithoutCategories(doctorId, patientId);
 
-        // P2011 = NOT NULL 制約違反（Postgres の 23502）。外部キー違反（P2003）ではない。
+        // P2003 = 外部キー制約違反（Postgres の 23503）。
         await expect(prisma.doctors.delete({ where: { id: doctorId } })).rejects.toMatchObject({
-            code: "P2011",
+            code: "P2003",
         });
         await expect(prisma.doctors.count()).resolves.toBe(1);
         await expect(prisma.medical_records.findFirstOrThrow()).resolves.toMatchObject({
@@ -101,13 +101,21 @@ describe("medical_records の外部キー（onDelete: SetDefault）", () => {
         });
     });
 
-    test("診療記録を持つ患者は削除できない", async () => {
+    test("診療記録を持つ患者は、外部キー違反で削除できない", async () => {
         const { doctorId, patientId } = await createDoctorAndPatient();
         await createRecordWithoutCategories(doctorId, patientId);
 
         await expect(prisma.patients.delete({ where: { id: patientId } })).rejects.toMatchObject({
-            code: "P2011",
+            code: "P2003",
         });
         await expect(prisma.patients.count()).resolves.toBe(1);
+    });
+
+    test("診療記録を持たない医師は削除できる", async () => {
+        const { doctorId } = await createDoctorAndPatient();
+
+        await prisma.doctors.delete({ where: { id: doctorId } });
+
+        await expect(prisma.doctors.count()).resolves.toBe(0);
     });
 });
