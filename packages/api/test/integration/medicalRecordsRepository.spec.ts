@@ -4,21 +4,11 @@ import {
     createMedicalRecord,
     findMedicalRecordsByPatient,
 } from "../../src/repository/medicalRecords.js";
+import { insertDoctor, insertPatient } from "../support/testRecords.js";
 
 const createDoctorAndPatient = async (): Promise<{ doctorId: number; patientId: number }> => {
-    const doctor = await prisma.doctors.create({
-        data: { name: "医師 一郎", email: "doctor@example.com", password: "unused-hash" },
-    });
-    const patient = await prisma.patients.create({
-        data: {
-            name: "患者 花子",
-            email: "patient@example.com",
-            password: "unused-hash",
-            tel: "090-0000-0000",
-            address: "東京都",
-            birth: new Date("1990-01-01T00:00:00.000Z"),
-        },
-    });
+    const doctor = await insertDoctor();
+    const patient = await insertPatient();
     return { doctorId: doctor.id, patientId: patient.id };
 };
 
@@ -75,5 +65,53 @@ describe("createMedicalRecord", () => {
         ).rejects.toMatchObject({ code: "P2003" });
 
         await expect(prisma.medical_records.count()).resolves.toBe(0);
+    });
+});
+
+// schema.prisma は medical_records の doctor / patient を onDelete: SetDefault としているが、
+// doctor_id / patient_id は NOT NULL かつ既定値を持たない。そのため SET DEFAULT は NULL を
+// 入れようとして NOT NULL 制約に違反し、削除は失敗する（事実上の RESTRICT）。
+// 現在 API に医師・患者の削除は無いが、この挙動を前提にした設計変更に気付けるよう固定する。
+describe("medical_records の外部キー（onDelete: SetDefault）", () => {
+    test("診療記録を持つ医師は削除できない", async () => {
+        const { doctorId, patientId } = await createDoctorAndPatient();
+        await createMedicalRecord(
+            {
+                patient_id: patientId,
+                doctor_id: doctorId,
+                medical_memo: "",
+                doctor_memo: "",
+                examination_at: new Date("2026-09-01T09:00:00.000Z"),
+            },
+            []
+        );
+
+        // P2011 = NOT NULL 制約違反（Postgres の 23502）。外部キー違反（P2003）ではない。
+        await expect(prisma.doctors.delete({ where: { id: doctorId } })).rejects.toMatchObject({
+            code: "P2011",
+        });
+        await expect(prisma.doctors.count()).resolves.toBe(1);
+        await expect(prisma.medical_records.findFirstOrThrow()).resolves.toMatchObject({
+            doctor_id: doctorId,
+        });
+    });
+
+    test("診療記録を持つ患者は削除できない", async () => {
+        const { doctorId, patientId } = await createDoctorAndPatient();
+        await createMedicalRecord(
+            {
+                patient_id: patientId,
+                doctor_id: doctorId,
+                medical_memo: "",
+                doctor_memo: "",
+                examination_at: new Date("2026-09-01T09:00:00.000Z"),
+            },
+            []
+        );
+
+        await expect(prisma.patients.delete({ where: { id: patientId } })).rejects.toMatchObject({
+            code: "P2011",
+        });
+        await expect(prisma.patients.count()).resolves.toBe(1);
     });
 });

@@ -1,11 +1,12 @@
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { afterAll, beforeEach } from "vitest";
+import { afterAll, beforeEach, inject } from "vitest";
 
 // 結合テスト（api-integration project）の setupFiles。テストファイルごとに、
 // そのファイル専用のインメモリ Postgres（PGlite）を立てる。
+// マイグレーションを適用済みの状態は globalSetup（pgliteTemplateGlobalSetup.ts）が
+// 1 回だけ作ってダンプしており、ここではそこから復元する。
 //
 // PGlite を Prisma へ直接つなぐアダプタ（pglite-prisma-adapter）は使わず、
 // pglite-socket で Postgres のワイヤプロトコルを話す TCP サーバとして公開し、
@@ -17,26 +18,8 @@ import { afterAll, beforeEach } from "vitest";
 // 設定すれば、テストファイルが @repo/db を読み込む時点で接続先はこの PGlite になる。
 // このファイル自身は @repo/db を静的に import してはならない（設定前に読み込まれるため）。
 
-const migrationsDirectory = join(import.meta.dirname, "../../../db/prisma/migrations");
-
-const applyMigrations = async (database: PGlite): Promise<void> => {
-    const entries = await readdir(migrationsDirectory, { withFileTypes: true });
-    // Prisma のマイグレーションディレクトリ名はタイムスタンプ始まりのため、名前順が適用順になる。
-    const migrationNames = entries
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-        .sort();
-    for (const migrationName of migrationNames) {
-        const migrationSql = await readFile(
-            join(migrationsDirectory, migrationName, "migration.sql"),
-            "utf8"
-        );
-        await database.exec(migrationSql);
-    }
-};
-
-const database = await PGlite.create();
-await applyMigrations(database);
+const templateDump = new Blob([await readFile(inject("pgliteTemplatePath"))]);
+const database = await PGlite.create({ loadDataDir: templateDump });
 
 // pglite-socket は上限を超えた接続を待たせずに拒否する（"Too many connections"）。
 // node-postgres の Pool の既定の最大接続数（10）に合わせる。

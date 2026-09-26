@@ -59,6 +59,9 @@ export default defineConfig({
                     name: "api-integration",
                     include: [`${apiIntegrationTestDirectory}/*.spec.ts`],
                     environment: "node",
+                    // globalSetup がマイグレーション適用済みの PGlite を 1 回だけ作ってダンプし、
+                    // setupFiles がテストファイルごとにそこから復元する。
+                    globalSetup: ["packages/api/test/support/pgliteTemplateGlobalSetup.ts"],
                     setupFiles: ["packages/api/test/support/pgliteDatabase.ts"],
                     env: apiTestEnvironment,
                 },

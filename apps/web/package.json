@@ -22,7 +22,7 @@
     "@repo/auth": "workspace:*",
     "@repo/schema": "workspace:*",
     "@tabler/icons-react": "^3.16.0",
-    "@trpc/client": "11.18.0",
+    "@trpc/client": "catalog:",
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.1",
     "dayjs": "^1.11.19",
