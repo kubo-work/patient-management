@@ -59,6 +59,19 @@ export default defineConfig({
                     name: "api-integration",
                     include: [`${apiIntegrationTestDirectory}/*.spec.ts`],
                     environment: "node",
+                    // テストファイル間でモジュールを共有し、PGlite と Prisma の初期化を
+                    // ワーカーごとに 1 回で済ませる（test/support/testDatabaseServer.ts）。
+                    // ファイル間の独立性は、各テストの前の TRUNCATE で保つ。
+                    isolate: false,
+                    // ワーカーを増やすと、その数だけ初期化（約 1 秒）が同時に走り CPU を奪い合う。
+                    // 実測ではワーカー 1〜2 が最速だった（7 ワーカーより約 2 秒速い）。
+                    maxWorkers: 2,
+                    // maxWorkers が他の project と違う場合、実行グループを分ける必要がある。
+                    // 単体テスト（groupOrder: 0）の後に実行される。
+                    sequence: { groupOrder: 1 },
+                    // globalSetup がマイグレーション適用済みの PGlite を 1 回だけ作ってダンプし、
+                    // 各ワーカーがそこから復元する。
+                    globalSetup: ["packages/api/test/support/pgliteTemplateGlobalSetup.ts"],
                     setupFiles: ["packages/api/test/support/pgliteDatabase.ts"],
                     env: apiTestEnvironment,
                 },

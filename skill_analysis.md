@@ -2,7 +2,8 @@
 
 > 対象リポジトリ: [kubo-work/patient-management](https://github.com/kubo-work/patient-management)  
 > 分析日: 2026-04-25  
-> 総コミット数: 479件 / 総PR数: 100件以上
+> 総コミット数: 479件 / 総PR数: 100件以上  
+> 最終更新: 2026-09-26（技術構成・認証・インフラ・テストの記述を現在の構成に更新。コミットやキーワードの集計は分析日時点の数字のまま）
 
 ---
 
@@ -35,19 +36,22 @@ CORS・クッキー・セッション・認証まわりのバグを執拗に追�
 
 | レイヤー | 技術スタック |
 |---|---|
-| バックエンド | Node.js / Express / Prisma / PostgreSQL |
-| フロントエンド | Next.js / React / TypeScript |
-| インフラ | Terraform / AWS |
+| 共通 | TypeScript / bun workspaces（monorepo） |
+| バックエンド | Node.js / Hono / tRPC / Prisma 7 / Zod / PostgreSQL（Neon） |
+| フロントエンド | Next.js（App Router） / React / Mantine UI |
+| テスト | Vitest / PGlite |
+| インフラ | Vercel / Neon（稼働中）、Terraform / AWS（構築済み・停止中） |
 
-ファイル種別の内訳:
+ファイル種別の内訳（2026-09-26 時点、`git ls-files` で数えた git 管理下のファイル数）:
 
 | 拡張子 | ファイル数 |
 |---|---|
-| `.ts` | 82 |
-| `.js` | 46 |
+| `.ts` | 75 |
 | `.tsx` | 29 |
 | `.tf` | 14 |
-| `.yml` | 4 |
+| `.js` | 6 |
+| `.mjs` | 5 |
+| `.yml` | 5 |
 
 フロント・バックエンド・インフラを全部自分でやりきる力がある。
 
@@ -56,7 +60,8 @@ CORS・クッキー・セッション・認証まわりのバグを執拗に追�
 ## 4. 認証・セキュリティ周りの経験値
 
 コミット解析でもっとも多かったキーワードが **auth (21回)**。  
-JWT・セッション・Cookie・CORS・ミドルウェアと、認証の難所をひと通り自力でぶつかって解決している。
+JWT・セッション・Cookie・CORS・ミドルウェアと、認証の難所をひと通り自力でぶつかって解決している。  
+現在はサーバ側のセッションを廃止し、JWT + httpOnly Cookie によるステートレス認証へ移行済み（ADR 0004）。
 
 関連キーワードの出現回数:
 
@@ -90,17 +95,26 @@ JWT・セッション・Cookie・CORS・ミドルウェアと、認証の難所�
 
 コードとしてインフラを管理する **Infrastructure as Code** の実践経験に加え、Dockerイメージのビルド・ECRへのプッシュ・ECSサービス更新までの **CI/CDパイプライン** を整備している。
 
+なお現在の本番は Vercel（フロントと API）+ Neon（PostgreSQL）に統合しており、この AWS 構成は稼働実績を残したまま停止している（README 参照）。
+
 ---
 
 ## 6. テストコードへの取り組み
 
-Jest + Faker.js を使ったバックエンドテストを整備。  
+当初は Jest + prisma-mock で書いていたが、mock の戻り値を書くだけで実装をなぞる「写経テスト」になっていたため、Vitest + PGlite で作り直した。  
 テストコードを「後付けで書く」ではなく**改善の一部として組み込んでいる**姿勢がある。
 
+| 層 | 対象 | 方法 |
+|---|---|---|
+| 単体 | domain（パスワード照合、カテゴリの差分計算、表示用の整形） | Vitest。DB を使わない純粋関数として検証 |
+| 結合 | tRPC の各 router | web と同じ tRPC クライアントで HTTP 経由で呼び、PGlite（WASM 版の Postgres 18）まで通して検証。外部キー・一意制約・トランザクションのロールバックなど、mock では確かめられない挙動を確認している |
+| CI | 全テスト | GitHub Actions で PR ごとに実行 |
+
 テストファイル例:
-- `backend/test/doctor/login.spec.ts`
-- `backend/test/doctor/login_doctor.spec.ts`
-- `backend/test/doctor/doctors.spec.ts`
+- `packages/api/test/domain/medicalCategoryDiff.spec.ts`
+- `packages/api/test/integration/authRouter.spec.ts`
+- `packages/api/test/integration/medicalRecordsRouter.spec.ts`
+- `packages/auth/test/token.spec.ts`
 
 ---
 
@@ -108,9 +122,10 @@ Jest + Faker.js を使ったバックエンドテストを整備。
 
 | 得意分野 | 根拠 |
 |---|---|
-| TypeScript フルスタック | TS/TSX 111ファイル、フロント・バック両方のPR |
+| TypeScript フルスタック | TS/TSX 104ファイル（2026-09-26 時点）、フロント・バック両方のPR、tRPC による端から端までの型共有 |
 | 認証・セッション設計 | auth関連コミット21回、大量のデバッグPR |
-| インフラ構築 (AWS + Terraform) | tf 14ファイル、ECS Fargate + ALB + ECR 構成を Terraform で構築 |
+| インフラ構築 (AWS + Terraform) | tf 14ファイル、ECS Fargate + ALB + ECR 構成を Terraform で構築（現在は停止中） |
+| テスト設計 | Vitest + PGlite で実 Postgres を使う結合テストを整備し、PR ごとに CI で実行 |
 | リファクタリング・型安全化 | 最多PR、Zod導入、strictNullChecks |
 | 粘り強いデバッグ | CORS問題を数十のPRで追跡・解決 |
 

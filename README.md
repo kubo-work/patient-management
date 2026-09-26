@@ -22,9 +22,9 @@
     - argon2（パスワードのハッシュ化）
     - jose（JWT の署名・検証）
     - Vitest
-    - Faker
+    - PGlite（結合テスト用の Postgres）
 - インフラ・CI/CD
-    - GitHub Actions（型チェック）
+    - GitHub Actions（型チェック・テスト）
     - Vercel（main への push で自動デプロイ）
 
 ### 構成
