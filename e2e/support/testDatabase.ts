@@ -21,23 +21,36 @@ export const SEEDED_PATIENT = {
     birth: "1990-01-01T00:00:00.000Z",
 };
 
+// 患者のログインは無く、パスワードを検証するテストも無いため、ハッシュ化していない値をそのまま入れる。
+const UNUSED_PATIENT_PASSWORD = "unused-patient-password";
+
 // 診察記録のフォームは、親カテゴリごとに子カテゴリを選ぶ欄を出す。
 export const SEEDED_CATEGORIES = {
-    PARENT: "内科",
-    CHILDREN: ["風邪", "頭痛"],
+    PARENT: "保険施術",
+    CHILDREN: ["捻挫", "打撲"],
 } as const;
 
-const insertCategories = async (client: pg.Client): Promise<void> => {
-    const { rows } = await client.query<{ id: number }>(
-        "INSERT INTO categories (treatment) VALUES ($1) RETURNING id",
-        [SEEDED_CATEGORIES.PARENT]
+const insertCategory = async (
+    client: pg.Client,
+    treatment: string,
+    parentCategoryId: number | null
+): Promise<number> => {
+    const {
+        rows: [insertedCategory],
+    } = await client.query<{ id: number }>(
+        "INSERT INTO categories (treatment, parent_id) VALUES ($1, $2) RETURNING id",
+        [treatment, parentCategoryId]
     );
-    const [parentCategory] = rows;
+    if (!insertedCategory) {
+        throw new Error(`カテゴリ「${treatment}」の登録結果が返りませんでした。`);
+    }
+    return insertedCategory.id;
+};
+
+const insertCategories = async (client: pg.Client): Promise<void> => {
+    const parentCategoryId = await insertCategory(client, SEEDED_CATEGORIES.PARENT, null);
     for (const childTreatment of SEEDED_CATEGORIES.CHILDREN) {
-        await client.query("INSERT INTO categories (treatment, parent_id) VALUES ($1, $2)", [
-            childTreatment,
-            parentCategory.id,
-        ]);
+        await insertCategory(client, childTreatment, parentCategoryId);
     }
 };
 
@@ -53,13 +66,12 @@ export const resetDatabase = async (): Promise<void> => {
             SEEDED_DOCTOR.email,
             await hashPassword(SEEDED_DOCTOR.password),
         ]);
-        // 患者のログインは無く、パスワードを検証するテストも無いため、ハッシュ化しない。
         await client.query(
             "INSERT INTO patients (name, email, password, tel, address, birth) VALUES ($1, $2, $3, $4, $5, $6)",
             [
                 SEEDED_PATIENT.name,
                 SEEDED_PATIENT.email,
-                "unused-patient-password",
+                UNUSED_PATIENT_PASSWORD,
                 SEEDED_PATIENT.tel,
                 SEEDED_PATIENT.address,
                 SEEDED_PATIENT.birth,
