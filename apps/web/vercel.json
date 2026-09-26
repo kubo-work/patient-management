@@ -1,4 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "bun --version; bunx bun@1.4.0 --version; echo \"bunx exit=$?\"; npx -y bun@1.4.0 install"
+  "installCommand": "npx -y bun@1.4.0 install"
 }
