@@ -9,7 +9,8 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "packages/*"
+      "packages/*",
+      "e2e"
     ],
     "catalog": {
       "@trpc/client": "11.18.0",
@@ -31,7 +32,8 @@
     "lint": "bun run --filter web lint",
     "test": "bun run build:schema && bun run build:auth && bun run build:db && vitest run",
     "test:auth": "vitest run --project auth",
-    "test:api": "bun run build:schema && bun run build:auth && bun run build:db && vitest run --project api --project api-integration"
+    "test:api": "bun run build:schema && bun run build:auth && bun run build:db && vitest run --project api --project api-integration",
+    "test:e2e": "bun run --filter @repo/e2e test"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
