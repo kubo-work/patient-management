@@ -9,7 +9,7 @@
         "@typescript/native": "npm:typescript@^7.0.2",
         "typescript": "npm:@typescript/typescript6@^6.0.2",
         "vite": "8.2.2",
-        "vitest": "5.0.1",
+        "vitest": "catalog:",
       },
     },
     "apps/web": {
@@ -69,6 +69,7 @@
         "jose": "6.2.10",
         "nodemon": "^3.1.6",
         "tsx": "^4.19.1",
+        "vitest": "catalog:",
       },
     },
     "packages/auth": {
@@ -77,6 +78,9 @@
       "dependencies": {
         "@node-rs/argon2": "2.2.0",
         "jose": "6.2.10",
+      },
+      "devDependencies": {
+        "vitest": "catalog:",
       },
     },
     "packages/db": {
@@ -97,6 +101,9 @@
   },
   "overrides": {
     "magic-string": "1.4.1",
+  },
+  "catalog": {
+    "vitest": "5.0.1",
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],

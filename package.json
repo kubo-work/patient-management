@@ -6,10 +6,15 @@
   "engines": {
     "node": ">=24"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "vitest": "5.0.1"
+    }
+  },
   "scripts": {
     "postinstall": "prisma generate --config packages/db/prisma.config.ts",
     "build": "bun run build:schema && bun run build:auth && bun run build:db && bun run build:api && bun run build:web",
@@ -32,7 +37,7 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vite": "8.2.2",
-    "vitest": "5.0.1"
+    "vitest": "catalog:"
   },
   "overrides": {
     "magic-string": "1.4.1"
