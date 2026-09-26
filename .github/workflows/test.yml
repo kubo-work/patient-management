@@ -36,6 +36,6 @@ jobs:
       - name: インストール
         run: bun install --frozen-lockfile
 
-      # テストは実 DB に接続しない。必要な環境変数は各パッケージの vitest.config.ts で明示している。
+      # テストは実 DB に接続しない。必要な環境変数はルートの vitest.config.ts で project ごとに明示している。
       - name: テスト（monorepo 全体）
         run: bun run test

@@ -20,9 +20,7 @@
     "dev": "nodemon",
     "typecheck": "tsc -p tsconfig.test.json",
     "hash-passwords": "node --env-file=.env scripts/hash-existing-passwords.mjs",
-    "reset-password": "node --env-file=.env scripts/reset-doctor-password.mjs",
-    "test": "vitest run",
-    "test-debug": "vitest run --reporter=verbose"
+    "reset-password": "node --env-file=.env scripts/reset-doctor-password.mjs"
   },
   "dependencies": {
     "@hono/node-server": "2.1.1",
@@ -42,6 +40,6 @@
     "jose": "6.2.10",
     "nodemon": "^3.1.6",
     "tsx": "^4.19.1",
-    "vitest": "4.1.11"
+    "vitest": "catalog:"
   }
 }
