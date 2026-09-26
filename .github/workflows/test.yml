@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "bun.lock"
+      - "tsconfig.base.json"
+      - ".github/workflows/test.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "package.json"
+      - "bun.lock"
+      - "tsconfig.base.json"
+      - ".github/workflows/test.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリチェック
+        uses: actions/checkout@v7
+
+      - name: bun セットアップ
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - name: インストール
+        run: bun install --frozen-lockfile
+
+      # テストは実 DB に接続しない。必要な環境変数は各パッケージの vitest.config.ts で明示している。
+      - name: テスト（monorepo 全体）
+        run: bun run test
