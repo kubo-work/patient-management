@@ -1,6 +1,9 @@
 {
-  // bun.lock を自動検出できずに別のパッケージマネージャが選ばれるため明示する
+  // 自動検出は yarn を bun より先に判定し、package.json の workspaces だけで
+  // yarn と判定してしまうため明示する。
+  // packageManager は install 等、scriptRunner は npm スクリプト一覧からの実行に使われる
   "npm.packageManager": "bun",
+  "npm.scriptRunner": "bun",
   "npm.autoDetect": "on",
   // TypeScript はルートの devDependencies に集約しているため、そこを参照させる。
   // 7 系の lib/ に tsserver.js は無いが、VS Code の TypeScript 拡張が
