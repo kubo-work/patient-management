@@ -33,8 +33,8 @@ const createRecordWithoutCategories = (doctorId: number, patientId: number): Pro
 describe("createMedicalRecord", () => {
     test("診療記録と診療カテゴリを保存し、患者ごとの一覧で読み戻せる", async () => {
         const { doctorId, patientId } = await createDoctorAndPatient();
-        const parentCategory = await insertCategory("保険施術");
-        const childCategory = await insertCategory("捻挫", parentCategory.id);
+        const parentCategory = await insertCategory("保険適用施術");
+        const childCategory = await insertCategory("電気療法", parentCategory.id);
 
         await createMedicalRecord(
             {
@@ -56,7 +56,7 @@ describe("createMedicalRecord", () => {
                 doctor_memo: "経過観察",
                 examination_at: DEFAULT_EXAMINATION_AT,
                 medical_categories: [
-                    { categories: { id: childCategory.id, treatment: "捻挫" } },
+                    { categories: { id: childCategory.id, treatment: "電気療法" } },
                 ],
             },
         ]);

@@ -26,8 +26,8 @@ const UNUSED_PATIENT_PASSWORD = "unused-patient-password";
 
 // 診察記録のフォームは、親カテゴリごとに子カテゴリを選ぶ欄を出す。
 export const SEEDED_CATEGORIES = {
-    PARENT: "保険施術",
-    CHILDREN: ["捻挫", "打撲"],
+    PARENT: "保険適用施術",
+    CHILDREN: ["電気療法", "手技療法"],
 } as const;
 
 const insertCategory = async (
