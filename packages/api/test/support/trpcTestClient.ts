@@ -4,6 +4,9 @@ import { signDoctorToken } from "@repo/auth";
 import { doctorCookieName } from "@repo/schema";
 import { app, type AppRouter } from "../../src/app.js";
 
+// doctor.login が成功したときのレスポンス。
+export const LOGIN_SUCCEEDED_RESPONSE = { message: "ログインに成功しました。" };
+
 type TestClientOptions = {
     cookieHeader?: string;
     // Set-Cookie など、tRPC クライアントが返り値に含めないレスポンスの情報を検証するために使う。
@@ -29,6 +32,18 @@ export const createTestClient = ({ cookieHeader, onResponse }: TestClientOptions
             }),
         ],
     });
+
+// tRPC クライアントは Set-Cookie を返り値に含めないため、レスポンスから読み取る手段を併せて返す。
+// 書き換わる状態はこの関数の中に閉じ込め、呼び出し側は const で値を受け取れるようにする。
+export const createSetCookieCapturingClient = () => {
+    let lastSetCookieHeader: string | null = null;
+    const client = createTestClient({
+        onResponse: (response) => {
+            lastSetCookieHeader = response.headers.get("set-cookie");
+        },
+    });
+    return { client, readLastSetCookieHeader: (): string | null => lastSetCookieHeader };
+};
 
 // 本番と同じ signDoctorToken で JWT を発行し、ログイン済みの医師として呼ぶクライアントを返す。
 // ログイン処理そのものの検証は authRouter.spec.ts で行う。

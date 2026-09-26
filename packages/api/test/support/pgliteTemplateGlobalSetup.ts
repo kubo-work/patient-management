@@ -38,13 +38,19 @@ const applyMigrations = async (database: PGlite): Promise<void> => {
     }
 };
 
-export default async function setup(project: TestProject): Promise<() => Promise<void>> {
+const createTemplateDump = async (): Promise<Blob> => {
     const database = await PGlite.create();
-    await applyMigrations(database);
-    // 圧縮すると復元のたびに展開が要るため、"none" で保存する。
-    const templateDump = await database.dumpDataDir("none");
-    await database.close();
+    try {
+        await applyMigrations(database);
+        // 圧縮すると復元のたびに展開が要るため、"none" で保存する。
+        return await database.dumpDataDir("none");
+    } finally {
+        await database.close();
+    }
+};
 
+const setup = async (project: TestProject): Promise<() => Promise<void>> => {
+    const templateDump = await createTemplateDump();
     const templateDirectory = await mkdtemp(join(tmpdir(), "pglite-template-"));
     const templatePath = join(templateDirectory, "template.tar");
     await writeFile(templatePath, new Uint8Array(await templateDump.arrayBuffer()));
@@ -53,4 +59,6 @@ export default async function setup(project: TestProject): Promise<() => Promise
     return async () => {
         await rm(templateDirectory, { recursive: true, force: true });
     };
-}
+};
+
+export default setup;

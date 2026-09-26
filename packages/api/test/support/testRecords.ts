@@ -4,6 +4,12 @@ import { hashPassword } from "@repo/auth/password";
 // 結合テストの前提データを Prisma で直接投入する。
 // 検証対象の procedure を経由しないことで、前提の作成と検証を切り離す。
 
+// 各テストは空の DB から始まるため、この ID の行は存在しない。
+export const NONEXISTENT_ID = 999;
+
+// 診療記録の受診日時。値そのものを検証しないテストで使う。
+export const DEFAULT_EXAMINATION_AT = new Date("2026-09-01T09:00:00.000Z");
+
 export const insertDoctor = async (
     overrides: { name?: string; email?: string; plainPassword?: string } = {}
 ) => {

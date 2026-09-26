@@ -1,8 +1,12 @@
 import { describe, test, expect } from "vitest";
 import { prisma } from "@repo/db";
 import { verifyPassword } from "@repo/auth/password";
-import { createDoctorClient, createTestClient } from "../support/trpcTestClient.js";
-import { insertDoctor } from "../support/testRecords.js";
+import {
+    createDoctorClient,
+    createTestClient,
+    LOGIN_SUCCEEDED_RESPONSE,
+} from "../support/trpcTestClient.js";
+import { insertDoctor, NONEXISTENT_ID } from "../support/testRecords.js";
 
 describe("doctor.doctors.list", () => {
     test("医師を id 順に返し、パスワードを含まない", async () => {
@@ -21,9 +25,9 @@ describe("doctor.doctors.byId", () => {
     test("存在しない医師は NOT_FOUND になる", async () => {
         const client = await createDoctorClient(await insertDoctor());
 
-        await expect(client.doctor.doctors.byId.query({ doctorId: 999 })).rejects.toMatchObject({
-            data: { code: "NOT_FOUND" },
-        });
+        await expect(
+            client.doctor.doctors.byId.query({ doctorId: NONEXISTENT_ID })
+        ).rejects.toMatchObject({ data: { code: "NOT_FOUND" } });
     });
 });
 
@@ -37,8 +41,14 @@ describe("doctor.doctors.create", () => {
             password: "new-doctor-password",
         });
 
-        expect(createdDoctor).toEqual({ id: 2, name: "医師 三郎", email: "new@example.com" });
-        const storedDoctor = await prisma.doctors.findUniqueOrThrow({ where: { id: 2 } });
+        expect(createdDoctor).toEqual({
+            id: createdDoctor.id,
+            name: "医師 三郎",
+            email: "new@example.com",
+        });
+        const storedDoctor = await prisma.doctors.findUniqueOrThrow({
+            where: { id: createdDoctor.id },
+        });
         expect(storedDoctor.password).not.toBe("new-doctor-password");
         await expect(verifyPassword(storedDoctor.password, "new-doctor-password")).resolves.toBe(
             true
@@ -68,7 +78,7 @@ describe("doctor.doctors.update", () => {
 
         await expect(
             client.doctor.doctors.update.mutate({
-                doctorId: 999,
+                doctorId: NONEXISTENT_ID,
                 name: "医師 九郎",
                 email: "nobody@example.com",
             })
@@ -95,7 +105,7 @@ describe("doctor.doctors.update", () => {
                 email: "renamed@example.com",
                 password: "original-password",
             })
-        ).resolves.toEqual({ message: "ログインに成功しました。" });
+        ).resolves.toEqual(LOGIN_SUCCEEDED_RESPONSE);
     });
 
     test("パスワードを指定すると、新しいパスワードでだけログインできるようになる", async () => {
@@ -112,7 +122,7 @@ describe("doctor.doctors.update", () => {
         const anonymousClient = createTestClient();
         await expect(
             anonymousClient.doctor.login.mutate({ email: doctor.email, password: "changed-password" })
-        ).resolves.toEqual({ message: "ログインに成功しました。" });
+        ).resolves.toEqual(LOGIN_SUCCEEDED_RESPONSE);
         await expect(
             anonymousClient.doctor.login.mutate({ email: doctor.email, password: "original-password" })
         ).rejects.toMatchObject({ data: { code: "UNAUTHORIZED" } });
