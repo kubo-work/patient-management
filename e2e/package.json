@@ -1,0 +1,19 @@
+{
+  "name": "@repo/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-socket": "0.2.11",
+    "@playwright/test": "1.63.0",
+    "@repo/auth": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@types/pg": "8.23.1",
+    "pg": "8.23.0"
+  }
+}

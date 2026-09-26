@@ -1,7 +1,8 @@
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
+import { applyMigrations } from "@repo/db/testing";
 import type { TestProject } from "vitest/node";
 
 // 結合テスト（api-integration project）の globalSetup。実行全体で 1 回だけ、
@@ -20,28 +21,10 @@ declare module "vitest" {
     }
 }
 
-const migrationsDirectory = join(import.meta.dirname, "../../../db/prisma/migrations");
-
-const applyMigrations = async (database: PGlite): Promise<void> => {
-    const entries = await readdir(migrationsDirectory, { withFileTypes: true });
-    // Prisma のマイグレーションディレクトリ名はタイムスタンプ始まりのため、名前順が適用順になる。
-    const migrationNames = entries
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-        .sort();
-    for (const migrationName of migrationNames) {
-        const migrationSql = await readFile(
-            join(migrationsDirectory, migrationName, "migration.sql"),
-            "utf8"
-        );
-        await database.exec(migrationSql);
-    }
-};
-
 const createTemplateDump = async (): Promise<Blob> => {
     const database = await PGlite.create();
     try {
-        await applyMigrations(database);
+        await applyMigrations((sql) => database.exec(sql));
         // 圧縮すると復元のたびに展開が要るため、"none" で保存する。
         return await database.dumpDataDir("none");
     } finally {

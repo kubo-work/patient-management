@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
+import { buildTruncateAllTablesSql, USER_TABLES_QUERY } from "@repo/db/testing";
 import { inject } from "vitest";
 
 // 結合テスト用のインメモリ Postgres（PGlite）を、ワーカーごとに 1 つだけ立てる。
@@ -35,15 +36,14 @@ const createTestDatabase = async (): Promise<{ truncateAllTables: () => Promise<
     // 手元のシェルに本番の DATABASE_URL が入っていても、必ずこの PGlite を向くよう無条件に上書きする。
     process.env.DATABASE_URL = `postgresql://postgres:postgres@${server.getServerConn()}/postgres`;
 
-    const userTableNames = (
-        await database.query<{ tablename: string }>(
-            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename"
-        )
-    ).rows.map((row) => `"public"."${row.tablename}"`);
+    // テーブルの構成はワーカーの実行中に変わらないため、空にする SQL は 1 回だけ組み立てる。
+    const userTableNames = (await database.query<{ tablename: string }>(USER_TABLES_QUERY)).rows.map(
+        (row) => row.tablename
+    );
+    const truncateAllTablesSql = buildTruncateAllTablesSql(userTableNames);
 
-    // 全テーブルを空にし、RESTART IDENTITY で採番も 1 に戻す。
     const truncateAllTables = async (): Promise<void> => {
-        await database.exec(`TRUNCATE ${userTableNames.join(", ")} RESTART IDENTITY CASCADE`);
+        await database.exec(truncateAllTablesSql);
     };
     return { truncateAllTables };
 };
