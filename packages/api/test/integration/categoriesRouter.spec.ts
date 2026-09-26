@@ -4,18 +4,18 @@ import { insertCategory, insertDoctor } from "../support/testRecords.js";
 
 describe("doctor.categories.list", () => {
     test("親カテゴリだけを、子カテゴリを持たせた形で返す", async () => {
-        const internalMedicine = await insertCategory("内科");
-        const cold = await insertCategory("風邪", internalMedicine.id);
-        const surgery = await insertCategory("外科");
+        const insuranceTreatment = await insertCategory("保険適用施術");
+        const electricTherapy = await insertCategory("電気療法", insuranceTreatment.id);
+        const selfPaidTreatment = await insertCategory("自費施術メニュー");
         const client = await createDoctorClient(await insertDoctor());
 
         await expect(client.doctor.categories.list.query()).resolves.toEqual([
             {
-                id: internalMedicine.id,
-                treatment: "内科",
-                children: [{ id: cold.id, treatment: "風邪" }],
+                id: insuranceTreatment.id,
+                treatment: "保険適用施術",
+                children: [{ id: electricTherapy.id, treatment: "電気療法" }],
             },
-            { id: surgery.id, treatment: "外科", children: [] },
+            { id: selfPaidTreatment.id, treatment: "自費施術メニュー", children: [] },
         ]);
     });
 });

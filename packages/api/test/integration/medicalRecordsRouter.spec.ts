@@ -28,23 +28,23 @@ const buildMedicalRecordInput = (
 const prepareDoctorPatientAndCategories = async () => {
     const doctor = await insertDoctor();
     const patient = await insertPatient();
-    const internalMedicine = await insertCategory("内科");
-    const cold = await insertCategory("風邪", internalMedicine.id);
-    const influenza = await insertCategory("インフルエンザ", internalMedicine.id);
-    const headache = await insertCategory("頭痛", internalMedicine.id);
+    const insuranceTreatment = await insertCategory("保険適用施術");
+    const electricTherapy = await insertCategory("電気療法", insuranceTreatment.id);
+    const manualTherapy = await insertCategory("手技療法", insuranceTreatment.id);
+    const reductionAndFixation = await insertCategory("整復・固定", insuranceTreatment.id);
     const client = await createDoctorClient(doctor);
-    return { doctor, patient, cold, influenza, headache, client };
+    return { doctor, patient, electricTherapy, manualTherapy, reductionAndFixation, client };
 };
 
 describe("doctor.medicalRecords.create / byPatient", () => {
     test("登録した診療記録を、カテゴリを平坦化した形で患者ごとに新しい順で返す", async () => {
-        const { doctor, patient, cold, influenza, client } = await prepareDoctorPatientAndCategories();
+        const { doctor, patient, electricTherapy, manualTherapy, client } = await prepareDoctorPatientAndCategories();
         const otherPatient = await insertPatient({ email: "other@example.com" });
         const firstInput = buildMedicalRecordInput({
             patient_id: patient.id,
             doctor_id: doctor.id,
             medical_memo: "1 回目",
-            categories: [String(cold.id)],
+            categories: [String(electricTherapy.id)],
         });
         const secondInput = buildMedicalRecordInput({
             patient_id: patient.id,
@@ -52,7 +52,7 @@ describe("doctor.medicalRecords.create / byPatient", () => {
             examination_at: new Date("2026-09-08T09:00:00.000Z"),
             medical_memo: "2 回目",
             doctor_memo: "再診",
-            categories: [String(influenza.id)],
+            categories: [String(manualTherapy.id)],
         });
 
         await client.doctor.medicalRecords.create.mutate(firstInput);
@@ -65,20 +65,20 @@ describe("doctor.medicalRecords.create / byPatient", () => {
         await expect(
             client.doctor.medicalRecords.byPatient.query({ patientId: patient.id })
         ).resolves.toEqual([
-            { ...secondInput, id: 2, categories: [{ id: influenza.id, treatment: "インフルエンザ" }] },
-            { ...firstInput, id: 1, categories: [{ id: cold.id, treatment: "風邪" }] },
+            { ...secondInput, id: 2, categories: [{ id: manualTherapy.id, treatment: "手技療法" }] },
+            { ...firstInput, id: 1, categories: [{ id: electricTherapy.id, treatment: "電気療法" }] },
         ]);
     });
 
     test("存在しない患者を指定すると BAD_REQUEST になり、何も保存されない", async () => {
-        const { doctor, cold, client } = await prepareDoctorPatientAndCategories();
+        const { doctor, electricTherapy, client } = await prepareDoctorPatientAndCategories();
 
         await expect(
             client.doctor.medicalRecords.create.mutate(
                 buildMedicalRecordInput({
                     patient_id: NONEXISTENT_ID,
                     doctor_id: doctor.id,
-                    categories: [String(cold.id)],
+                    categories: [String(electricTherapy.id)],
                 })
             )
         ).rejects.toMatchObject({
@@ -92,17 +92,17 @@ describe("doctor.medicalRecords.create / byPatient", () => {
 
 describe("doctor.medicalRecords.update", () => {
     test("メモを更新し、カテゴリを指定したものへ差分で入れ替える", async () => {
-        const { doctor, patient, cold, influenza, headache, client } =
+        const { doctor, patient, electricTherapy, manualTherapy, reductionAndFixation, client } =
             await prepareDoctorPatientAndCategories();
         const createdInput = buildMedicalRecordInput({
             patient_id: patient.id,
             doctor_id: doctor.id,
             medical_memo: "初診",
-            categories: [String(cold.id), String(influenza.id)],
+            categories: [String(electricTherapy.id), String(manualTherapy.id)],
         });
         await client.doctor.medicalRecords.create.mutate(createdInput);
         const keptMedicalCategory = await prisma.medical_categories.findFirstOrThrow({
-            where: { category_id: influenza.id },
+            where: { category_id: manualTherapy.id },
         });
 
         await client.doctor.medicalRecords.update.mutate({
@@ -110,7 +110,7 @@ describe("doctor.medicalRecords.update", () => {
             id: 1,
             medical_memo: "初診（追記）",
             doctor_memo: "要経過観察",
-            categories: [String(influenza.id), String(headache.id)],
+            categories: [String(manualTherapy.id), String(reductionAndFixation.id)],
         });
 
         const medicalRecords = await client.doctor.medicalRecords.byPatient.query({
@@ -122,27 +122,27 @@ describe("doctor.medicalRecords.update", () => {
                 medical_memo: "初診（追記）",
                 doctor_memo: "要経過観察",
                 categories: expect.arrayContaining([
-                    { id: influenza.id, treatment: "インフルエンザ" },
-                    { id: headache.id, treatment: "頭痛" },
+                    { id: manualTherapy.id, treatment: "手技療法" },
+                    { id: reductionAndFixation.id, treatment: "整復・固定" },
                 ]),
             }),
         ]);
         expect(medicalRecords.flatMap((medicalRecord) => medicalRecord.categories)).toHaveLength(2);
         // 残したカテゴリは削除・再作成されず、元の行がそのまま残る（差分更新であることの確認）。
         await expect(
-            prisma.medical_categories.findFirstOrThrow({ where: { category_id: influenza.id } })
+            prisma.medical_categories.findFirstOrThrow({ where: { category_id: manualTherapy.id } })
         ).resolves.toMatchObject({ id: keptMedicalCategory.id });
     });
 });
 
 describe("doctor.medicalRecords.remove", () => {
     test("論理削除した診療記録は一覧に出ず、紐づくカテゴリも論理削除される", async () => {
-        const { doctor, patient, cold, client } = await prepareDoctorPatientAndCategories();
+        const { doctor, patient, electricTherapy, client } = await prepareDoctorPatientAndCategories();
         await client.doctor.medicalRecords.create.mutate(
             buildMedicalRecordInput({
                 patient_id: patient.id,
                 doctor_id: doctor.id,
-                categories: [String(cold.id)],
+                categories: [String(electricTherapy.id)],
             })
         );
 
