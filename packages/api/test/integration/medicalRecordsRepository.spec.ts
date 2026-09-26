@@ -83,7 +83,7 @@ describe("createMedicalRecord", () => {
 });
 
 // medical_records の doctor / patient は onDelete: Restrict。診療記録は医療の記録なので、
-// 医師や患者の削除に巻き込んで消したり参照先を失わせたりせず、削除そのものを拒否する（#335）。
+// 医師や患者の削除に巻き込んで消したり参照先を失わせたりせず、削除そのものを拒否する（#322）。
 // 以前は SetDefault だったが、列が NOT NULL で既定値も無いため NOT NULL 違反（P2011）で
 // 失敗しており、拒否の理由が意図と食い違っていた。
 describe("medical_records の外部キー（onDelete: Restrict）", () => {
