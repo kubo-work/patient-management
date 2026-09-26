@@ -50,11 +50,11 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
             align={{ base: "stretch", sm: "center" }}
             direction={{ base: "column", sm: "row" }}
           >
-            <label htmlFor="name" className={styles.label}>
+            <label htmlFor="email" className={styles.label}>
               メールアドレス<span style={{ color: "red" }}>*</span>
             </label>
             <TextInput
-              id="mail"
+              id="email"
               type="email"
               placeholder="**@example.com"
               value={form.values.email}

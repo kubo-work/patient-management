@@ -107,7 +107,7 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
               メールアドレス<span style={{ color: "red" }}>*</span>
             </label>
             <TextInput
-              id="mail"
+              id="email"
               type="email"
               placeholder="**@example.com"
               value={form.values.email}
@@ -126,6 +126,7 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
               生年月日<span style={{ color: "red" }}>*</span>
             </label>
             <DateInput
+              id="birth"
               placeholder="yyyy年M月d日"
               valueFormat="YYYY年M月D日"
               {...form.getInputProps("birth")}
