@@ -23,11 +23,18 @@
     "dev:web": "bun run --filter web dev",
     "typecheck": "bun run build:schema && bun run build:auth && bun run build:db && bun run build:api && bun run --filter '*' typecheck",
     "lint": "bun run --filter web lint",
-    "test": "bun run build:schema && bun run build:auth && bun run build:db && bun run --filter @repo/auth test && bun run --filter @repo/api test"
+    "test": "bun run build:schema && bun run build:auth && bun run build:db && vitest run",
+    "test:auth": "vitest run --project auth",
+    "test:api": "bun run build:schema && bun run build:auth && bun run build:db && vitest run --project api"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vite": "8.2.2",
+    "vitest": "5.0.1"
+  },
+  "overrides": {
+    "magic-string": "1.4.1"
   }
 }

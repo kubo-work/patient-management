@@ -22,14 +22,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.0",
     "jose": "6.2.10"
-  },
-  "devDependencies": {
-    "vitest": "4.1.11"
   }
 }
