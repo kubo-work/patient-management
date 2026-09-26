@@ -33,14 +33,14 @@ const createRecordWithoutCategories = (doctorId: number, patientId: number): Pro
 describe("createMedicalRecord", () => {
     test("診療記録と診療カテゴリを保存し、患者ごとの一覧で読み戻せる", async () => {
         const { doctorId, patientId } = await createDoctorAndPatient();
-        const parentCategory = await insertCategory("内科");
-        const childCategory = await insertCategory("風邪", parentCategory.id);
+        const parentCategory = await insertCategory("保険施術");
+        const childCategory = await insertCategory("捻挫", parentCategory.id);
 
         await createMedicalRecord(
             {
                 patient_id: patientId,
                 doctor_id: doctorId,
-                medical_memo: "咳が続く",
+                medical_memo: "右足首を捻った",
                 doctor_memo: "経過観察",
                 examination_at: DEFAULT_EXAMINATION_AT,
             },
@@ -52,11 +52,11 @@ describe("createMedicalRecord", () => {
                 id: 1,
                 patient_id: patientId,
                 doctor_id: doctorId,
-                medical_memo: "咳が続く",
+                medical_memo: "右足首を捻った",
                 doctor_memo: "経過観察",
                 examination_at: DEFAULT_EXAMINATION_AT,
                 medical_categories: [
-                    { categories: { id: childCategory.id, treatment: "風邪" } },
+                    { categories: { id: childCategory.id, treatment: "捻挫" } },
                 ],
             },
         ]);
