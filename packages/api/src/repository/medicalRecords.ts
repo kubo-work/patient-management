@@ -1,5 +1,7 @@
 import { prisma, Prisma, delFlag } from "@repo/db";
+import type { PageRequest, MedicalRecordSortColumn } from "@repo/schema";
 import { z } from "zod";
+import { toPrismaPaging, type PageResult } from "./pagination.js";
 import { diffMedicalCategories } from "../domain/medicalCategoryDiff.js";
 
 // select を satisfies で型付けした上で戻り値型を明示しているのは、
@@ -26,25 +28,29 @@ const medicalRecordSelect = {
     },
 } satisfies Prisma.medical_recordsSelect;
 
-// 選択した患者の診察履歴一覧を取得する。移植前の doctor/medical_records.ts の
-// GET /:patient_id にあった where 句（patient_id と delFlag: ACTIVE の AND）と
-// orderBy はそのまま移した。移植前にあった validStartDate / validEndDate の
-// 計算と、コメントアウトされた examination_at の日付フィルタは、どこからも
-// 使われていない死んだコードだったため移植しない（task-4-brief.md 必須 4）。
-export const findMedicalRecordsByPatient = (
-    patientId: number
-): Prisma.PrismaPromise<
-    Array<Prisma.medical_recordsGetPayload<{ select: typeof medicalRecordSelect }>>
-> =>
-    prisma.medical_records.findMany({
-        select: medicalRecordSelect,
-        where: {
-            AND: [{ patient_id: patientId }, { delFlag: delFlag.ACTIVE }],
-        },
-        orderBy: {
-            id: "desc",
-        },
-    });
+// 選択した患者の診察履歴の 1 ページ分と全件数を取得する。where 句（patient_id と
+// delFlag: ACTIVE の AND）は移植前の doctor/medical_records.ts の GET /:patient_id から
+// 変えておらず、全件数にも同じ条件を使う。移植前の既定の並び（id の降順）は、
+// 画面が sortBy / sortOrder の初期値として渡す。
+export const findMedicalRecordsPageByPatient = async (
+    patientId: number,
+    request: PageRequest<MedicalRecordSortColumn>
+): Promise<
+    PageResult<Prisma.medical_recordsGetPayload<{ select: typeof medicalRecordSelect }>>
+> => {
+    const where = {
+        AND: [{ patient_id: patientId }, { delFlag: delFlag.ACTIVE }],
+    } satisfies Prisma.medical_recordsWhereInput;
+    const [items, totalCount] = await prisma.$transaction([
+        prisma.medical_records.findMany({
+            select: medicalRecordSelect,
+            where,
+            ...toPrismaPaging(request),
+        }),
+        prisma.medical_records.count({ where }),
+    ]);
+    return { items, totalCount };
+};
 
 // medical_categories への createMany 直前の形状検証。移植前の
 // doctor/medical_records.ts の createMedicalCategoriesSchema をそのまま移した。

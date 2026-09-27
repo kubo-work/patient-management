@@ -36,7 +36,19 @@ const prepareDoctorPatientAndCategories = async () => {
     return { doctor, patient, electricTherapy, manualTherapy, reductionAndFixation, client };
 };
 
-describe("doctor.medicalRecords.create / byPatient", () => {
+type DoctorClient = Awaited<ReturnType<typeof createDoctorClient>>;
+
+// 画面の既定と同じく、新しい順（id の降順）の 1 ページ目を取得する。
+const queryNewestFirstPage = (client: DoctorClient, patientId: number) =>
+    client.doctor.medicalRecords.page.query({
+        patientId,
+        page: 1,
+        pageSize: 10,
+        sortBy: "id",
+        sortOrder: "desc",
+    });
+
+describe("doctor.medicalRecords.create / page", () => {
     test("登録した診療記録を、カテゴリを平坦化した形で患者ごとに新しい順で返す", async () => {
         const { doctor, patient, electricTherapy, manualTherapy, client } = await prepareDoctorPatientAndCategories();
         const otherPatient = await insertPatient({ email: "other@example.com" });
@@ -62,12 +74,13 @@ describe("doctor.medicalRecords.create / byPatient", () => {
         );
 
         // create は id を返さないため、空の DB から登録した順の採番（1, 2）で特定する。
-        await expect(
-            client.doctor.medicalRecords.byPatient.query({ patientId: patient.id })
-        ).resolves.toEqual([
-            { ...secondInput, id: 2, categories: [{ id: manualTherapy.id, treatment: "手技療法" }] },
-            { ...firstInput, id: 1, categories: [{ id: electricTherapy.id, treatment: "電気療法" }] },
-        ]);
+        await expect(queryNewestFirstPage(client, patient.id)).resolves.toEqual({
+            items: [
+                { ...secondInput, id: 2, categories: [{ id: manualTherapy.id, treatment: "手技療法" }] },
+                { ...firstInput, id: 1, categories: [{ id: electricTherapy.id, treatment: "電気療法" }] },
+            ],
+            totalCount: 2,
+        });
     });
 
     test("存在しない患者を指定すると BAD_REQUEST になり、何も保存されない", async () => {
@@ -87,6 +100,39 @@ describe("doctor.medicalRecords.create / byPatient", () => {
         });
         await expect(prisma.medical_records.count()).resolves.toBe(0);
         await expect(prisma.medical_categories.count()).resolves.toBe(0);
+    });
+});
+
+describe("doctor.medicalRecords.page", () => {
+    test("診察日で並べた 1 ページ分と、その患者の全件数を返す", async () => {
+        const { doctor, patient, client } = await prepareDoctorPatientAndCategories();
+        const otherPatient = await insertPatient({ email: "other@example.com" });
+        const examinationDates = ["2026-09-10", "2026-09-03", "2026-09-17"].map(
+            (date) => new Date(`${date}T09:00:00.000Z`)
+        );
+        for (const examination_at of examinationDates) {
+            await client.doctor.medicalRecords.create.mutate(
+                buildMedicalRecordInput({ patient_id: patient.id, doctor_id: doctor.id, examination_at })
+            );
+        }
+        await client.doctor.medicalRecords.create.mutate(
+            buildMedicalRecordInput({ patient_id: otherPatient.id, doctor_id: doctor.id })
+        );
+
+        const oldestFirstPage = await client.doctor.medicalRecords.page.query({
+            patientId: patient.id,
+            page: 1,
+            pageSize: 10,
+            sortBy: "examination_at",
+            sortOrder: "asc",
+        });
+
+        expect(oldestFirstPage.items.map((medicalRecord) => medicalRecord.examination_at)).toEqual([
+            examinationDates[1],
+            examinationDates[0],
+            examinationDates[2],
+        ]);
+        expect(oldestFirstPage.totalCount).toBe(3);
     });
 });
 
@@ -113,9 +159,7 @@ describe("doctor.medicalRecords.update", () => {
             categories: [String(manualTherapy.id), String(reductionAndFixation.id)],
         });
 
-        const medicalRecords = await client.doctor.medicalRecords.byPatient.query({
-            patientId: patient.id,
-        });
+        const { items: medicalRecords } = await queryNewestFirstPage(client, patient.id);
         // medical_categories の取得順は select で指定していないため、順序を問わずに比べる。
         expect(medicalRecords).toEqual([
             expect.objectContaining({
@@ -148,9 +192,10 @@ describe("doctor.medicalRecords.remove", () => {
 
         await client.doctor.medicalRecords.remove.mutate({ id: 1 });
 
-        await expect(
-            client.doctor.medicalRecords.byPatient.query({ patientId: patient.id })
-        ).resolves.toEqual([]);
+        await expect(queryNewestFirstPage(client, patient.id)).resolves.toEqual({
+            items: [],
+            totalCount: 0,
+        });
         await expect(
             prisma.medical_records.findUniqueOrThrow({ where: { id: 1 } })
         ).resolves.toMatchObject({ delFlag: "DELETED" });

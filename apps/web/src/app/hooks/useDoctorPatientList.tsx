@@ -1,11 +1,12 @@
 import { MRT_ColumnDef } from "mantine-react-table";
 import React, { useMemo } from "react";
-import { PatientType, sexList } from "@repo/schema";
+import { sexList } from "@repo/schema";
+import type { PatientListItemType } from "../../lib/trpc";
 import Link from "next/link";
 import { Button, Flex } from "@mantine/core";
 
 const useDoctorPatientList = () => {
-  const columns = useMemo<MRT_ColumnDef<PatientType>[]>(
+  const columns = useMemo<MRT_ColumnDef<PatientListItemType>[]>(
     () => [
       {
         accessorKey: "id",

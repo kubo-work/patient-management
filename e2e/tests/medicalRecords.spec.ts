@@ -1,7 +1,13 @@
 import type { Locator, Page } from "@playwright/test";
 import { test, expect } from "../support/fixtures.ts";
+import { DOCTOR_PAGES } from "../support/doctorPages.ts";
 import { logInAsSeededDoctor } from "../support/login.ts";
-import { SEEDED_CATEGORIES, SEEDED_PATIENT } from "../support/testDatabase.ts";
+import {
+    findPatientIdByEmail,
+    insertPatient,
+    SEEDED_CATEGORIES,
+    SEEDED_PATIENT,
+} from "../support/testDatabase.ts";
 
 const [ELECTRIC_THERAPY, MANUAL_THERAPY] = SEEDED_CATEGORIES.CHILDREN;
 
@@ -26,20 +32,37 @@ const openMedicalRecordsOfSeededPatient = async (page: Page): Promise<void> => {
     await expect(page.getByRole("heading", { name: `${SEEDED_PATIENT.name} 様` })).toBeVisible();
 };
 
+// 開いている診察履歴画面で、指定した子カテゴリとメモの診察を作成し、一覧に表示されるまで待つ。
+const createMedicalRecord = async (
+    page: Page,
+    { childTreatment, memo }: { childTreatment: string; memo: string }
+): Promise<void> => {
+    await page.getByRole("button", { name: "新しい診察を作成" }).click();
+    const dialog = page.getByRole("dialog", { name: "新しい診察を作成" });
+    await toggleCategories(dialog, [childTreatment]);
+    await dialog.getByLabel("メモ", { exact: true }).fill(memo);
+    await dialog.getByRole("button", { name: "保存" }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("診察を保存しました。", { exact: true })).toBeVisible();
+    await expect(page.getByRole("row", { name: childTreatment })).toBeVisible();
+};
+
+// 患者 ID で診察履歴画面を開き、その患者の名前の見出しが表示されるまで待つ。
+const openMedicalRecordsOf = async (
+    page: Page,
+    { patientId, patientName }: { patientId: number; patientName: string }
+): Promise<void> => {
+    await page.goto(`${DOCTOR_PAGES.MEDICAL_RECORDS}?patients_id=${patientId}`);
+    await expect(page.getByRole("heading", { name: `${patientName} 様` })).toBeVisible();
+};
+
 test("診察履歴から診察を作成し、編集して、削除できる", async ({ page }) => {
     await logInAsSeededDoctor(page);
     await openMedicalRecordsOfSeededPatient(page);
 
     await test.step("新しい診察を作成する", async () => {
-        await page.getByRole("button", { name: "新しい診察を作成" }).click();
-        const dialog = page.getByRole("dialog", { name: "新しい診察を作成" });
-        await toggleCategories(dialog, [ELECTRIC_THERAPY]);
-        await dialog.getByLabel("メモ", { exact: true }).fill("右足首を捻った");
-        await dialog.getByRole("button", { name: "保存" }).click();
-
-        await expect(dialog).toBeHidden();
-        await expect(page.getByText("診察を保存しました。", { exact: true })).toBeVisible();
-        await expect(page.getByRole("row", { name: ELECTRIC_THERAPY })).toBeVisible();
+        await createMedicalRecord(page, { childTreatment: ELECTRIC_THERAPY, memo: "右足首を捻った" });
     });
 
     await test.step("診察のカテゴリを入れ替えて更新する", async () => {
@@ -67,4 +90,21 @@ test("診察履歴から診察を作成し、編集して、削除できる", as
         await expect(page.getByText("診察を削除しました。", { exact: true })).toBeVisible();
         await expect(page.getByRole("row", { name: MANUAL_THERAPY })).toHaveCount(0);
     });
+});
+
+// 以前は保存時に患者名で全患者から患者を探しており、同じ名前の患者がいると
+// 先に登録された患者の診察として保存されていた。
+test("同じ名前の患者がいても、開いている患者の診察として保存される", async ({ page }) => {
+    const seededPatientId = await findPatientIdByEmail(SEEDED_PATIENT.email);
+    const sameNamePatientId = await insertPatient({
+        ...SEEDED_PATIENT,
+        email: "same-name-patient@example.com",
+    });
+    await logInAsSeededDoctor(page);
+
+    await openMedicalRecordsOf(page, { patientId: sameNamePatientId, patientName: SEEDED_PATIENT.name });
+    await createMedicalRecord(page, { childTreatment: ELECTRIC_THERAPY, memo: "右足首を捻った" });
+
+    await openMedicalRecordsOf(page, { patientId: seededPatientId, patientName: SEEDED_PATIENT.name });
+    await expect(page.getByRole("row", { name: ELECTRIC_THERAPY })).toHaveCount(0);
 });

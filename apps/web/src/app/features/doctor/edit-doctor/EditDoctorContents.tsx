@@ -1,6 +1,8 @@
 "use client";
 
 import useDoctorEdit from "@/app/hooks/useDoctorEdit";
+import { revalidatePagedQueries } from "@/app/hooks/usePagedQuery";
+import { DOCTORS_PAGE_QUERY_NAME } from "@/app/hooks/useDoctorsPage";
 import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
 import { TextInput, Flex, Button, PasswordInput, Alert } from "@mantine/core";
 import React, { FC } from "react";
@@ -23,7 +25,10 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
       )}
       <form
         onSubmit={form.onSubmit(() =>
-          handleSubmit(form.values, doctorsDoMutate)
+          handleSubmit(form.values, () => {
+            doctorsDoMutate();
+            revalidatePagedQueries(DOCTORS_PAGE_QUERY_NAME);
+          })
         )}
       >
         <Flex direction="column" gap="lg">

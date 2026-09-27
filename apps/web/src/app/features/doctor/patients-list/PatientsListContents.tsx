@@ -1,16 +1,16 @@
 "use client";
-import { MantineReactTable } from "mantine-react-table";
 import React, { FC } from "react";
 import useDoctorPatientList from "@/app/hooks/useDoctorPatientList";
-import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
+import usePatientsPage from "@/app/hooks/usePatientsPage";
 import TableHeader from "../components/TableHeader";
+import ServerPagedTable from "../components/ServerPagedTable";
 import { useSearchParams } from "next/navigation";
 import useShowNotification from "@/app/hooks/useShowNotification";
 import { Notifications } from "@mantine/notifications";
 
 const PatientsListContents: FC<Record<string, never>> = React.memo(() => {
   const { columns } = useDoctorPatientList();
-  const { patients } = useGlobalDoctor();
+  const { table } = usePatientsPage();
   const searchParams = useSearchParams();
   useShowNotification(searchParams);
   return (
@@ -19,15 +19,7 @@ const PatientsListContents: FC<Record<string, never>> = React.memo(() => {
         url="/doctor/edit-patient"
         textLabel="新しい患者さんを登録"
       />
-      {patients ? (
-        <MantineReactTable
-          columns={columns}
-          data={patients}
-          initialState={{ sorting: [{ id: "id", desc: false }] }}
-        />
-      ) : (
-        ""
-      )}
+      <ServerPagedTable columns={columns} {...table} />
       <Notifications />
     </>
   );

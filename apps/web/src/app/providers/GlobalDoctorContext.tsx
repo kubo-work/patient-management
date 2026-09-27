@@ -1,8 +1,7 @@
 import { createContext, ReactNode, useMemo } from "react";
 import useSWR from "swr";
 
-import { CategoriesType, DoctorType, PatientType, SexTypes, SexListData } from "@repo/schema";
-import { PatientNameSuggestionsType } from "../types/PatientNameSuggestionsTypes";
+import { CategoriesType, DoctorType, SexTypes, SexListData } from "@repo/schema";
 import { trpcClient } from "../../lib/trpc";
 
 export type GlobalDoctorContextType = {
@@ -12,9 +11,6 @@ export type GlobalDoctorContextType = {
   categoriesDoMutate: () => void;
   doctors: DoctorType[] | undefined;
   doctorsDoMutate: () => void;
-  patients: PatientType[] | undefined;
-  patientsMutate: () => void;
-  patientNameSuggestions: PatientNameSuggestionsType[] | undefined;
   sexList: SexTypes;
   sexListData: SexListData[];
 };
@@ -39,30 +35,15 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
     () => trpcClient.doctor.categories.list.query()
   );
 
-  // 医者一覧データの管理
+  // 医者一覧データの管理。診察フォームの担当医の選択肢で全件を使う。
+  // 医師一覧画面は doctor.doctors.page でページごとに取得する（useDoctorsPage）。
   const { data: doctorsData, mutate: doctorsDoMutate } = useSWR(
     "doctor.doctors.list",
     () => trpcClient.doctor.doctors.list.query()
   );
 
-  // 患者一覧データの管理
-  const { data: patientsData, mutate: patientsMutate } = useSWR(
-    "doctor.patients.list",
-    () => trpcClient.doctor.patients.list.query()
-  );
-
-  // 患者の名前をサジェストするためのリストを準備
-  const patientNameSuggestions: PatientNameSuggestionsType[] | undefined =
-    useMemo(
-      () =>
-        patientsData
-          ? patientsData.map((patient) => ({
-              value: patient.name,
-              id: patient.id.toString(),
-            }))
-          : undefined,
-      [patientsData]
-    );
+  // 患者は件数が増え続けるため、ここで全件を持たない。
+  // 患者一覧は doctor.patients.page でページごとに取得する（usePatientsPage）。
 
   const sexList: SexTypes = useMemo(() => {
     return {
@@ -97,9 +78,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
         categoriesDoMutate,
         doctors: doctorsData,
         doctorsDoMutate,
-        patients: patientsData,
-        patientsMutate,
-        patientNameSuggestions,
         sexList,
         sexListData,
       }}

@@ -30,6 +30,46 @@ export const SEEDED_CATEGORIES = {
     CHILDREN: ["電気療法", "手技療法"],
 } as const;
 
+type PatientRecord = { name: string; email: string; tel: string; address: string; birth: string };
+
+const insertPatientWith = async (client: pg.Client, patient: PatientRecord): Promise<number> => {
+    const {
+        rows: [insertedPatient],
+    } = await client.query<{ id: number }>(
+        "INSERT INTO patients (name, email, password, tel, address, birth) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+        [patient.name, patient.email, UNUSED_PATIENT_PASSWORD, patient.tel, patient.address, patient.birth]
+    );
+    if (!insertedPatient) {
+        throw new Error(`患者「${patient.name}」の登録結果が返りませんでした。`);
+    }
+    return insertedPatient.id;
+};
+
+const withClient = async <Result>(run: (client: pg.Client) => Promise<Result>): Promise<Result> => {
+    const client = new pg.Client({ connectionString: DATABASE_URL });
+    await client.connect();
+    try {
+        return await run(client);
+    } finally {
+        await client.end();
+    }
+};
+
+// 初期データに加えて、テストごとの前提となる患者を登録する。登録した患者の id を返す。
+export const insertPatient = (patient: PatientRecord): Promise<number> =>
+    withClient((client) => insertPatientWith(client, patient));
+
+export const findPatientIdByEmail = (email: string): Promise<number> =>
+    withClient(async (client) => {
+        const {
+            rows: [foundPatient],
+        } = await client.query<{ id: number }>("SELECT id FROM patients WHERE email = $1", [email]);
+        if (!foundPatient) {
+            throw new Error(`メールアドレス「${email}」の患者が見つかりませんでした。`);
+        }
+        return foundPatient.id;
+    });
+
 const insertCategory = async (
     client: pg.Client,
     treatment: string,
@@ -54,10 +94,8 @@ const insertCategories = async (client: pg.Client): Promise<void> => {
     }
 };
 
-export const resetDatabase = async (): Promise<void> => {
-    const client = new pg.Client({ connectionString: DATABASE_URL });
-    await client.connect();
-    try {
+export const resetDatabase = (): Promise<void> =>
+    withClient(async (client) => {
         const { rows } = await client.query<{ tablename: string }>(USER_TABLES_QUERY);
         await client.query(buildTruncateAllTablesSql(rows.map((row) => row.tablename)));
         // argon2 のハッシュ化は 1 回約 16ms のため、結果を保持する状態を持たずに毎回計算する。
@@ -66,19 +104,6 @@ export const resetDatabase = async (): Promise<void> => {
             SEEDED_DOCTOR.email,
             await hashPassword(SEEDED_DOCTOR.password),
         ]);
-        await client.query(
-            "INSERT INTO patients (name, email, password, tel, address, birth) VALUES ($1, $2, $3, $4, $5, $6)",
-            [
-                SEEDED_PATIENT.name,
-                SEEDED_PATIENT.email,
-                UNUSED_PATIENT_PASSWORD,
-                SEEDED_PATIENT.tel,
-                SEEDED_PATIENT.address,
-                SEEDED_PATIENT.birth,
-            ]
-        );
+        await insertPatientWith(client, SEEDED_PATIENT);
         await insertCategories(client);
-    } finally {
-        await client.end();
-    }
-};
+    });

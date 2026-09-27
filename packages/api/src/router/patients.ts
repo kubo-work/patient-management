@@ -1,10 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { sexList } from "@repo/schema";
+import { patientSortColumns, sexList } from "@repo/schema";
 import { hashPassword } from "@repo/auth/password";
 import { router, protectedProcedure } from "../trpc/init.js";
 import { derivePatientInitialPassword } from "../domain/patientPassword.js";
-import { createPatient, findAllPatients, findPatientById, updatePatient } from "../repository/patients.js";
+import { createPatient, findPatientById, findPatientsPage, updatePatient } from "../repository/patients.js";
+import { createPageInputSchema, createPageOutputSchema } from "./pageSchemas.js";
 
 // sexList のキーから zod の enum を組み立てる。値は参照せずキーだけを使うため
 // unknown で受ける。@repo/schema に置かないのは、schema パッケージを zod に
@@ -39,7 +40,15 @@ const getPatientSchema = z.object({
     id: z.number(),
 });
 
-const getPatientsSchema = z.array(getPatientSchema);
+// 一覧に表示する列だけの形。連絡先・生年月日を一覧で返さないことを出力側でも保証する。
+const patientsPageSchema = createPageOutputSchema(
+    z.object({
+        id: z.number(),
+        name: z.string(),
+        sex: basePatientSchemaObject.sex,
+        address: z.string(),
+    })
+);
 
 const createPatientSchema = z.object({
     ...basePatientSchemaObject,
@@ -55,9 +64,9 @@ type CreatePatientSchema = z.infer<typeof createPatientSchema>;
 type UpdatePatientSchema = z.infer<typeof updatePatientSchema>;
 
 export const patientsRouter = router({
-    list: protectedProcedure.query(async () => {
+    page: protectedProcedure.input(createPageInputSchema(patientSortColumns)).query(async ({ input }) => {
         try {
-            return getPatientsSchema.parse(await findAllPatients());
+            return patientsPageSchema.parse(await findPatientsPage(input));
         } catch {
             throw new TRPCError({
                 code: "BAD_REQUEST",

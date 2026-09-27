@@ -10,3 +10,19 @@ export type { SexTypes } from "./types/SexTypes.js";
 
 export { doctorCookieName } from "./util/CookieName.js";
 export { sexList } from "./util/SexList.js";
+export {
+    doctorSortColumns,
+    isPageSize,
+    medicalRecordSortColumns,
+    pageSizeOptions,
+    patientSortColumns,
+    sortOrders,
+} from "./util/Pagination.js";
+export type {
+    DoctorSortColumn,
+    MedicalRecordSortColumn,
+    PageRequest,
+    PageSize,
+    PatientSortColumn,
+    SortOrder,
+} from "./util/Pagination.js";
