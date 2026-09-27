@@ -36,6 +36,15 @@ export default defineConfig({
                 },
             },
             {
+                // web の、画面の描画を伴わない純粋な処理（列定義・API の入力への変換など）。
+                // alias を足すと Vite サーバを共有できなくなるため、テスト対象は @/ を使わず相対パスで import する。
+                test: {
+                    name: "web",
+                    include: ["apps/web/test/**/*.spec.ts"],
+                    environment: "node",
+                },
+            },
+            {
                 // DB に触れないテスト（domain / 認可 / CSRF など）。
                 test: {
                     name: "api",

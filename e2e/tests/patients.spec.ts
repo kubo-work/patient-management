@@ -2,7 +2,7 @@ import { test, expect } from "../support/fixtures.ts";
 import { DOCTOR_PAGES } from "../support/doctorPages.ts";
 import { expectSavedOnList } from "../support/listPage.ts";
 import { logInAsSeededDoctor } from "../support/login.ts";
-import { SEEDED_PATIENT } from "../support/testDatabase.ts";
+import { insertPatient, SEEDED_PATIENT } from "../support/testDatabase.ts";
 
 test.describe("患者の登録", () => {
     test("患者一覧から新しい患者を登録すると、一覧に戻って登録した患者が表示される", async ({
@@ -52,6 +52,52 @@ test.describe("患者情報の編集", () => {
             listPath: DOCTOR_PAGES.PATIENTS_LIST,
             result: "update",
             rowText: renamedPatientName,
+        });
+    });
+});
+
+// 初期データの患者 1 人に加えて登録し、1 ページ（10 件）に収まらない 11 人にする。
+// 行を名前で探すため、どの名前も他の名前の一部にならないようにする。
+const ADDITIONAL_PATIENT_NAMES = [
+    "青木 一郎",
+    "石田 二郎",
+    "上野 三郎",
+    "江口 四郎",
+    "大塚 五郎",
+    "加藤 六郎",
+    "木村 七郎",
+    "工藤 八郎",
+    "小林 九郎",
+    "斉藤 十郎",
+] as const;
+const LAST_REGISTERED_PATIENT_NAME = ADDITIONAL_PATIENT_NAMES[ADDITIONAL_PATIENT_NAMES.length - 1];
+
+test.describe("患者一覧の並べ替えとページ送り", () => {
+    test("既定は ID の昇順で 1 ページ 10 件表示し、見出しを押すと並びが変わる", async ({ page }) => {
+        for (const [index, name] of ADDITIONAL_PATIENT_NAMES.entries()) {
+            await insertPatient({ ...SEEDED_PATIENT, name, email: `listed-patient-${index}@example.com` });
+        }
+        await logInAsSeededDoctor(page);
+        const lastRegisteredPatientRow = page.getByRole("row", { name: LAST_REGISTERED_PATIENT_NAME });
+
+        await test.step("最後に登録した 11 人目は 2 ページ目に表示される", async () => {
+            await expect(page.getByText("全 11 件", { exact: true })).toBeVisible();
+            await expect(lastRegisteredPatientRow).toHaveCount(0);
+
+            await page.getByRole("button", { name: "2", exact: true }).click();
+
+            await expect(lastRegisteredPatientRow).toBeVisible();
+        });
+
+        await test.step("ID の見出しを押すと降順になり、1 ページ目の先頭に最後に登録した患者が来る", async () => {
+            await page.getByRole("button", { name: "ID", exact: true }).click();
+
+            await expect(page.getByRole("columnheader", { name: "ID" })).toHaveAttribute(
+                "aria-sort",
+                "descending"
+            );
+            // 1 行目は見出しの行のため、データの先頭は 2 行目になる。
+            await expect(page.getByRole("row").nth(1)).toContainText(LAST_REGISTERED_PATIENT_NAME);
         });
     });
 });
