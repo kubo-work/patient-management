@@ -1,15 +1,23 @@
 "use client";
 import React, { FC } from "react";
+import Link from "next/link";
+import { Button } from "@mantine/core";
+import type { DoctorType } from "@repo/schema";
 import useDoctorsPage from "@/app/hooks/useDoctorsPage";
-import useDoctorsList from "@/app/hooks/useDoctorsList";
 import { useSearchParams } from "next/navigation";
 import { Notifications } from "@mantine/notifications";
 import TableHeader from "../components/TableHeader";
-import ServerPagedTable from "../components/ServerPagedTable";
+import DataTable from "../components/dataTable/DataTable";
+import { doctorsListColumns } from "./doctorsListColumns";
 import useShowNotification from "@/app/hooks/useShowNotification";
 
+const renderDoctorActions = (doctor: DoctorType) => (
+  <Button component={Link} href={`/doctor/edit-doctor/${doctor.id}`}>
+    編集
+  </Button>
+);
+
 const DoctorsListContents: FC<Record<string, never>> = React.memo(() => {
-  const { columns } = useDoctorsList();
   const { table } = useDoctorsPage();
   const searchParams = useSearchParams();
   useShowNotification(searchParams);
@@ -20,7 +28,11 @@ const DoctorsListContents: FC<Record<string, never>> = React.memo(() => {
         url="/doctor/edit-doctor"
         textLabel="新しいお医者さんを登録"
       />
-      <ServerPagedTable columns={columns} {...table} />
+      <DataTable
+        columns={doctorsListColumns}
+        renderRowActions={renderDoctorActions}
+        {...table}
+      />
       <Notifications />
     </>
   );

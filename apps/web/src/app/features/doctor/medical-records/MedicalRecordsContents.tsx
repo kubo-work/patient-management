@@ -3,11 +3,12 @@ import useMedicalRecords from "@/app/hooks/useMedicalRecords";
 import React from "react";
 import { Box, Button, Flex, Modal } from "@mantine/core";
 import MedicalRecordForm from "../components/MedicalRecordForm";
-import ServerPagedTable from "../components/ServerPagedTable";
+import DataTable from "../components/dataTable/DataTable";
+import { medicalRecordsColumns } from "./medicalRecordsColumns";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { PatientType } from "@repo/schema";
+import { MedicalRecordsType, PatientType } from "@repo/schema";
 import { Notifications } from "@mantine/notifications";
 
 type Props = {
@@ -27,8 +28,19 @@ const MedicalRecordsContents = React.memo(
       setSelectedRecord,
       isNewRecord,
       setIsNewRecord,
-      columns,
     } = useMedicalRecords(patients_id);
+
+    // 選択した診察を編集モーダルで開く。state を更新するため、コンポーネントの中で定義する。
+    const renderMedicalRecordActions = (medicalRecord: MedicalRecordsType) => (
+      <Button
+        onClick={() => {
+          setIsNewRecord(false);
+          setSelectedRecord(medicalRecord);
+        }}
+      >
+        編集
+      </Button>
+    );
 
     return (
       <>
@@ -70,7 +82,11 @@ const MedicalRecordsContents = React.memo(
           </Flex>
         </Box>
         <Box>
-          <ServerPagedTable columns={columns} {...table} />
+          <DataTable
+            columns={medicalRecordsColumns}
+            renderRowActions={renderMedicalRecordActions}
+            {...table}
+          />
         </Box>
         <Notifications />
       </>
