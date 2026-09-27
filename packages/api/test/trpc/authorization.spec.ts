@@ -14,11 +14,12 @@ const oneMinuteAgoInSeconds = Math.floor(Date.now() / 1000) - 60;
 const protectedQueryPaths = [
     "/trpc/doctor.categories.list",
     "/trpc/doctor.doctors.list",
+    "/trpc/doctor.doctors.page",
     "/trpc/doctor.doctors.byId",
     "/trpc/doctor.loginDoctor",
-    "/trpc/doctor.patients.list",
+    "/trpc/doctor.patients.page",
     "/trpc/doctor.patients.byId",
-    "/trpc/doctor.medicalRecords.byPatient",
+    "/trpc/doctor.medicalRecords.page",
 ];
 
 describe("認可が必要な query は Cookie 無しで 401 を返す", () => {

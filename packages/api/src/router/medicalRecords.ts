@@ -1,10 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { medicalRecordSortColumns } from "@repo/schema";
 import { router, protectedProcedure } from "../trpc/init.js";
 import { toMedicalRecordView } from "../domain/medicalRecordView.js";
+import { createPageInputSchema } from "./pageSchemas.js";
 import {
     createMedicalRecord,
-    findMedicalRecordsByPatient,
+    findMedicalRecordsPageByPatient,
     removeMedicalRecord,
     updateMedicalRecord,
 } from "../repository/medicalRecords.js";
@@ -47,14 +49,19 @@ const medicalRecordFieldsSchema = {
 export const medicalRecordsRouter = router({
     // 期間での絞り込みは #305 で UI とセットで設計し直す。移植前の受け口は
     // フロントから一度も呼ばれておらず、絞り込みの実装も無効化されていた。
-    byPatient: protectedProcedure
-        .input(z.object({ patientId: z.number() }))
+    page: protectedProcedure
+        .input(
+            createPageInputSchema(medicalRecordSortColumns).extend({ patientId: z.number() })
+        )
         .query(async ({ input }) => {
+            const { patientId, ...pageRequest } = input;
             try {
-                const rows = medicalRecordRowsSchema.parse(
-                    await findMedicalRecordsByPatient(input.patientId)
+                const { items, totalCount } = await findMedicalRecordsPageByPatient(
+                    patientId,
+                    pageRequest
                 );
-                return rows.map((row) => toMedicalRecordView(row));
+                const rows = medicalRecordRowsSchema.parse(items);
+                return { items: rows.map((row) => toMedicalRecordView(row)), totalCount };
             } catch {
                 throw new TRPCError({
                     code: "BAD_REQUEST",

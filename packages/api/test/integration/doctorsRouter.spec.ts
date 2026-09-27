@@ -21,6 +21,24 @@ describe("doctor.doctors.list", () => {
     });
 });
 
+describe("doctor.doctors.page", () => {
+    test("指定した列で並べた 1 ページ分と全件数を返し、パスワードを含まない", async () => {
+        const firstDoctor = await insertDoctor({ name: "医師 一郎", email: "a@example.com" });
+        const secondDoctor = await insertDoctor({ name: "医師 二郎", email: "b@example.com" });
+        const client = await createDoctorClient(firstDoctor);
+
+        await expect(
+            client.doctor.doctors.page.query({ page: 1, pageSize: 10, sortBy: "email", sortOrder: "desc" })
+        ).resolves.toEqual({
+            items: [
+                { id: secondDoctor.id, name: "医師 二郎", email: "b@example.com" },
+                { id: firstDoctor.id, name: "医師 一郎", email: "a@example.com" },
+            ],
+            totalCount: 2,
+        });
+    });
+});
+
 describe("doctor.doctors.byId", () => {
     test("存在しない医師は NOT_FOUND になる", async () => {
         const client = await createDoctorClient(await insertDoctor());

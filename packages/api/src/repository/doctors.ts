@@ -1,4 +1,6 @@
 import { prisma, Prisma } from "@repo/db";
+import type { PageRequest, DoctorSortColumn } from "@repo/schema";
+import { toPrismaPaging, type PageResult } from "./pagination.js";
 
 // select を satisfies で型付けした上で戻り値型を明示しているのは、
 // tsconfig の declaration: true 下で推論に任せると TS2883
@@ -22,6 +24,17 @@ export const findAllDoctors = (): Prisma.PrismaPromise<
         select: doctorSelect,
         orderBy: { id: "asc" },
     });
+
+// 医師一覧の 1 ページ分と全件数を取得する。findAllDoctors は診察フォームの担当医の選択肢で使う。
+export const findDoctorsPage = async (
+    request: PageRequest<DoctorSortColumn>
+): Promise<PageResult<Prisma.doctorsGetPayload<{ select: typeof doctorSelect }>>> => {
+    const [items, totalCount] = await prisma.$transaction([
+        prisma.doctors.findMany({ select: doctorSelect, ...toPrismaPaging(request) }),
+        prisma.doctors.count(),
+    ]);
+    return { items, totalCount };
+};
 
 // id 指定で医師を 1 件取得する。移植前の doctor/doctors.ts の
 // GET /:doctor_id と doctor/login_doctor.ts の GET / の両方がこの形の

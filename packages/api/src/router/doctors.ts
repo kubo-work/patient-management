@@ -3,7 +3,9 @@ import { TRPCError } from "@trpc/server";
 import { z, ZodError } from "zod";
 import { hashPassword } from "@repo/auth/password";
 import { router, protectedProcedure } from "../trpc/init.js";
-import { createDoctor, findAllDoctors, findDoctorById, updateDoctor } from "../repository/doctors.js";
+import { doctorSortColumns } from "@repo/schema";
+import { createDoctor, findAllDoctors, findDoctorById, findDoctorsPage, updateDoctor } from "../repository/doctors.js";
+import { createPageInputSchema, createPageOutputSchema } from "./pageSchemas.js";
 
 // password は出力スキーマに含めない。含めると repository が返さなくなっても
 // 型の上では「返る」ことになり、将来 select を戻したときに素通しする
@@ -20,6 +22,8 @@ export const getDoctorSchema = z.object({
 });
 
 const getDoctorsSchema = z.array(getDoctorSchema);
+
+const doctorsPageSchema = createPageOutputSchema(getDoctorSchema);
 
 const createDoctorSchema = z.object({
     ...baseDoctorSchema,
@@ -41,6 +45,18 @@ export const doctorsRouter = router({
     list: protectedProcedure.query(async () => {
         try {
             return getDoctorsSchema.parse(await findAllDoctors());
+        } catch {
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "データの取得に失敗しました。",
+            });
+        }
+    }),
+
+    // 医師一覧画面が使う。list は診察フォームの担当医の選択肢が全件を必要とするため残している。
+    page: protectedProcedure.input(createPageInputSchema(doctorSortColumns)).query(async ({ input }) => {
+        try {
+            return doctorsPageSchema.parse(await findDoctorsPage(input));
         } catch {
             throw new TRPCError({
                 code: "BAD_REQUEST",

@@ -2,7 +2,7 @@ import { describe, test, expect } from "vitest";
 import { prisma } from "@repo/db";
 import {
     createMedicalRecord,
-    findMedicalRecordsByPatient,
+    findMedicalRecordsPageByPatient,
 } from "../../src/repository/medicalRecords.js";
 import {
     DEFAULT_EXAMINATION_AT,
@@ -47,19 +47,29 @@ describe("createMedicalRecord", () => {
             [childCategory.id]
         );
 
-        await expect(findMedicalRecordsByPatient(patientId)).resolves.toEqual([
-            {
-                id: 1,
-                patient_id: patientId,
-                doctor_id: doctorId,
-                medical_memo: "右足首を捻った",
-                doctor_memo: "経過観察",
-                examination_at: DEFAULT_EXAMINATION_AT,
-                medical_categories: [
-                    { categories: { id: childCategory.id, treatment: "電気療法" } },
-                ],
-            },
-        ]);
+        await expect(
+            findMedicalRecordsPageByPatient(patientId, {
+                page: 1,
+                pageSize: 10,
+                sortBy: "id",
+                sortOrder: "desc",
+            })
+        ).resolves.toEqual({
+            items: [
+                {
+                    id: 1,
+                    patient_id: patientId,
+                    doctor_id: doctorId,
+                    medical_memo: "右足首を捻った",
+                    doctor_memo: "経過観察",
+                    examination_at: DEFAULT_EXAMINATION_AT,
+                    medical_categories: [
+                        { categories: { id: childCategory.id, treatment: "電気療法" } },
+                    ],
+                },
+            ],
+            totalCount: 1,
+        });
     });
 
     test("存在しないカテゴリを渡すとトランザクション全体が取り消され、診療記録も残らない", async () => {

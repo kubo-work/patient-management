@@ -7,17 +7,6 @@ import { insertDoctor, insertPatient, NONEXISTENT_ID } from "../support/testReco
 
 type InsertedPatient = Awaited<ReturnType<typeof insertPatient>>;
 
-// API が返す患者の形。パスワードと作成・更新日時は含まない。
-const toPatientResponse = ({ id, name, email, tel, sex, address, birth }: InsertedPatient) => ({
-    id,
-    name,
-    email,
-    tel,
-    sex,
-    address,
-    birth,
-});
-
 const newPatientInput = {
     name: "患者 太郎",
     email: "new-patient@example.com",
@@ -27,16 +16,74 @@ const newPatientInput = {
     birth: new Date("1985-05-05T00:00:00.000Z"),
 };
 
-describe("doctor.patients.list / byId", () => {
-    test("一覧はパスワードを含まない", async () => {
+const firstPageSortedById = { page: 1, pageSize: 10, sortBy: "id", sortOrder: "asc" } as const;
+
+// 名前だけを変えた患者を順に登録する。メールアドレスは一意制約があるため連番にする。
+const insertPatientsNamed = async (names: readonly string[]): Promise<InsertedPatient[]> => {
+    const insertedPatients: InsertedPatient[] = [];
+    for (const [index, name] of names.entries()) {
+        insertedPatients.push(await insertPatient({ name, email: `patient-${index}@example.com` }));
+    }
+    return insertedPatients;
+};
+
+describe("doctor.patients.page", () => {
+    test("一覧に表示する列だけを返し、連絡先・生年月日・パスワードを含まない", async () => {
         const patient = await insertPatient();
         const client = await createDoctorClient(await insertDoctor());
 
-        await expect(client.doctor.patients.list.query()).resolves.toEqual([
-            toPatientResponse(patient),
-        ]);
+        await expect(client.doctor.patients.page.query(firstPageSortedById)).resolves.toEqual({
+            items: [
+                { id: patient.id, name: patient.name, sex: patient.sex, address: patient.address },
+            ],
+            totalCount: 1,
+        });
     });
 
+    test("指定したページの行と、ページングする前の全件数を返す", async () => {
+        const patients = await insertPatientsNamed(
+            Array.from({ length: 12 }, (_, index) => `患者 ${index + 1}`)
+        );
+        const client = await createDoctorClient(await insertDoctor());
+
+        const secondPage = await client.doctor.patients.page.query({ ...firstPageSortedById, page: 2 });
+        const outOfRangePage = await client.doctor.patients.page.query({ ...firstPageSortedById, page: 3 });
+
+        expect(secondPage.items.map((item) => item.id)).toEqual(
+            patients.slice(10).map((patient) => patient.id)
+        );
+        expect(secondPage.totalCount).toBe(12);
+        expect(outOfRangePage).toEqual({ items: [], totalCount: 12 });
+    });
+
+    test("指定した列で並べ、同じ値の行は昇順・降順どちらでも id の昇順に並べる", async () => {
+        const [firstSuzuki, sato, secondSuzuki] = await insertPatientsNamed(["鈴木", "佐藤", "鈴木"]);
+        const client = await createDoctorClient(await insertDoctor());
+        const sortedIds = async (sortOrder: "asc" | "desc") =>
+            (
+                await client.doctor.patients.page.query({ ...firstPageSortedById, sortBy: "name", sortOrder })
+            ).items.map((item) => item.id);
+
+        // 「佐」（U+4F50）は「鈴」（U+9234）より前に並ぶ。
+        await expect(sortedIds("asc")).resolves.toEqual([sato.id, firstSuzuki.id, secondSuzuki.id]);
+        await expect(sortedIds("desc")).resolves.toEqual([firstSuzuki.id, secondSuzuki.id, sato.id]);
+    });
+
+    test.each([
+        ["許可していない列での並べ替え", { sortBy: "email" }],
+        ["選択肢に無い 1 ページの件数", { pageSize: 1000 }],
+        ["1 未満のページ", { page: 0 }],
+    ])("%sは BAD_REQUEST になる", async (_, invalidInput) => {
+        const client = await createDoctorClient(await insertDoctor());
+
+        await expect(
+            // 不正な値を API に届けるため、型の検査を外して渡す。
+            client.doctor.patients.page.query({ ...firstPageSortedById, ...invalidInput } as never)
+        ).rejects.toMatchObject({ data: { code: "BAD_REQUEST" } });
+    });
+});
+
+describe("doctor.patients.byId", () => {
     test("存在しない患者は NOT_FOUND になる", async () => {
         const client = await createDoctorClient(await insertDoctor());
 
