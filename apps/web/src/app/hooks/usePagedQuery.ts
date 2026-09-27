@@ -10,7 +10,7 @@ import {
     type StateUpdater,
 } from "../util/pageQuery";
 
-// テーブルに渡す表示状態と操作。ServerPagedTable の props と同じ形。
+// テーブルに渡す表示状態と操作。DataTable の props と同じ形。
 export type PagedTableState<Item> = {
     items: Item[];
     totalCount: number;

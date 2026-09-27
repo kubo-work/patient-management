@@ -1,15 +1,31 @@
 "use client";
 import React, { FC } from "react";
-import useDoctorPatientList from "@/app/hooks/useDoctorPatientList";
+import Link from "next/link";
+import { Button, Flex } from "@mantine/core";
 import usePatientsPage from "@/app/hooks/usePatientsPage";
 import TableHeader from "../components/TableHeader";
-import ServerPagedTable from "../components/ServerPagedTable";
+import DataTable from "../components/dataTable/DataTable";
+import { patientsListColumns } from "./patientsListColumns";
 import { useSearchParams } from "next/navigation";
 import useShowNotification from "@/app/hooks/useShowNotification";
 import { Notifications } from "@mantine/notifications";
+import type { PatientListItemType } from "@/lib/trpc";
+
+const renderPatientActions = (patient: PatientListItemType) => (
+  <Flex gap={4}>
+    <Button
+      component={Link}
+      href={`/doctor/medical-records?patients_id=${patient.id}`}
+    >
+      診察履歴
+    </Button>
+    <Button component={Link} href={`/doctor/edit-patient/${patient.id}`}>
+      患者情報
+    </Button>
+  </Flex>
+);
 
 const PatientsListContents: FC<Record<string, never>> = React.memo(() => {
-  const { columns } = useDoctorPatientList();
   const { table } = usePatientsPage();
   const searchParams = useSearchParams();
   useShowNotification(searchParams);
@@ -19,7 +35,11 @@ const PatientsListContents: FC<Record<string, never>> = React.memo(() => {
         url="/doctor/edit-patient"
         textLabel="新しい患者さんを登録"
       />
-      <ServerPagedTable columns={columns} {...table} />
+      <DataTable
+        columns={patientsListColumns}
+        renderRowActions={renderPatientActions}
+        {...table}
+      />
       <Notifications />
     </>
   );
