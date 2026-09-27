@@ -15,13 +15,13 @@ describe("toMedicalRecordView", () => {
         const view = toMedicalRecordView({
             ...baseRow,
             medical_categories: [
-                { categories: { id: 3, treatment: "虫歯治療" } },
-                { categories: { id: 4, treatment: "歯石除去" } },
+                { categories: { id: 3, treatment: "電気療法" } },
+                { categories: { id: 4, treatment: "手技療法" } },
             ],
         });
         expect(view.categories).toEqual([
-            { id: 3, treatment: "虫歯治療" },
-            { id: 4, treatment: "歯石除去" },
+            { id: 3, treatment: "電気療法" },
+            { id: 4, treatment: "手技療法" },
         ]);
     });
 

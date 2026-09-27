@@ -1,14 +1,4 @@
-export type SexTypes = {
-    no_answer: {
-        label: "未回答"
-    };
-    man: {
-        label: "男性"
-    };
-    woman: {
-        label: "女性"
-    };
-    neither: {
-        label: "その他"
-    }
-}
+import type { sexList } from "../util/SexList.js";
+
+// 性別の型は sexList から導き、定義を 1 箇所にする。
+export type SexTypes = typeof sexList;

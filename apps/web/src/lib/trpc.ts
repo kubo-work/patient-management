@@ -19,5 +19,13 @@ export const trpcClient = createTRPCClient<AppRouter>({
 // API の出力の型は、router の zod スキーマから tRPC が推論したものを使う。
 // @repo/schema に同じ形を書き直すと、定義が 2 箇所になり食い違いうるため。
 // inferRouterOutputs は @trpc/server にしか無いため、クライアントの戻り値から導く。
-type PatientsPage = Awaited<ReturnType<typeof trpcClient.doctor.patients.page.query>>;
-export type PatientListItemType = PatientsPage["items"][number];
+type QueryOutput<Procedure extends { query: (...args: never[]) => Promise<unknown> }> =
+    Awaited<ReturnType<Procedure["query"]>>;
+
+export type PatientType = QueryOutput<typeof trpcClient.doctor.patients.byId>;
+export type PatientListItemType = QueryOutput<typeof trpcClient.doctor.patients.page>["items"][number];
+// loginDoctor / doctors.list / doctors.page も同じ出力スキーマ（getDoctorSchema）で返すため、
+// この型を共有する。形が食い違えば、代入する箇所で型エラーになる。
+export type DoctorType = QueryOutput<typeof trpcClient.doctor.doctors.byId>;
+export type MedicalRecordType = QueryOutput<typeof trpcClient.doctor.medicalRecords.page>["items"][number];
+export type CategoryType = QueryOutput<typeof trpcClient.doctor.categories.list>[number];

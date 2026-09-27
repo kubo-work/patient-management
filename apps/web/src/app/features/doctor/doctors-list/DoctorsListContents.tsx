@@ -2,7 +2,7 @@
 import React, { FC } from "react";
 import Link from "next/link";
 import { Button } from "@mantine/core";
-import type { DoctorType } from "@repo/schema";
+import type { DoctorType } from "@/lib/trpc";
 import useDoctorsPage from "@/app/hooks/useDoctorsPage";
 import { useSearchParams } from "next/navigation";
 import { Notifications } from "@mantine/notifications";

@@ -1,6 +1,5 @@
-import { SexTypes } from "../types/SexTypes.js";
-
-export const sexList: SexTypes = {
+// 性別の選択肢。API の zod 検証（キー）と画面の表示名（label）の両方がこれを参照する。
+export const sexList = {
     no_answer: {
         label: "未回答"
     },
@@ -13,4 +12,4 @@ export const sexList: SexTypes = {
     neither: {
         label: "その他"
     }
-} as const
+} as const;

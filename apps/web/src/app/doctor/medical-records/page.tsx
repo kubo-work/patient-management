@@ -3,8 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Title } from "@mantine/core";
 import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
-import { PatientType } from "@repo/schema";
-import { trpcClient } from "../../../lib/trpc";
+import { trpcClient, type PatientType } from "../../../lib/trpc";
 
 function MedicalRecordsInner() {
   const searchParams = useSearchParams();

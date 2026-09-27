@@ -1,10 +1,5 @@
-export type { BasicCategoriesType } from "./types/BasicCategoriesType.js";
-export type { CategoriesType } from "./types/CategoriesType.js";
-export type { DelFlagType } from "./types/DelFllagType.js";
-export type { DoctorType } from "./types/DoctorType.js";
-export type { MedicalRecordsCategoryType } from "./types/MedicalRecordsCategoryType.js";
-export type { MedicalRecordsType } from "./types/MedicalRecordsType.js";
-export type { PatientType } from "./types/PatientType.js";
+// API の出力の型はここに置かない。web は tRPC の推論から得る（apps/web/src/lib/trpc.ts）。
+// ここに置くのは、API と web の両方が実行時に値として使う定数と、そこから導く型だけにする。
 export type { SexListData } from "./types/SexListData.js";
 export type { SexTypes } from "./types/SexTypes.js";
 

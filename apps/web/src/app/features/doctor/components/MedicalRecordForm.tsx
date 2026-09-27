@@ -11,7 +11,7 @@ import {
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import React, { FC } from "react";
-import { MedicalRecordsType } from "@repo/schema";
+import type { MedicalRecordType } from "@/lib/trpc";
 import useMedicalRecordForm from "@/app/hooks/useMedicalRecordForm";
 import { DateTimePicker } from "@mantine/dates";
 
@@ -20,7 +20,7 @@ import styles from "./styles/MedicalRecordForm.module.scss";
 type Props = {
   name: string;
   patientId: number;
-  data: MedicalRecordsType | null;
+  data: MedicalRecordType | null;
   mutate: () => void;
   modalClosed: () => void;
 };

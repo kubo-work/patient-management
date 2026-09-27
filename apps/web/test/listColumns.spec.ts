@@ -3,8 +3,8 @@ import {
     doctorSortColumns,
     medicalRecordSortColumns,
     patientSortColumns,
-    type MedicalRecordsType,
 } from "@repo/schema";
+import type { MedicalRecordType } from "../src/lib/trpc";
 import type { RowData } from "@tanstack/react-table";
 import type { DataTableColumns } from "../src/app/features/doctor/components/dataTable/dataTableFeatures";
 import { doctorsListColumns } from "../src/app/features/doctor/doctors-list/doctorsListColumns";
@@ -58,7 +58,7 @@ describe("診察履歴の列", () => {
     });
 
     test("施術の列は、施術名の配列を値にする", () => {
-        const medicalRecord: MedicalRecordsType = {
+        const medicalRecord: MedicalRecordType = {
             id: 1,
             patient_id: 1,
             doctor_id: 1,

@@ -1,7 +1,7 @@
-import { MedicalRecordsType, medicalRecordSortColumns } from "@repo/schema";
+import { medicalRecordSortColumns } from "@repo/schema";
 import { useState } from "react";
 import usePagedQuery, { revalidatePagedQueries } from "./usePagedQuery";
-import { trpcClient } from "../../lib/trpc";
+import { trpcClient, type MedicalRecordType } from "../../lib/trpc";
 
 const MEDICAL_RECORDS_PAGE_QUERY_NAME = "doctor.medicalRecords.page";
 
@@ -14,7 +14,7 @@ const revalidateMedicalRecordsPages = (): Promise<void> =>
 // 列の定義は features/doctor/medical-records/medicalRecordsColumns.ts に置く。
 const useMedicalRecords = (patients_id: number) => {
   const [selectedRecord, setSelectedRecord] =
-    useState<MedicalRecordsType | null>(null);
+    useState<MedicalRecordType | null>(null);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
 
   // 移植前の API と同じく新しい順（id の降順）を既定の並びにする。
