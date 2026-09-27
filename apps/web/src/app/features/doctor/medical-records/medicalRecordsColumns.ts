@@ -1,4 +1,4 @@
-import type { MedicalRecordsType } from "@repo/schema";
+import type { MedicalRecordType } from "../../../../lib/trpc";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -13,7 +13,7 @@ const CLINIC_TIME_ZONE = "Asia/Tokyo";
 export const formatExaminationAt = (examinationAt: Date): string =>
   dayjs(examinationAt).utc().tz(CLINIC_TIME_ZONE).format("YYYY年M月D日 H:mm");
 
-const columnHelper = createDataTableColumnHelper<MedicalRecordsType>();
+const columnHelper = createDataTableColumnHelper<MedicalRecordType>();
 
 // 列の id は、API の sortBy（@repo/schema の medicalRecordSortColumns）と同じ文字列にする。
 export const medicalRecordsColumns = columnHelper.columns([

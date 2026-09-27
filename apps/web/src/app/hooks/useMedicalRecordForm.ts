@@ -2,10 +2,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useGlobalDoctor } from "./useGlobalDoctor";
 import { useForm } from "@mantine/form";
-import { MedicalRecordsType } from "@repo/schema";
 import dayjs from "dayjs";
 import setShowNotification from "../../../constants/setShowNotification";
-import { trpcClient } from "../../lib/trpc";
+import { trpcClient, type MedicalRecordType } from "../../lib/trpc";
 
 type FormValues = {
     id: string;
@@ -18,7 +17,7 @@ type FormValues = {
 
 // patientId は診察履歴画面の URL（patients_id）で確定している患者。
 // 以前は患者名で全患者から探していたため、同じ名前の患者がいると別の患者の診察として保存された。
-const useMedicalRecordForm = (patientId: number, data: MedicalRecordsType | null) => {
+const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null) => {
     const { loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
 

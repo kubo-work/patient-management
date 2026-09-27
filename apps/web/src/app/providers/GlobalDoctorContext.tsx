@@ -1,18 +1,15 @@
-import { createContext, ReactNode, useMemo } from "react";
+import { createContext, ReactNode } from "react";
 import useSWR from "swr";
 
-import { CategoriesType, DoctorType, SexTypes, SexListData } from "@repo/schema";
-import { trpcClient } from "../../lib/trpc";
+import { trpcClient, type CategoryType, type DoctorType } from "../../lib/trpc";
 
 export type GlobalDoctorContextType = {
   loginDoctor: DoctorType | undefined;
   loginDoMutate: () => void;
-  categories: CategoriesType[] | undefined;
+  categories: CategoryType[] | undefined;
   categoriesDoMutate: () => void;
   doctors: DoctorType[] | undefined;
   doctorsDoMutate: () => void;
-  sexList: SexTypes;
-  sexListData: SexListData[];
 };
 
 export const GlobalDoctorContext = createContext<GlobalDoctorContextType>(
@@ -45,30 +42,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
   // 患者は件数が増え続けるため、ここで全件を持たない。
   // 患者一覧は doctor.patients.page でページごとに取得する（usePatientsPage）。
 
-  const sexList: SexTypes = useMemo(() => {
-    return {
-      no_answer: {
-        label: "未回答",
-      },
-      man: {
-        label: "男性",
-      },
-      woman: {
-        label: "女性",
-      },
-      neither: {
-        label: "その他",
-      },
-    };
-  }, []);
-
-  const sexListData: SexListData[] = Object.entries(sexList).map(
-    ([key, value]) => ({
-      value: key as keyof SexTypes,
-      label: value.label,
-    })
-  );
-
   return (
     <GlobalDoctorContext.Provider
       value={{
@@ -78,8 +51,6 @@ const GlobalDoctorProvider = (props: { children: ReactNode }) => {
         categoriesDoMutate,
         doctors: doctorsData,
         doctorsDoMutate,
-        sexList,
-        sexListData,
       }}
     >
       {children}

@@ -8,7 +8,7 @@ import { medicalRecordsColumns } from "./medicalRecordsColumns";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { MedicalRecordsType, PatientType } from "@repo/schema";
+import type { MedicalRecordType, PatientType } from "@/lib/trpc";
 import { Notifications } from "@mantine/notifications";
 
 type Props = {
@@ -31,7 +31,7 @@ const MedicalRecordsContents = React.memo(
     } = useMedicalRecords(patients_id);
 
     // 選択した診察を編集モーダルで開く。state を更新するため、コンポーネントの中で定義する。
-    const renderMedicalRecordActions = (medicalRecord: MedicalRecordsType) => (
+    const renderMedicalRecordActions = (medicalRecord: MedicalRecordType) => (
       <Button
         onClick={() => {
           setIsNewRecord(false);

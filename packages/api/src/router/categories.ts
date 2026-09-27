@@ -3,7 +3,8 @@ import { z } from "zod";
 import { router, protectedProcedure } from "../trpc/init.js";
 import { findParentCategoriesWithChildren } from "../repository/categories.js";
 
-const categorySchema = z.object({
+// カテゴリ 1 件の形。診察履歴の出力（router/medicalRecords.ts）でも使う。
+export const categorySchema = z.object({
     id: z.number(),
     treatment: z.string(),
 });

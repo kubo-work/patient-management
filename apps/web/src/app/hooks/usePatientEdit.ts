@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { PatientType } from "@repo/schema";
 import { useForm } from "@mantine/form";
 import setShowNotification from "../../../constants/setShowNotification";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { trpcClient } from "../../lib/trpc";
+import { trpcClient, type PatientType } from "../../lib/trpc";
 
 type FormValues = {
     name: string;
@@ -16,7 +15,7 @@ type FormValues = {
     password?: string;
 }
 
-const getPatientFetcher = async (id: number): Promise<PatientType | undefined> =>
+const getPatientFetcher = (id: number) =>
     trpcClient.doctor.patients.byId.query({ patientId: id });
 
 const usePatientEdit = (id: number | null) => {

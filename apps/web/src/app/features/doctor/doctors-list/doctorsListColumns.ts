@@ -1,4 +1,4 @@
-import type { DoctorType } from "@repo/schema";
+import type { DoctorType } from "../../../../lib/trpc";
 import { createDataTableColumnHelper } from "../components/dataTable/dataTableFeatures";
 
 const columnHelper = createDataTableColumnHelper<DoctorType>();

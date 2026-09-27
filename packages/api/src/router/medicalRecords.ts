@@ -3,7 +3,8 @@ import { z } from "zod";
 import { medicalRecordSortColumns } from "@repo/schema";
 import { router, protectedProcedure } from "../trpc/init.js";
 import { toMedicalRecordView } from "../domain/medicalRecordView.js";
-import { createPageInputSchema } from "./pageSchemas.js";
+import { categorySchema } from "./categories.js";
+import { createPageInputSchema, createPageOutputSchema } from "./pageSchemas.js";
 import {
     createMedicalRecord,
     findMedicalRecordsPageByPatient,
@@ -21,16 +22,16 @@ const medicalRecordRowSchema = z.object({
     medical_memo: z.string(),
     doctor_memo: z.string(),
     doctor_id: z.number(),
-    medical_categories: z.array(
-        z.object({
-            categories: z.object({
-                id: z.number(),
-                treatment: z.string(),
-            }),
-        })
-    ),
+    medical_categories: z.array(z.object({ categories: categorySchema })),
 });
 const medicalRecordRowsSchema = z.array(medicalRecordRowSchema);
+
+// 画面へ返す 1 件の形。行の形から medical_categories を外し、平坦化した categories を足す。
+// 他の一覧と同じく出力をこのスキーマで parse し、web はここから推論した型を受け取る。
+const medicalRecordViewSchema = medicalRecordRowSchema
+    .omit({ medical_categories: true })
+    .extend({ categories: z.array(categorySchema) });
+const medicalRecordsPageSchema = createPageOutputSchema(medicalRecordViewSchema);
 
 // update/create の record 部分のフィールドは .input() で number/string/Date として
 // 直接検証しており、移植前の updateMedicalRecordSchema / createMedicalRecordSchema
@@ -61,7 +62,10 @@ export const medicalRecordsRouter = router({
                     pageRequest
                 );
                 const rows = medicalRecordRowsSchema.parse(items);
-                return { items: rows.map((row) => toMedicalRecordView(row)), totalCount };
+                return medicalRecordsPageSchema.parse({
+                    items: rows.map((row) => toMedicalRecordView(row)),
+                    totalCount,
+                });
             } catch {
                 throw new TRPCError({
                     code: "BAD_REQUEST",

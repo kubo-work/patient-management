@@ -1,6 +1,6 @@
 "use client";
 
-import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
+import { sexList, type SexListData, type SexTypes } from "@repo/schema";
 import { TextInput, Flex, Button, Alert, Select } from "@mantine/core";
 import React, { FC } from "react";
 
@@ -15,8 +15,13 @@ type Props = {
   id: number | null;
 };
 
+// 性別の選択肢（Select の data）。@repo/schema の sexList を唯一の定義とし、ここでは形だけを変える。
+// Object.keys はキーを string[] として返すため、sexList のキーであることを明示する。
+const SEX_OPTIONS: SexListData[] = (Object.keys(sexList) as (keyof SexTypes)[]).map(
+  (sex) => ({ value: sex, label: sexList[sex].label })
+);
+
 const EditPatientContents: FC<Props> = React.memo(({ id }) => {
-  const { sexListData } = useGlobalDoctor();
   const { form, handleSubmit, submitError } = usePatientEdit(id);
   return (
     <>
@@ -61,7 +66,7 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
             </label>
             <Select
               id="sex"
-              data={sexListData}
+              data={SEX_OPTIONS}
               {...form.getInputProps("sex")}
               required
             />
