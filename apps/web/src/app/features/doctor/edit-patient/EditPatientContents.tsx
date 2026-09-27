@@ -6,6 +6,8 @@ import React, { FC } from "react";
 
 import styles from "../components/styles/EditFlexInput.module.scss";
 import usePatientEdit from "@/app/hooks/usePatientEdit";
+import { revalidatePagedQueries } from "@/app/hooks/usePagedQuery";
+import { PATIENTS_PAGE_QUERY_NAME } from "@/app/hooks/usePatientsPage";
 import { DateInput } from "@mantine/dates";
 import dayjs from "dayjs";
 
@@ -14,7 +16,7 @@ type Props = {
 };
 
 const EditPatientContents: FC<Props> = React.memo(({ id }) => {
-  const { patientsMutate, sexListData } = useGlobalDoctor();
+  const { sexListData } = useGlobalDoctor();
   const { form, handleSubmit, submitError } = usePatientEdit(id);
   return (
     <>
@@ -25,7 +27,9 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
       )}
       <form
         onSubmit={form.onSubmit(() =>
-          handleSubmit(form.values, patientsMutate)
+          handleSubmit(form.values, () =>
+            revalidatePagedQueries(PATIENTS_PAGE_QUERY_NAME)
+          )
         )}
       >
         <Flex direction="column" gap="lg">

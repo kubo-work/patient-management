@@ -9,7 +9,6 @@ import { trpcClient } from "../../lib/trpc";
 
 type FormValues = {
     id: string;
-    name: string;
     doctor_id: string;
     categories: string[];
     examination_at: Date;
@@ -17,21 +16,15 @@ type FormValues = {
     doctor_memo: string;
 }
 
-const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => {
-    const { patients, loginDoctor, categories, doctors } = useGlobalDoctor();
+// patientId は診察履歴画面の URL（patients_id）で確定している患者。
+// 以前は患者名で全患者から探していたため、同じ名前の患者がいると別の患者の診察として保存された。
+const useMedicalRecordForm = (patientId: number, data: MedicalRecordsType | null) => {
+    const { loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
-
-    const getName: string = name;
-    const getPatient = patients ? patients?.find((patient) => patient.name === getName) : null;
-
-    const getCategories = data
-        ? data.categories.map((category) => category.id.toString())
-        : [];
 
     const form = useForm({
         initialValues: {
             id: "",
-            name,
             doctor_id: "",
             categories: [""],
             medical_memo: "",
@@ -39,7 +32,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
             examination_at: new Date()
         },
         validate: {
-            name: (value) => value ? null : "選択してください。",
             doctor_id: (value) => value ? null : "選択してください。",
             categories: (value) => value.length > 0 ? null : "少なくとも1つのカテゴリを選択してください",
             examination_at: (value) => {
@@ -75,7 +67,6 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         } else {
             form.setValues({
                 id: "",
-                name,
                 doctor_id: loginDoctor?.id.toString(),
                 categories: [],
                 medical_memo: "",
@@ -83,22 +74,20 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 examination_at: new Date()
             })
         }
-    }, [loginDoctor, name, data])
+    }, [loginDoctor, data])
 
 
     const handleSubmit = useCallback(async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
 
-        const { id, name, doctor_id, examination_at, medical_memo, doctor_memo, categories } = values;
-        const patientData = patients?.find((patient) => patient.name === name);
-        const patient_id = patientData ? Number(patientData.id) : 0;
+        const { id, doctor_id, examination_at, medical_memo, doctor_memo, categories } = values;
         const isUpdate = Boolean(id);
 
         try {
             if (isUpdate) {
                 await trpcClient.doctor.medicalRecords.update.mutate({
                     id: Number(id),
-                    patient_id,
+                    patient_id: patientId,
                     doctor_id: Number(doctor_id),
                     medical_memo,
                     doctor_memo,
@@ -107,7 +96,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
                 });
             } else {
                 await trpcClient.doctor.medicalRecords.create.mutate({
-                    patient_id,
+                    patient_id: patientId,
                     doctor_id: Number(doctor_id),
                     medical_memo,
                     doctor_memo,
@@ -127,7 +116,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         doMutate()
         modalClosed();
         setShowNotification(isUpdate ? "診察を更新しました。" : "診察を保存しました。", "orange");
-    }, [patients])
+    }, [patientId])
 
     const handleDelete = useCallback(async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
@@ -149,7 +138,7 @@ const useMedicalRecordForm = (name: string, data: MedicalRecordsType | null) => 
         modalClosed();
     }, [])
 
-    return { getName, getPatient, loginDoctor, getCategories, categories, doctorsData, form, handleSubmit, handleDelete, submitError }
+    return { categories, doctorsData, form, handleSubmit, handleDelete, submitError }
 }
 
 export default useMedicalRecordForm

@@ -4,4 +4,5 @@ export const DOCTOR_PAGES = {
     PATIENTS_LIST: "/doctor/patients-list",
     NEW_PATIENT: "/doctor/edit-patient",
     DOCTORS_LIST: "/doctor/doctors-list",
+    MEDICAL_RECORDS: "/doctor/medical-records",
 } as const;

@@ -1,9 +1,9 @@
 "use client";
 import useMedicalRecords from "@/app/hooks/useMedicalRecords";
 import React from "react";
-import { MantineReactTable } from "mantine-react-table";
 import { Box, Button, Flex, Modal } from "@mantine/core";
 import MedicalRecordForm from "../components/MedicalRecordForm";
+import ServerPagedTable from "../components/ServerPagedTable";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -21,9 +21,9 @@ dayjs.extend(timezone);
 const MedicalRecordsContents = React.memo(
   ({ patientData, patients_id }: Props) => {
     const {
-      medicalRecord,
+      table,
       selectedRecord,
-      patientMutate,
+      revalidateMedicalRecords,
       setSelectedRecord,
       isNewRecord,
       setIsNewRecord,
@@ -46,8 +46,9 @@ const MedicalRecordsContents = React.memo(
           {(selectedRecord || isNewRecord) && (
             <MedicalRecordForm
               name={patientData.name}
+              patientId={patients_id}
               data={selectedRecord || null}
-              mutate={patientMutate}
+              mutate={revalidateMedicalRecords}
               modalClosed={() => {
                 setSelectedRecord(null);
                 setIsNewRecord(false);
@@ -69,9 +70,7 @@ const MedicalRecordsContents = React.memo(
           </Flex>
         </Box>
         <Box>
-          {medicalRecord && (
-            <MantineReactTable columns={columns} data={medicalRecord} />
-          )}
+          <ServerPagedTable columns={columns} {...table} />
         </Box>
         <Notifications />
       </>
