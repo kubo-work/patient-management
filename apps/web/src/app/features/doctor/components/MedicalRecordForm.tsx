@@ -82,7 +82,9 @@ const MedicalRecordForm: FC<Props> = React.memo(
                   if (!value) {
                     return "日時を選択してください。";
                   }
-                  form.setFieldValue("examination_at", value); // useFormでフィールドの値を更新
+                  // Mantine 8 から onChange は Date ではなく "YYYY-MM-DD HH:mm:ss" の文字列を渡す。
+                  // dayjs はこの形式をローカル時刻として解釈するので、7 系と同じ値になる。
+                  form.setFieldValue("examination_at", dayjs(value).toDate());
                 }}
                 maxDate={dayjs().endOf("day").toDate()}
               />

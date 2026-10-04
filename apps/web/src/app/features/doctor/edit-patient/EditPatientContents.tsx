@@ -146,7 +146,9 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
                 if (!value) {
                   return "生年月日を選択してください。";
                 }
-                form.setFieldValue("birth", value);
+                // Mantine 8 から onChange は Date ではなく "YYYY-MM-DD" の文字列を渡す。
+                // dayjs はこの形式をローカル時刻の 0 時として解釈するので、7 系と同じ値になる。
+                form.setFieldValue("birth", dayjs(value).toDate());
               }}
             />
           </Flex>
