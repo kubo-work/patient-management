@@ -73,6 +73,12 @@ export const insertDoctor = (doctor: DoctorRecord): Promise<void> =>
         ]);
     });
 
+// 画面を操作せずに患者の名前を書き換える。他の医師が更新した状況を再現するために使う。
+export const renamePatient = ({ email, name }: { email: string; name: string }): Promise<void> =>
+    withClient(async (client) => {
+        await client.query("UPDATE patients SET name = $1 WHERE email = $2", [name, email]);
+    });
+
 export const findPatientIdByEmail = (email: string): Promise<number> =>
     withClient(async (client) => {
         const {
@@ -107,6 +113,54 @@ const insertCategories = async (client: pg.Client): Promise<void> => {
         await insertCategory(client, childTreatment, parentCategoryId);
     }
 };
+
+const findIdOrThrow = async (
+    client: pg.Client,
+    { sql, value, label }: { sql: string; value: string; label: string }
+): Promise<number> => {
+    const {
+        rows: [foundRow],
+    } = await client.query<{ id: number }>(sql, [value]);
+    if (!foundRow) {
+        throw new Error(`${label}「${value}」が見つかりませんでした。`);
+    }
+    return foundRow.id;
+};
+
+// 画面を操作せずに、初期データの医師を担当者にした診察を 1 件登録する。
+// 件数の多い一覧を前提にするテストで、準備の時間を短くするために使う。
+export const insertMedicalRecord = ({
+    patientId,
+    childTreatment,
+}: {
+    patientId: number;
+    childTreatment: string;
+}): Promise<void> =>
+    withClient(async (client) => {
+        const doctorId = await findIdOrThrow(client, {
+            sql: "SELECT id FROM doctors WHERE email = $1",
+            value: SEEDED_DOCTOR.email,
+            label: "医師",
+        });
+        const categoryId = await findIdOrThrow(client, {
+            sql: "SELECT id FROM categories WHERE treatment = $1",
+            value: childTreatment,
+            label: "カテゴリ",
+        });
+        const {
+            rows: [insertedMedicalRecord],
+        } = await client.query<{ id: number }>(
+            "INSERT INTO medical_records (patient_id, doctor_id, medical_memo, doctor_memo) VALUES ($1, $2, $3, $4) RETURNING id",
+            [patientId, doctorId, "", ""]
+        );
+        if (!insertedMedicalRecord) {
+            throw new Error("診察の登録結果が返りませんでした。");
+        }
+        await client.query(
+            "INSERT INTO medical_categories (medical_record_id, category_id) VALUES ($1, $2)",
+            [insertedMedicalRecord.id, categoryId]
+        );
+    });
 
 export const resetDatabase = (): Promise<void> =>
     withClient(async (client) => {

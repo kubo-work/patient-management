@@ -5,11 +5,13 @@ import { logInAsSeededDoctor } from "../support/login.ts";
 import {
     findPatientIdByEmail,
     insertDoctor,
+    insertMedicalRecord,
     insertPatient,
     SEEDED_CATEGORIES,
     SEEDED_DOCTOR,
     SEEDED_PATIENT,
 } from "../support/testDatabase.ts";
+import { delayTrpcRequest } from "../support/trpcFailure.ts";
 
 const [ELECTRIC_THERAPY, MANUAL_THERAPY] = SEEDED_CATEGORIES.CHILDREN;
 
@@ -150,4 +152,60 @@ test("担当者の選択を外すと保存できず、別の医師を選ぶと�
         const editDialog = page.getByRole("dialog", { name: "診察編集" });
         await expect(editDialog.getByRole("combobox", { name: "担当者" })).toHaveValue(otherDoctor.name);
     });
+});
+
+// 1 ページは 10 件。11 件目だけが載っているページでその 1 件を削除すると、そのページ自体が無くなる。
+const PAGE_SIZE = 10;
+
+test("最後のページに 1 件だけ残った診察を削除すると、前のページが表示される", async ({ page }) => {
+    const patientId = await findPatientIdByEmail(SEEDED_PATIENT.email);
+    // 既定は新しい順のため、最初に登録した診察が最後のページに来る。この 1 件だけ施術を変えて見分ける。
+    await insertMedicalRecord({ patientId, childTreatment: MANUAL_THERAPY });
+    for (let recordCount = 0; recordCount < PAGE_SIZE; recordCount++) {
+        await insertMedicalRecord({ patientId, childTreatment: ELECTRIC_THERAPY });
+    }
+    await logInAsSeededDoctor(page);
+    await openMedicalRecordsOfSeededPatient(page);
+
+    await test.step("2 ページ目に、最初に登録した診察だけが表示される", async () => {
+        await expect(page.getByText(`全 ${PAGE_SIZE + 1} 件`, { exact: true })).toBeVisible();
+        await page.getByRole("button", { name: "2", exact: true }).click();
+
+        await expect(page.getByRole("row", { name: MANUAL_THERAPY })).toBeVisible();
+        await expect(page.getByRole("row", { name: ELECTRIC_THERAPY })).toHaveCount(0);
+    });
+
+    await test.step("その診察を削除すると、1 ページ目の 10 件が表示される", async () => {
+        await page.getByRole("row", { name: MANUAL_THERAPY }).getByRole("button", { name: "編集" }).click();
+        const dialog = page.getByRole("dialog", { name: "診察編集" });
+        page.once("dialog", (confirmDialog) => confirmDialog.accept());
+        await dialog.getByRole("button", { name: "削除" }).click();
+
+        await expect(dialog).toBeHidden();
+        await expect(page.getByText(`全 ${PAGE_SIZE} 件`, { exact: true })).toBeVisible();
+        await expect(page.getByRole("row", { name: ELECTRIC_THERAPY })).toHaveCount(PAGE_SIZE);
+    });
+});
+
+// 保存は、一覧の取り直しが済むまでモーダルを閉じない。その間にもう一度押せると、診察が 2 件作られる。
+const SAVE_DELAY_MILLISECONDS = 1000;
+
+test("保存中は保存ボタンを押せず、診察は 1 件だけ作られる", async ({ page }) => {
+    await delayTrpcRequest(page, "doctor.medicalRecords.create", SAVE_DELAY_MILLISECONDS);
+    await logInAsSeededDoctor(page);
+    await openMedicalRecordsOfSeededPatient(page);
+    await page.getByRole("button", { name: "新しい診察を作成" }).click();
+    const dialog = page.getByRole("dialog", { name: "新しい診察を作成" });
+    await toggleCategories(dialog, [ELECTRIC_THERAPY]);
+    const saveButton = dialog.getByRole("button", { name: "保存" });
+
+    await saveButton.click();
+
+    await expect(saveButton).toBeDisabled();
+    // 無効かどうかの検査を飛ばして、もう一度押す。ボタンが無効なら何も起きない。
+    // 有効なままなら 2 件目が作られ、下の件数の確認で失敗する。
+    await saveButton.click({ force: true });
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("row", { name: ELECTRIC_THERAPY })).toHaveCount(1);
 });
