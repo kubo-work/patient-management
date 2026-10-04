@@ -4,8 +4,10 @@ import { DOCTOR_PAGES } from "../support/doctorPages.ts";
 import { logInAsSeededDoctor } from "../support/login.ts";
 import {
     findPatientIdByEmail,
+    insertDoctor,
     insertPatient,
     SEEDED_CATEGORIES,
+    SEEDED_DOCTOR,
     SEEDED_PATIENT,
 } from "../support/testDatabase.ts";
 
@@ -107,4 +109,45 @@ test("同じ名前の患者がいても、開いている患者の診察とし�
 
     await openMedicalRecordsOf(page, { patientId: seededPatientId, patientName: SEEDED_PATIENT.name });
     await expect(page.getByRole("row", { name: ELECTRIC_THERAPY })).toHaveCount(0);
+});
+
+// 担当者の欄は、選択済みの選択肢をもう一度押すと選択が外れる（Mantine の Select の既定）。
+test("担当者の選択を外すと保存できず、別の医師を選ぶとその医師の診察として保存される", async ({ page }) => {
+    const otherDoctor = { name: "医師 二郎", email: "second-doctor@example.com" };
+    await insertDoctor(otherDoctor);
+    await logInAsSeededDoctor(page);
+    await openMedicalRecordsOfSeededPatient(page);
+
+    await page.getByRole("button", { name: "新しい診察を作成" }).click();
+    const createDialog = page.getByRole("dialog", { name: "新しい診察を作成" });
+    const doctorSelect = createDialog.getByRole("combobox", { name: "担当者" });
+    // 新規作成では、ログイン中の医師が担当者として選ばれている。
+    await expect(doctorSelect).toHaveValue(SEEDED_DOCTOR.name);
+
+    await test.step("担当者の選択を外すと保存できない", async () => {
+        await doctorSelect.click();
+        await page.getByRole("option", { name: SEEDED_DOCTOR.name }).click();
+        await expect(doctorSelect).toHaveValue("");
+        await createDialog.getByRole("button", { name: "保存" }).click();
+
+        await expect(createDialog.getByText("選択してください。", { exact: true })).toBeVisible();
+        await expect(createDialog).toBeVisible();
+    });
+
+    await test.step("別の医師を選んで保存する", async () => {
+        await doctorSelect.click();
+        await page.getByRole("option", { name: otherDoctor.name }).click();
+        await expect(doctorSelect).toHaveValue(otherDoctor.name);
+        await toggleCategories(createDialog, [ELECTRIC_THERAPY]);
+        await createDialog.getByRole("button", { name: "保存" }).click();
+
+        await expect(createDialog).toBeHidden();
+        await expect(page.getByText("診察を保存しました。", { exact: true })).toBeVisible();
+    });
+
+    await test.step("保存した診察を開き直すと、選んだ医師が担当者になっている", async () => {
+        await page.getByRole("row", { name: ELECTRIC_THERAPY }).getByRole("button", { name: "編集" }).click();
+        const editDialog = page.getByRole("dialog", { name: "診察編集" });
+        await expect(editDialog.getByRole("combobox", { name: "担当者" })).toHaveValue(otherDoctor.name);
+    });
 });

@@ -14,6 +14,7 @@ import React, { FC } from "react";
 import type { MedicalRecordType } from "@/lib/trpc";
 import useMedicalRecordForm from "@/app/hooks/useMedicalRecordForm";
 import { DateTimePicker } from "@mantine/dates";
+import { toDateFromPickerValue } from "@/app/util/datePickerValue";
 
 import styles from "./styles/MedicalRecordForm.module.scss";
 
@@ -45,8 +46,8 @@ const MedicalRecordForm: FC<Props> = React.memo(
           </Alert>
         )}
         <form
-          onSubmit={form.onSubmit(() =>
-            handleSubmit(form.values, mutate, modalClosed)
+          onSubmit={form.onSubmit((values) =>
+            handleSubmit(values, mutate, modalClosed)
           )}
         >
           <Flex direction="column" gap="lg">
@@ -66,7 +67,6 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 placeholder="担当者を選択してください。"
                 {...form.getInputProps("doctor_id")}
                 required
-                error={form.errors.doctor_id}
               />
             </Flex>
             <Flex direction="column" gap="md">
@@ -76,13 +76,12 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 placeholder="yyyy年M月d日"
                 valueFormat="YYYY年M月D日 HH:mm"
                 {...form.getInputProps("examination_at")}
-                error={form.errors.examination_at}
-                value={form.values.examination_at}
                 onChange={(value) => {
+                  // 入力が空になったときは、直前の日時を保つ。
                   if (!value) {
-                    return "日時を選択してください。";
+                    return;
                   }
-                  form.setFieldValue("examination_at", value); // useFormでフィールドの値を更新
+                  form.setFieldValue("examination_at", toDateFromPickerValue(value));
                 }}
                 maxDate={dayjs().endOf("day").toDate()}
               />
@@ -143,20 +142,8 @@ const MedicalRecordForm: FC<Props> = React.memo(
                 </Flex>
               </Flex>
 
-              <Textarea
-                label="メモ"
-                value={form.values.medical_memo}
-                onChange={(e) =>
-                  form.setFieldValue("medical_memo", e.currentTarget.value)
-                }
-              />
-              <Textarea
-                label="お医者メモ"
-                value={form.values.doctor_memo}
-                onChange={(e) =>
-                  form.setFieldValue("doctor_memo", e.currentTarget.value)
-                }
-              />
+              <Textarea label="メモ" {...form.getInputProps("medical_memo")} />
+              <Textarea label="お医者メモ" {...form.getInputProps("doctor_memo")} />
               <Button type="submit">{data === null ? "保存" : "更新"}</Button>
               {data && (
                 <Button

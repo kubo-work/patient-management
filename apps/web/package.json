@@ -13,11 +13,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mantine/core": "^7.17.2",
-    "@mantine/dates": "^7.17.2",
-    "@mantine/form": "^7.17.2",
-    "@mantine/hooks": "^7.17.2",
-    "@mantine/notifications": "^7.17.2",
+    "@mantine/core": "^9.6.3",
+    "@mantine/dates": "^9.6.3",
+    "@mantine/form": "^9.6.3",
+    "@mantine/hooks": "^9.6.3",
+    "@mantine/notifications": "^9.6.3",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/schema": "workspace:*",

@@ -10,6 +10,7 @@ import { revalidatePagedQueries } from "@/app/hooks/usePagedQuery";
 import { PATIENTS_PAGE_QUERY_NAME } from "@/app/hooks/usePatientsPage";
 import { DateInput } from "@mantine/dates";
 import dayjs from "dayjs";
+import { toDateFromPickerValue } from "@/app/util/datePickerValue";
 
 type Props = {
   id: number | null;
@@ -31,8 +32,8 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
         </Alert>
       )}
       <form
-        onSubmit={form.onSubmit(() =>
-          handleSubmit(form.values, () =>
+        onSubmit={form.onSubmit((values) =>
+          handleSubmit(values, () =>
             revalidatePagedQueries(PATIENTS_PAGE_QUERY_NAME)
           )
         )}
@@ -49,11 +50,9 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
             <TextInput
               id="name"
               placeholder="山田太郎"
-              value={form.values.name}
               required
               className={styles.input}
               {...form.getInputProps("name")}
-              error={form.errors.name}
             />
           </Flex>
           <Flex
@@ -82,11 +81,9 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
             <TextInput
               id="tel"
               placeholder="0000-11-2222"
-              value={form.values.tel}
               required
               className={styles.input}
               {...form.getInputProps("tel")}
-              error={form.errors.tel}
             />
           </Flex>
           <Flex
@@ -100,11 +97,9 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
             <TextInput
               id="address"
               placeholder="⚪︎⚪︎県⚪︎⚪︎市⚪︎⚪︎番地"
-              value={form.values.address}
               required
               className={styles.input}
               {...form.getInputProps("address")}
-              error={form.errors.address}
             />
           </Flex>
           <Flex
@@ -119,11 +114,9 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
               id="email"
               type="email"
               placeholder="**@example.com"
-              value={form.values.email}
               className={styles.input}
               required
               {...form.getInputProps("email")}
-              error={form.errors.email}
             />
           </Flex>
           <Flex
@@ -139,14 +132,13 @@ const EditPatientContents: FC<Props> = React.memo(({ id }) => {
               placeholder="yyyy年M月d日"
               valueFormat="YYYY年M月D日"
               {...form.getInputProps("birth")}
-              error={form.errors.birth}
-              value={form.values.birth}
               maxDate={dayjs().endOf("day").toDate()}
               onChange={(value) => {
+                // 入力が空になったときは、直前の日付を保つ。
                 if (!value) {
-                  return "生年月日を選択してください。";
+                  return;
                 }
-                form.setFieldValue("birth", value);
+                form.setFieldValue("birth", toDateFromPickerValue(value));
               }}
             />
           </Flex>

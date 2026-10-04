@@ -24,8 +24,8 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
         </Alert>
       )}
       <form
-        onSubmit={form.onSubmit(() =>
-          handleSubmit(form.values, () => {
+        onSubmit={form.onSubmit((values) =>
+          handleSubmit(values, () => {
             doctorsDoMutate();
             revalidatePagedQueries(DOCTORS_PAGE_QUERY_NAME);
           })
@@ -43,11 +43,9 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
             <TextInput
               id="name"
               placeholder="山田太郎"
-              value={form.values.name}
               required
               className={styles.input}
               {...form.getInputProps("name")}
-              error={form.errors.name}
             />
           </Flex>
           <Flex
@@ -62,11 +60,9 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
               id="email"
               type="email"
               placeholder="**@example.com"
-              value={form.values.email}
               className={styles.input}
               required
               {...form.getInputProps("email")}
-              error={form.errors.email}
             />
           </Flex>
           {(!id || id === loginDoctor?.id) && (
@@ -85,9 +81,7 @@ const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
                 }
                 required={!id}
                 className={styles.input}
-                value={form.values.password}
                 {...form.getInputProps("password")}
-                error={form.errors.password}
               />
             </Flex>
           )}
