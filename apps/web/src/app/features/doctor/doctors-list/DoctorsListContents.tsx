@@ -5,7 +5,6 @@ import { Button } from "@mantine/core";
 import type { DoctorType } from "@/lib/trpc";
 import useDoctorsPage from "@/app/hooks/useDoctorsPage";
 import { useSearchParams } from "next/navigation";
-import { Notifications } from "@mantine/notifications";
 import TableHeader from "../components/TableHeader";
 import DataTable from "../components/dataTable/DataTable";
 import { doctorsListColumns } from "./doctorsListColumns";
@@ -33,7 +32,6 @@ const DoctorsListContents: FC<Record<string, never>> = React.memo(() => {
         renderRowActions={renderDoctorActions}
         {...table}
       />
-      <Notifications />
     </>
   );
 });

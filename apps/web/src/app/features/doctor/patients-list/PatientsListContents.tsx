@@ -8,7 +8,6 @@ import DataTable from "../components/dataTable/DataTable";
 import { patientsListColumns } from "./patientsListColumns";
 import { useSearchParams } from "next/navigation";
 import useShowNotification from "@/app/hooks/useShowNotification";
-import { Notifications } from "@mantine/notifications";
 import type { PatientListItemType } from "@/lib/trpc";
 
 const renderPatientActions = (patient: PatientListItemType) => (
@@ -40,7 +39,6 @@ const PatientsListContents: FC<Record<string, never>> = React.memo(() => {
         renderRowActions={renderPatientActions}
         {...table}
       />
-      <Notifications />
     </>
   );
 });

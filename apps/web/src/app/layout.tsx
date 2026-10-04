@@ -1,4 +1,5 @@
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { theme } from "./util/theme";
@@ -37,6 +38,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <MantineProvider defaultColorScheme="light" theme={theme}>
+          {/* 通知の表示枠は全画面で 1 つだけ置く。画面ごとに置くと、置き忘れた画面では通知が表示されない。 */}
+          <Notifications />
           {children}
         </MantineProvider>
       </body>

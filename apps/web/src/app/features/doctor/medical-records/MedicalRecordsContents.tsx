@@ -9,7 +9,6 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import type { MedicalRecordType, PatientType } from "@/lib/trpc";
-import { Notifications } from "@mantine/notifications";
 
 type Props = {
   patientData: PatientType;
@@ -88,7 +87,6 @@ const MedicalRecordsContents = React.memo(
             {...table}
           />
         </Box>
-        <Notifications />
       </>
     );
   }
