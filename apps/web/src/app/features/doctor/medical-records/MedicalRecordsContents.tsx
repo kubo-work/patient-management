@@ -1,8 +1,8 @@
 "use client";
-import useMedicalRecords from "@/app/hooks/useMedicalRecords";
+import useMedicalRecords from "./hooks/useMedicalRecords";
 import React from "react";
 import { Box, Button, Flex, Modal } from "@mantine/core";
-import MedicalRecordForm from "../components/MedicalRecordForm";
+import MedicalRecordForm from "./MedicalRecordForm";
 import DataTable from "../components/dataTable/DataTable";
 import { medicalRecordsColumns } from "./medicalRecordsColumns";
 import dayjs from "dayjs";
@@ -18,12 +18,13 @@ type Props = {
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const NEW_RECORD_FORM_KEY = "new";
+
 const MedicalRecordsContents = React.memo(
   ({ patientData, patients_id }: Props) => {
     const {
       table,
       selectedRecord,
-      revalidateMedicalRecords,
       setSelectedRecord,
       isNewRecord,
       setIsNewRecord,
@@ -56,10 +57,11 @@ const MedicalRecordsContents = React.memo(
         >
           {(selectedRecord || isNewRecord) && (
             <MedicalRecordForm
+              // 開く診察が変わったら作り直し、その診察の値を初期値にする。
+              key={selectedRecord?.id ?? NEW_RECORD_FORM_KEY}
               name={patientData.name}
               patientId={patients_id}
-              data={selectedRecord || null}
-              mutate={revalidateMedicalRecords}
+              data={selectedRecord}
               modalClosed={() => {
                 setSelectedRecord(null);
                 setIsNewRecord(false);

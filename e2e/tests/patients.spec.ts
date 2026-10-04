@@ -2,7 +2,7 @@ import { test, expect } from "../support/fixtures.ts";
 import { DOCTOR_PAGES } from "../support/doctorPages.ts";
 import { expectSavedOnList } from "../support/listPage.ts";
 import { logInAsSeededDoctor } from "../support/login.ts";
-import { insertPatient, SEEDED_PATIENT } from "../support/testDatabase.ts";
+import { insertPatient, renamePatient, SEEDED_PATIENT } from "../support/testDatabase.ts";
 
 test.describe("患者の登録", () => {
     test("患者一覧から新しい患者を登録すると、一覧に戻って登録した患者が表示される", async ({
@@ -54,6 +54,30 @@ test.describe("患者情報の編集", () => {
             rowText: renamedPatientName,
         });
     });
+});
+
+// 診察履歴の画面も同じ患者を取得するため、その結果がキャッシュに残っている。
+// 編集フォームがキャッシュの値を初期値にすると、保存したときに他の医師の更新を古い値で上書きしてしまう。
+test("診察履歴を開いた後に他で名前が変わっても、編集フォームには取得し直した名前が入る", async ({ page }) => {
+    const renamedPatientName = "患者 花子（他の医師が改姓）";
+    await logInAsSeededDoctor(page);
+    await page
+        .getByRole("row", { name: SEEDED_PATIENT.name })
+        .getByRole("link", { name: "診察履歴" })
+        .click();
+    await expect(page.getByRole("heading", { name: `${SEEDED_PATIENT.name} 様` })).toBeVisible();
+
+    await renamePatient({ email: SEEDED_PATIENT.email, name: renamedPatientName });
+
+    // ページを読み込み直すとキャッシュが消えるため、画面内のリンクだけで編集画面まで進む。
+    await page.getByRole("link", { name: "患者一覧" }).click();
+    await page
+        .getByRole("row", { name: renamedPatientName })
+        .getByRole("link", { name: "患者情報" })
+        .click();
+
+    await expect(page.getByRole("heading", { name: "患者情報を編集" })).toBeVisible();
+    await expect(page.getByLabel("名前")).toHaveValue(renamedPatientName);
 });
 
 // 初期データの患者 1 人に加えて登録し、1 ページ（10 件）に収まらない 11 人にする。

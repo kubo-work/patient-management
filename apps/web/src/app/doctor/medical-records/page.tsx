@@ -1,50 +1,49 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { Title } from "@mantine/core";
+import { Suspense } from "react";
+import { Alert, Title } from "@mantine/core";
+import { skipToken, useQuery } from "@tanstack/react-query";
+import FetchErrorAlert from "@/app/features/doctor/components/FetchErrorAlert";
+import LoadingIndicator from "@/app/features/doctor/components/LoadingIndicator";
 import MedicalRecordsContents from "@/app/features/doctor/medical-records/MedicalRecordsContents";
-import { trpcClient, type PatientType } from "../../../lib/trpc";
+import { useTRPC } from "../../../lib/trpc";
 
-function MedicalRecordsInner() {
+const MedicalRecordsInner = () => {
+  const trpc = useTRPC();
   const searchParams = useSearchParams();
-  const patients_id = Number(searchParams.get("patients_id"));
-  const [patientData, setPatientData] = useState<PatientType | null>(null);
-  const [loading, setLoading] = useState(true);
+  // patients_id が無い・数値でないときは 0 か NaN になり、どちらも「患者が選択されていない」として扱う。
+  const patientId = Number(searchParams.get("patients_id"));
+  const hasPatientId = Boolean(patientId);
 
-  useEffect(() => {
-    if (!patients_id) {
-      setLoading(false);
-      return;
-    }
-    trpcClient.doctor.patients.byId
-      .query({ patientId: patients_id })
-      .then((data) => {
-        setPatientData(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [patients_id]);
+  const { data: patient, error } = useQuery(
+    trpc.doctor.patients.byId.queryOptions(hasPatientId ? { patientId } : skipToken)
+  );
 
-  if (!patients_id) return <div>患者が選択されていません</div>;
-  if (loading) return <div>Loading...</div>;
-  if (!patientData) return <div>データが見つかりません</div>;
+  if (!hasPatientId) return <Alert color="red">患者が選択されていません</Alert>;
+  // 取得済みの患者があれば、表示を続ける。表示後の取り直しが失敗しても、
+  // 入力中の診察フォームごと画面を外さない。
+  if (patient === undefined) {
+    return error ? <FetchErrorAlert error={error} /> : <LoadingIndicator />;
+  }
 
   return (
     <>
       <header>
         <Title order={1} ta="center">
-          {patientData.name} 様
+          {patient.name} 様
         </Title>
       </header>
-      <MedicalRecordsContents patientData={patientData} patients_id={patients_id} />
+      <MedicalRecordsContents patientData={patient} patients_id={patientId} />
     </>
   );
-}
+};
 
-export default function Page() {
+const Page = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingIndicator />}>
       <MedicalRecordsInner />
     </Suspense>
   );
-}
+};
+
+export default Page;

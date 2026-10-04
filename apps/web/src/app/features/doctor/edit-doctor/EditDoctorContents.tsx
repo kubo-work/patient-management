@@ -1,99 +1,48 @@
 "use client";
 
-import useDoctorEdit from "@/app/hooks/useDoctorEdit";
-import { revalidatePagedQueries } from "@/app/hooks/usePagedQuery";
-import { DOCTORS_PAGE_QUERY_NAME } from "@/app/hooks/useDoctorsPage";
-import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
-import { TextInput, Flex, Button, PasswordInput, Alert } from "@mantine/core";
-import React, { FC } from "react";
-
-import styles from "../components/styles/EditFlexInput.module.scss";
+import { useQuery } from "@tanstack/react-query";
+import type { FC } from "react";
+import { useTRPC } from "@/lib/trpc";
+import FetchErrorAlert from "../components/FetchErrorAlert";
+import LoadingIndicator from "../components/LoadingIndicator";
+import DoctorForm from "./DoctorForm";
 
 type Props = {
+  // null なら新規登録。
   id: number | null;
 };
 
-const EditDoctorContents: FC<Props> = React.memo(({ id }) => {
-  const { loginDoctor, doctorsDoMutate } = useGlobalDoctor();
-  const { form, handleSubmit, submitError } = useDoctorEdit(id);
-  return (
-    <>
-      {submitError && (
-        <Alert color="red" mb="md">
-          {submitError}
-        </Alert>
-      )}
-      <form
-        onSubmit={form.onSubmit((values) =>
-          handleSubmit(values, () => {
-            doctorsDoMutate();
-            revalidatePagedQueries(DOCTORS_PAGE_QUERY_NAME);
-          })
-        )}
-      >
-        <Flex direction="column" gap="lg">
-          <Flex
-            gap="lg"
-            align={{ base: "stretch", sm: "center" }}
-            direction={{ base: "column", sm: "row" }}
-          >
-            <label htmlFor="name" className={styles.label}>
-              名前<span style={{ color: "red" }}>*</span>
-            </label>
-            <TextInput
-              id="name"
-              placeholder="山田太郎"
-              required
-              className={styles.input}
-              {...form.getInputProps("name")}
-            />
-          </Flex>
-          <Flex
-            gap="lg"
-            align={{ base: "stretch", sm: "center" }}
-            direction={{ base: "column", sm: "row" }}
-          >
-            <label htmlFor="email" className={styles.label}>
-              メールアドレス<span style={{ color: "red" }}>*</span>
-            </label>
-            <TextInput
-              id="email"
-              type="email"
-              placeholder="**@example.com"
-              className={styles.input}
-              required
-              {...form.getInputProps("email")}
-            />
-          </Flex>
-          {(!id || id === loginDoctor?.id) && (
-            <Flex
-              gap="lg"
-              align={{ base: "stretch", sm: "center" }}
-              direction={{ base: "column", sm: "row" }}
-            >
-              <label htmlFor="password" className={styles.label}>
-                パスワード{!id && <span style={{ color: "red" }}>*</span>}
-              </label>
-              <PasswordInput
-                id="password"
-                placeholder={
-                  id ? "変更する場合のみ入力してください。" : "パスワードを入力してください。"
-                }
-                required={!id}
-                className={styles.input}
-                {...form.getInputProps("password")}
-              />
-            </Flex>
-          )}
-          <Flex>
-            <Button type="submit">{id ? "更新" : "保存"}</Button>
-          </Flex>
-        </Flex>
-      </form>
-    </>
-  );
-});
+type ExistingDoctorFormProps = {
+  doctorId: number;
+};
 
-EditDoctorContents.displayName = "EditDoctorContents";
+// 医師を取得してから、その値を初期値にしたフォームを描画する。
+const ExistingDoctorForm: FC<ExistingDoctorFormProps> = ({ doctorId }) => {
+  const trpc = useTRPC();
+  // 取得は、この画面を開いたときの 1 回だけにする。
+  // - staleTime: 0 … 開くたびに必ず取り直す。下の isFetchedAfterMount による判定はこれを前提にしている。
+  // - refetchOnWindowFocus / refetchOnReconnect: false … フォームの初期値は開いたときの値しか使わないため、
+  //   表示後の取り直しは要らない。取り直しが失敗すると、入力中のフォームがエラー表示に替わってしまう。
+  const { data: doctor, error, isFetchedAfterMount } = useQuery(
+    trpc.doctor.doctors.byId.queryOptions(
+      { doctorId },
+      { staleTime: 0, refetchOnWindowFocus: false, refetchOnReconnect: false }
+    )
+  );
+
+  if (error) return <FetchErrorAlert error={error} />;
+  // フォームの初期値には、キャッシュではなく、この画面を開いてから取得し直した値を使う。
+  // 他の画面が同じデータを取得済みだとキャッシュがすぐ返るため、取り直しが済むまで待つ。
+  if (!isFetchedAfterMount || doctor === undefined) return <LoadingIndicator />;
+
+  return <DoctorForm doctor={doctor} />;
+};
+
+const EditDoctorContents: FC<Props> = ({ id }) => {
+  if (id === null) {
+    return <DoctorForm doctor={null} />;
+  }
+  return <ExistingDoctorForm doctorId={id} />;
+};
 
 export default EditDoctorContents;

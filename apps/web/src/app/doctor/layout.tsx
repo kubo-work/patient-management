@@ -1,7 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
 import DoctorDashboardLayout from "../features/doctor/layout/DoctorDashboardLayout";
-import GlobalDoctorProvider from "../providers/GlobalDoctorContext";
 import GlobalDoctorLoginProvider from "../providers/GlobalDoctorLoginContext";
 
 export default function Layout({
@@ -15,9 +14,7 @@ export default function Layout({
   } else {
     return (
       <GlobalDoctorLoginProvider>
-        <GlobalDoctorProvider>
-          <DoctorDashboardLayout>{children}</DoctorDashboardLayout>
-        </GlobalDoctorProvider>
+        <DoctorDashboardLayout>{children}</DoctorDashboardLayout>
       </GlobalDoctorLoginProvider>
     );
   }
