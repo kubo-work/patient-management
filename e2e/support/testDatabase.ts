@@ -31,6 +31,7 @@ export const SEEDED_CATEGORIES = {
 } as const;
 
 type PatientRecord = { name: string; email: string; tel: string; address: string; birth: string };
+type DoctorRecord = { name: string; email: string };
 
 const insertPatientWith = async (client: pg.Client, patient: PatientRecord): Promise<number> => {
     const {
@@ -58,6 +59,19 @@ const withClient = async <Result>(run: (client: pg.Client) => Promise<Result>): 
 // 初期データに加えて、テストごとの前提となる患者を登録する。登録した患者の id を返す。
 export const insertPatient = (patient: PatientRecord): Promise<number> =>
     withClient((client) => insertPatientWith(client, patient));
+
+// ログインに使わない医師のパスワード。照合されないため、ハッシュ化していない値をそのまま入れる。
+const UNUSED_DOCTOR_PASSWORD = "unused-doctor-password";
+
+// 初期データの医師に加えて、担当者として選ぶだけの医師を登録する。
+export const insertDoctor = (doctor: DoctorRecord): Promise<void> =>
+    withClient(async (client) => {
+        await client.query("INSERT INTO doctors (name, email, password) VALUES ($1, $2, $3)", [
+            doctor.name,
+            doctor.email,
+            UNUSED_DOCTOR_PASSWORD,
+        ]);
+    });
 
 export const findPatientIdByEmail = (email: string): Promise<number> =>
     withClient(async (client) => {

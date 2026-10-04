@@ -8,12 +8,15 @@ import { trpcClient, type MedicalRecordType } from "../../lib/trpc";
 
 type FormValues = {
     id: string;
-    doctor_id: string;
+    // 未選択は null。Mantine 9 から Select が数値の値を扱えるため、ID を文字列へ変換しない。
+    doctor_id: number | null;
     categories: string[];
     examination_at: Date;
     medical_memo: string;
     doctor_memo: string;
 }
+
+const DOCTOR_NOT_SELECTED_MESSAGE = "選択してください。";
 
 // patientId は診察履歴画面の URL（patients_id）で確定している患者。
 // 以前は患者名で全患者から探していたため、同じ名前の患者がいると別の患者の診察として保存された。
@@ -21,22 +24,20 @@ const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null)
     const { loginDoctor, categories, doctors } = useGlobalDoctor();
     const [submitError, setSubmitError] = useState<string>("");
 
-    const form = useForm({
+    const form = useForm<FormValues>({
         initialValues: {
             id: "",
-            doctor_id: "",
-            categories: [""],
+            doctor_id: null,
+            categories: [],
             medical_memo: "",
             doctor_memo: "",
             examination_at: new Date()
         },
         validate: {
-            doctor_id: (value) => value ? null : "選択してください。",
+            doctor_id: (value) => value === null ? DOCTOR_NOT_SELECTED_MESSAGE : null,
             categories: (value) => value.length > 0 ? null : "少なくとも1つのカテゴリを選択してください",
+            // 診察日は空にできない（初期値が必ず入り、入力欄は空への変更を受け付けない）ため、未来の日時だけを確かめる。
             examination_at: (value) => {
-                if (!value) {
-                    return "日時を選択してください。";
-                }
                 const now = dayjs().startOf('minute');
                 const selectedTime = dayjs(value).startOf('minute');
                 return selectedTime.isAfter(now) ? "未来の日時は選択できません。" : null;
@@ -46,19 +47,17 @@ const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null)
 
     const doctorsData = useMemo(() =>
     (doctors?.map((doctor) => ({
-        value: doctor.id.toString(),
+        value: doctor.id,
         label: doctor.name,
     }))), [doctors]);
 
     useEffect(() => {
         if (data) {
-            const getCategories = data
-                ? data.categories.map((category) => category.id.toString())
-                : [];
+            const selectedCategoryIds = data.categories.map((category) => category.id.toString());
             form.setValues({
                 id: data.id.toString(),
-                categories: getCategories,
-                doctor_id: data?.doctor_id.toString(),
+                categories: selectedCategoryIds,
+                doctor_id: data.doctor_id,
                 medical_memo: data.medical_memo,
                 doctor_memo: data.doctor_memo,
                 examination_at: new Date(data.examination_at)
@@ -66,7 +65,7 @@ const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null)
         } else {
             form.setValues({
                 id: "",
-                doctor_id: loginDoctor?.id.toString(),
+                doctor_id: loginDoctor?.id ?? null,
                 categories: [],
                 medical_memo: "",
                 doctor_memo: "",
@@ -76,18 +75,27 @@ const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null)
     }, [loginDoctor, data])
 
 
+    // form は描画のたびに新しいオブジェクトになるため、参照が変わらない setFieldError だけを取り出して使う。
+    const { setFieldError } = form;
+
     const handleSubmit = useCallback(async (values: FormValues, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");
 
         const { id, doctor_id, examination_at, medical_memo, doctor_memo, categories } = values;
         const isUpdate = Boolean(id);
+        // 検証（validate）を通っていれば null にはならない。型の上で null を除くために確かめる。
+        // 到達した場合も、検証のときと同じく担当者の欄にエラーを出す。
+        if (doctor_id === null) {
+            setFieldError("doctor_id", DOCTOR_NOT_SELECTED_MESSAGE);
+            return;
+        }
 
         try {
             if (isUpdate) {
                 await trpcClient.doctor.medicalRecords.update.mutate({
                     id: Number(id),
                     patient_id: patientId,
-                    doctor_id: Number(doctor_id),
+                    doctor_id,
                     medical_memo,
                     doctor_memo,
                     examination_at,
@@ -96,7 +104,7 @@ const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null)
             } else {
                 await trpcClient.doctor.medicalRecords.create.mutate({
                     patient_id: patientId,
-                    doctor_id: Number(doctor_id),
+                    doctor_id,
                     medical_memo,
                     doctor_memo,
                     examination_at,
@@ -115,7 +123,7 @@ const useMedicalRecordForm = (patientId: number, data: MedicalRecordType | null)
         doMutate()
         modalClosed();
         setShowNotification(isUpdate ? "診察を更新しました。" : "診察を保存しました。", "orange");
-    }, [patientId])
+    }, [patientId, setFieldError])
 
     const handleDelete = useCallback(async (id: number, doMutate: () => void, modalClosed: () => void) => {
         setSubmitError("");

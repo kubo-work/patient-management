@@ -40,10 +40,8 @@ const usePatientEdit = (id: number | null) => {
                 /^\S+@\S+$/.test(value) ? null : "メールアドレスを入力してください。",
             tel: (value) => value === "" && "電話番号を入力してください。",
             address: (value) => value === "" && "住所を入力してください。",
+            // 生年月日は空にできない（初期値が必ず入り、入力欄は空への変更を受け付けない）ため、未来の日付だけを確かめる。
             birth: (value) => {
-                if (!value) {
-                    return "生年月日を入力してください。";
-                }
                 const now = dayjs().startOf('minute');
                 const selectedTime = dayjs(value).startOf('minute');
                 return selectedTime.isAfter(now) ? "未来の日付は選択できません。" : null;

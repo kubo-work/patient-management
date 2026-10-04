@@ -27,7 +27,7 @@ const LoginForm: FC<Props> = React.memo((props) => {
       />
       <form
         className={styles.form}
-        onSubmit={form.onSubmit(() => handleLogin(form.values))}
+        onSubmit={form.onSubmit((values) => handleLogin(values))}
       >
         {loginError && (
           <Alert color="red" mb="md">
@@ -39,18 +39,14 @@ const LoginForm: FC<Props> = React.memo((props) => {
           type="email"
           label="メールアドレス"
           placeholder="**@example.com"
-          value={form.values.email}
           {...form.getInputProps("email")}
-          error={form.errors.email}
         />
         <PasswordInput
           label="パスワード"
           placeholder="パスワードを入力してください。"
           required
           mt="md"
-          value={form.values.password}
           {...form.getInputProps("password")}
-          error={form.errors.password}
         />
         <Button fullWidth mt="xl" type="submit">
           ログイン
