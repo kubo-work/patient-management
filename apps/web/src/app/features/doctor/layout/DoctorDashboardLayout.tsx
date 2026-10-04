@@ -3,12 +3,12 @@ import "@mantine/dates/styles.css"; //if using mantine date picker features
 
 import { AppShell, Burger, Button, Flex, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
 import style from "./layout.module.scss";
-import useDoctorLogout from "@/app/hooks/useDoctorLogout";
+import useDoctorLogout from "./hooks/useDoctorLogout";
 import React, { FC, ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useGlobalDoctor } from "@/app/hooks/useGlobalDoctor";
+import { useTRPC } from "@/lib/trpc";
 
 type Props = {
   children: ReactNode;
@@ -16,10 +16,10 @@ type Props = {
 
 const DoctorDashboardLayout: FC<Props> = React.memo((props) => {
   const { children } = props;
-  const pathname = usePathname();
   const [opened, { toggle, close }] = useDisclosure();
   const { handleClickLogout } = useDoctorLogout();
-  const { loginDoctor } = useGlobalDoctor();
+  const trpc = useTRPC();
+  const { data: loginDoctor } = useQuery(trpc.doctor.loginDoctor.queryOptions());
   return (
     <AppShell
       className={style.body}

@@ -2,12 +2,12 @@
 import React, { FC } from "react";
 import Link from "next/link";
 import { Button, Flex } from "@mantine/core";
-import usePatientsPage from "@/app/hooks/usePatientsPage";
+import usePatientsPage from "./hooks/usePatientsPage";
 import TableHeader from "../components/TableHeader";
 import DataTable from "../components/dataTable/DataTable";
 import { patientsListColumns } from "./patientsListColumns";
 import { useSearchParams } from "next/navigation";
-import useShowNotification from "@/app/hooks/useShowNotification";
+import useShowNotification from "../hooks/useShowNotification";
 import type { PatientListItemType } from "@/lib/trpc";
 
 const renderPatientActions = (patient: PatientListItemType) => (

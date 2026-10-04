@@ -2,7 +2,8 @@
 import { type ReactNode } from "react";
 import { Box, LoadingOverlay, Table } from "@mantine/core";
 import { useTable, type RowData } from "@tanstack/react-table";
-import type { PagedTableState } from "../../../../hooks/usePagedQuery";
+import type { PagedTableState } from "../../hooks/usePagedQuery";
+import FetchErrorAlert from "../FetchErrorAlert";
 import { dataTableFeatures, type DataTableColumns } from "./dataTableFeatures";
 import DataTableBody from "./DataTableBody";
 import DataTableHeaderCell from "./DataTableHeaderCell";
@@ -28,6 +29,7 @@ const DataTable = <Item extends RowData>({
   sorting,
   onSortingChange,
   isLoading,
+  fetchError,
   renderRowActions,
 }: Props<Item>) => {
   const table = useTable({
@@ -46,6 +48,7 @@ const DataTable = <Item extends RowData>({
 
   return (
     <Box pos="relative">
+      {fetchError && <FetchErrorAlert error={fetchError} />}
       <LoadingOverlay visible={isLoading} />
       <Table striped highlightOnHover withTableBorder>
         <Table.Thead>

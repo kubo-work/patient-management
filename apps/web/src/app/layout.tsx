@@ -3,6 +3,7 @@ import { Notifications } from "@mantine/notifications";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { theme } from "./util/theme";
+import TRPCQueryProvider from "./providers/TRPCQueryProvider";
 import "./globals.css";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
@@ -40,7 +41,7 @@ export default function RootLayout({
         <MantineProvider defaultColorScheme="light" theme={theme}>
           {/* 通知の表示枠は全画面で 1 つだけ置く。画面ごとに置くと、置き忘れた画面では通知が表示されない。 */}
           <Notifications />
-          {children}
+          <TRPCQueryProvider>{children}</TRPCQueryProvider>
         </MantineProvider>
       </body>
     </html>

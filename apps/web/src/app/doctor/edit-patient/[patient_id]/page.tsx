@@ -2,7 +2,7 @@ import EditPatientContents from "@/app/features/doctor/edit-patient/EditPatientC
 import { Title } from "@mantine/core";
 import { Metadata } from "next";
 
-// 静的エクスポート用（実データはクライアントサイドで SWR が取得）
+// 静的エクスポート用（実データはクライアントサイドで TanStack Query が取得）
 // Next.js 16 の output: export は空配列不可のためプレースホルダーを返す
 export function generateStaticParams() {
   return [{ patient_id: "0" }];

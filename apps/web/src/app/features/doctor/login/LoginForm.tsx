@@ -1,5 +1,5 @@
 "use client";
-import useDoctorLogin from "@/app/hooks/useDoctorLogin";
+import useDoctorLogin from "./hooks/useDoctorLogin";
 import {
   Alert,
   Box,
@@ -16,18 +16,18 @@ type Props = {
 
 const LoginForm: FC<Props> = React.memo((props) => {
   const { styles } = props;
-  const { form, loginError, handleLogin, visible } = useDoctorLogin();
+  const { form, loginError, handleLogin, isLoggingIn } = useDoctorLogin();
 
   return (
     <Box>
       <LoadingOverlay
-        visible={visible}
+        visible={isLoggingIn}
         zIndex={1000}
         overlayProps={{ radius: "sm", blur: 1 }}
       />
       <form
         className={styles.form}
-        onSubmit={form.onSubmit((values) => handleLogin(values))}
+        onSubmit={form.onSubmit(handleLogin)}
       >
         {loginError && (
           <Alert color="red" mb="md">
